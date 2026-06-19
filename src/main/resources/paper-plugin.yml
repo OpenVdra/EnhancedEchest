@@ -1,0 +1,20 @@
+name: EnhancedEChest
+version: '${version}'
+main: com.enhancedechest.EnhancedEChestPlugin
+bootstrapper: com.enhancedechest.EnhancedEChestBootstrap
+api-version: '1.21'
+description: Custom 54-slot enderchest that fully replaces vanilla storage
+
+permissions:
+  ee.use:
+    description: Allows opening the custom enderchest via block or command
+    default: op
+  ee.admin.migrate.toggle:
+    description: Toggle migration mode on or off
+    default: op
+  ee.admin.migrate.run:
+    description: Run migration for a specific player or all players
+    default: op
+  ee.admin.reload:
+    description: Reload the plugin configuration
+    default: op

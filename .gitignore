@@ -1,0 +1,38 @@
+# Gradle build output and cache
+.gradle/
+build/
+
+# Keep the Gradle wrapper binaries
+!gradle/wrapper/gradle-wrapper.jar
+!gradlew
+!gradlew.bat
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Plugin data folder generated when running locally
+plugins/
+run/

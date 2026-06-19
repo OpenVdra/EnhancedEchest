@@ -1,0 +1,22 @@
+# EnhancedEChest configuration
+
+gui:
+  # Title shown in the custom enderchest GUI (supports color codes via MiniMessage in future)
+  title: "Ender Chest"
+
+database:
+  # Storage backend: sqlite | mysql | postgres
+  type: sqlite
+  # SQLite: path relative to plugin data folder (default: enderchests.db)
+  sqlite-file: enderchests.db
+  # MySQL/Postgres (unused until Phase 4)
+  host: localhost
+  port: 3306
+  database: enhancedechest
+  username: root
+  password: ""
+  pool-size: 10
+
+migration:
+  # When true: un-migrated players have their vanilla enderchest imported on join
+  enabled: false
