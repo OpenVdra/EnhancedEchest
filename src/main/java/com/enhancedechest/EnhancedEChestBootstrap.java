@@ -42,6 +42,14 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
         return builder.buildFuture();
     };
 
+    /** Suggests the valid chest sizes (multiples of 9, from 9 to 54) for the {@code <size>} argument. */
+    private static final SuggestionProvider<CommandSourceStack> CHEST_SIZES = (ctx, builder) -> {
+        for (int size = 9; size <= 54; size += 9) {
+            builder.suggest(size);
+        }
+        return builder.buildFuture();
+    };
+
     /** Suggests the sender's own chests as {@code #index} and custom-name completions for /ec. */
     private static final SuggestionProvider<CommandSourceStack> OWN_CHESTS = (ctx, builder) -> {
         if (!(ctx.getSource().getSender() instanceof Player player)) {
@@ -128,6 +136,7 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                                 .then(Commands.argument("player", StringArgumentType.word())
                                         .suggests(ONLINE_PLAYERS)
                                         .then(Commands.argument("size", IntegerArgumentType.integer(9, 54))
+                                                .suggests(CHEST_SIZES)
                                                 .executes(ctx -> ChestAdminCommand.add(
                                                         ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "player"),
@@ -139,6 +148,7 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                                         .suggests(ONLINE_PLAYERS)
                                         .then(Commands.argument("index", IntegerArgumentType.integer(1))
                                                 .then(Commands.argument("size", IntegerArgumentType.integer(9, 54))
+                                                        .suggests(CHEST_SIZES)
                                                         .executes(ctx -> ChestAdminCommand.resize(
                                                                 ctx.getSource(),
                                                                 StringArgumentType.getString(ctx, "player"),

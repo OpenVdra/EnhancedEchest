@@ -12,7 +12,9 @@ import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,10 +52,12 @@ public final class ChestDialogs {
     /**
      * Top-level list: one button per chest, clicking opens that chest's detail dialog in place.
      *
-     * @param canSetMain whether the viewer may set a chest as their main (gated on the
-     *                   open-by-command permission); threaded into each detail dialog
+     * @param canSetMain  whether the viewer may set a chest as their main (gated on the
+     *                    open-by-command permission); threaded into each detail dialog
+     * @param sourceBlock ender chest block this menu was opened from (for the lid close animation),
+     *                    or null when opened by command; threaded into each detail dialog's Open
      */
-    public Dialog listDialog(List<ChestSummary> chests, boolean canSetMain) {
+    public Dialog listDialog(List<ChestSummary> chests, boolean canSetMain, @Nullable Location sourceBlock) {
         List<ActionButton> buttons = new ArrayList<>(chests.size());
         for (ChestSummary chest : chests) {
             Component label = lang.getChestTitle(chest.index(), chest.customName());
@@ -63,7 +67,7 @@ public final class ChestDialogs {
             Component tooltip = lang.getGui("dialog.slots", "size", Integer.toString(chest.size()));
             // Forward, in-place: open this chest's detail dialog client-side (no cursor reset).
             buttons.add(ActionButton.create(label, tooltip, BUTTON_WIDTH,
-                    DialogAction.staticAction(ClickEvent.showDialog(detailDialog(chest, canSetMain)))));
+                    DialogAction.staticAction(ClickEvent.showDialog(detailDialog(chest, canSetMain, sourceBlock)))));
         }
 
         return Dialog.create(builder -> builder.empty()
@@ -74,17 +78,19 @@ public final class ChestDialogs {
     /**
      * Per-chest detail: Open / Rename / Set-as-main / Back.
      *
-     * @param canSetMain whether to show the "set as main" button; hidden for viewers without the
-     *                   open-by-command permission, for whom a main chest is meaningless
+     * @param canSetMain  whether to show the "set as main" button; hidden for viewers without the
+     *                    open-by-command permission, for whom a main chest is meaningless
+     * @param sourceBlock ender chest block this menu was opened from, or null when opened by command;
+     *                    passed to the inventory open so the lid close animation fires on close
      */
-    public Dialog detailDialog(ChestSummary chest, boolean canSetMain) {
+    public Dialog detailDialog(ChestSummary chest, boolean canSetMain, @Nullable Location sourceBlock) {
         int index = chest.index();
         List<ActionButton> buttons = new ArrayList<>(4);
 
         // Open the actual inventory (closes the dialog; cursor position is moot once an inventory opens).
         buttons.add(ActionButton.create(lang.getGui("dialog.open"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
-                    if (audience instanceof Player p) service.openChest(p, index, null);
+                    if (audience instanceof Player p) service.openChest(p, index, sourceBlock);
                 })));
 
         // Forward, in-place: go to the dedicated rename dialog client-side (no cursor reset).

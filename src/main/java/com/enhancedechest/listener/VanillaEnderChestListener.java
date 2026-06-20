@@ -1,6 +1,5 @@
 package com.enhancedechest.listener;
 
-import com.enhancedechest.gui.EnderChestAnimator;
 import com.enhancedechest.gui.EnderChestService;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
@@ -31,10 +30,10 @@ public final class VanillaEnderChestListener implements Listener {
         Player player = event.getPlayer();
         Location blockLoc = block.getLocation();
 
-        // We are on the block's region thread (Folia) or main thread (Spigot/Paper),
-        // which is the correct thread to call startOpen on the block entity.
-        EnderChestAnimator.open(player, blockLoc);
-
+        // The lid animation is driven by the inventory open/close lifecycle (see EnderChestService /
+        // EnderChestGuiListener), not eagerly here: a single chest opens straight to its inventory,
+        // whereas several chests open a dialog first — and dialogs have no close event to pair an
+        // eager open() with, which would otherwise leave the lid stuck open.
         service.open(player, blockLoc);
     }
 }

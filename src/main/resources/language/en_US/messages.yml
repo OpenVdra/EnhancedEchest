@@ -1,29 +1,8 @@
-# EnhancedEChest – messages.yml
-# All player-facing chat messages and the plugin prefix.
-#
-#   COLOR FORMAT:
-#   - Legacy '&' codes are used throughout, including hex: &#RRGGBB
-#   - {prefix} is replaced with the prefix below
-#   - {placeholders} like {player}, {index}, {size} are filled in at runtime
-#
-#   PALETTE:
-#   - &#FF4444  errors
-#   - &#F0C857  warnings / caution
-#   - &a        success
-#   - &e / &f   highlighted values
-#   - &7 / &8   muted / separators
-
 prefix: '&#9B59B6EɴʜᴀɴᴄᴇᴅEᴄʜᴇsᴛ &8⏩ &r'
 
-# ──────────────────────────────────────────────────────
-#                 Command / Player
-# ──────────────────────────────────────────────────────
 command:
   not-player: '{prefix}&#FF4444Only players can use the ender chest.'
 
-# ──────────────────────────────────────────────────────
-#                 Ender Chest
-# ──────────────────────────────────────────────────────
 chest:
   load-failed: '{prefix}&#FF4444Could not load your ender chest. Please contact an admin.'
   codec-failed: '{prefix}&#FF4444Your ender chest data could not be read. Please contact an admin.'
@@ -31,9 +10,6 @@ chest:
   unknown: '{prefix}&#FF4444No ender chest matches &e{query}&#FF4444.'
   none: '{prefix}&#F0C857You do not have any ender chests yet.'
 
-# ──────────────────────────────────────────────────────
-#                 Migration
-# ──────────────────────────────────────────────────────
 migrate:
   no-players: '{prefix}&#F0C857No players are online.'
   complete: '{prefix}&7Migration complete: &a{migrated} migrated&7, &#F0C857{skipped} already done.'
@@ -41,9 +17,6 @@ migrate:
   success: '{prefix}&aMigrated &e{player}&a successfully.'
   already-done: '{prefix}&e{player} &7was already migrated.'
 
-# ──────────────────────────────────────────────────────
-#                 Admin
-# ──────────────────────────────────────────────────────
 admin:
   reload-success: '{prefix}&aConfiguration reloaded.'
   player-not-found: '{prefix}&#FF4444Player &e{player}&#FF4444 was not found.'
@@ -53,9 +26,6 @@ admin:
   chest-resized: '{prefix}&aResized &e{player}&a ender chest &e{index}&a to &e{size}&a slots.'
   chest-deleted: '{prefix}&aDeleted ender chest &e{index}&a of &e{player}&a.'
 
-# ──────────────────────────────────────────────────────
-#                 Update Notice
-# ──────────────────────────────────────────────────────
 update:
   available: '{prefix}&#F0C857New update available! &7(&f{current} &8→ &a{latest}&7)'
   # Kept in MiniMessage so the download URL stays clickable (legacy '&' cannot do click events).

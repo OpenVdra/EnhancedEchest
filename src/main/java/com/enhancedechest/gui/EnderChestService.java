@@ -98,7 +98,7 @@ public final class EnderChestService {
                     .thenAccept(chests -> {
                         if (chests.size() >= 2) {
                             foliaLib.getScheduler().runAtEntity(player, task -> {
-                                if (player.isOnline()) player.showDialog(dialogs.listDialog(chests, canSetMain));
+                                if (player.isOnline()) player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock));
                             });
                         } else {
                             openPrimaryChest(player, uuid, sourceBlock);
@@ -214,6 +214,15 @@ public final class EnderChestService {
             }
         }
         player.openInventory(inv);
+
+        // Play the open lid animation now that the inventory is actually showing; the matching close
+        // animation fires from EnderChestGuiListener on InventoryCloseEvent. Both are gated on a
+        // source block, so command/dialog opens (no block) animate nothing. Dispatched to the block's
+        // region thread, as the animation touches the block entity (required on Folia).
+        if (sourceBlock != null) {
+            foliaLib.getScheduler().runAtLocation(sourceBlock, task ->
+                    EnderChestAnimator.open(player, sourceBlock));
+        }
     }
 
     private void closeExistingGui(Player player) {
@@ -245,7 +254,7 @@ public final class EnderChestService {
                         player.sendMessage(lang.get("chest.none"));
                         return;
                     }
-                    player.showDialog(dialogs.listDialog(chests, canSetMain));
+                    player.showDialog(dialogs.listDialog(chests, canSetMain, null));
                 })
         ).exceptionally(e -> reportOpenFailure(player, e));
     }
@@ -253,7 +262,7 @@ public final class EnderChestService {
     /** Shows the per-chest detail dialog (Open / Rename / Set-main / Back). */
     public void openDetailDialog(Player player, int index) {
         boolean canSetMain = canSetMain(player);
-        showChestDialog(player, index, chest -> dialogs.detailDialog(chest, canSetMain));
+        showChestDialog(player, index, chest -> dialogs.detailDialog(chest, canSetMain, null));
     }
 
     /**
