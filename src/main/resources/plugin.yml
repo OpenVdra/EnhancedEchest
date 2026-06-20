@@ -2,6 +2,7 @@ name: EnhancedEChest
 version: '${version}'
 main: com.enhancedechest.EnhancedEChestPlugin
 api-version: '1.21'
+author: Nighter
 description: Gives every player a double-size ender chest backed by a persistent database
 
 commands:
