@@ -1,17 +1,19 @@
 package com.enhancedechest.update;
 
 import com.enhancedechest.lang.LanguageManager;
+import com.tcoded.folialib.FoliaLib;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 public final class UpdateNotifyListener implements Listener {
 
-    private final JavaPlugin plugin;
+    private final FoliaLib foliaLib;
     private final UpdateChecker checker;
     private final LanguageManager lang;
 
@@ -22,13 +24,15 @@ public final class UpdateNotifyListener implements Listener {
         if (!player.isOp()) return;
 
         // Slight delay so the player is fully loaded before receiving messages.
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+        // runAtEntityLater targets the player's entity thread (safe for Folia),
+        // 2 seconds ≈ 40 ticks at 20 TPS.
+        foliaLib.getScheduler().runAtEntityLater(player, () -> {
             if (!player.isOnline()) return;
             player.sendMessage(lang.get("update.available",
                     "current", checker.getCurrentVersion(),
                     "latest",  checker.getLatestVersion()));
             player.sendMessage(lang.get("update.download",
                     "url", UpdateChecker.MODRINTH_PAGE));
-        }, 40L);
+        }, 2L, TimeUnit.SECONDS);
     }
 }

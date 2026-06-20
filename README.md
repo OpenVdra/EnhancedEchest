@@ -88,4 +88,4 @@ Plugin icon by [m11.dalp.sh](https://m11.dalp.sh/).
 
 ## License
 
-GPLv3 — see [LICENSE](LICENSE) for details.
+This project is licensed under the GPLv3 License - see the [LICENSE](LICENSE) file for details.

@@ -1,8 +1,10 @@
 package com.enhancedechest.listener;
 
+import com.enhancedechest.gui.EnderChestAnimator;
 import com.enhancedechest.gui.EnderChestService;
 import com.enhancedechest.lang.LanguageManager;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -32,6 +34,12 @@ public final class VanillaEnderChestListener implements Listener {
             return;
         }
 
-        service.open(player);
+        Location blockLoc = block.getLocation();
+
+        // We are on the block's region thread (Folia) or main thread (Spigot/Paper),
+        // which is the correct thread to call startOpen on the block entity.
+        EnderChestAnimator.open(player, blockLoc);
+
+        service.open(player, blockLoc);
     }
 }

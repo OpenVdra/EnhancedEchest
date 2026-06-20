@@ -23,7 +23,7 @@ public final class EnderChestOpenCommand {
             return 0;
         }
 
-        plugin.getEnderChestService().open(player);
+        plugin.getEnderChestService().open(player, null);
         return Command.SINGLE_SUCCESS;
     }
 }

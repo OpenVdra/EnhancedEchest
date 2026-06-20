@@ -1,8 +1,7 @@
 package com.enhancedechest.update;
 
+import com.tcoded.folialib.FoliaLib;
 import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 
 import java.net.URI;
@@ -31,8 +30,8 @@ public final class UpdateChecker {
         this.log = log;
     }
 
-    public void checkAsync(JavaPlugin plugin) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, this::performCheck);
+    public void checkAsync(FoliaLib foliaLib) {
+        foliaLib.getScheduler().runAsync(task -> this.performCheck());
     }
 
     private void performCheck() {

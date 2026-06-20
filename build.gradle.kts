@@ -18,6 +18,10 @@ java {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven {
+        name = "tcoded-releases"
+        url = uri("https://repo.tcoded.com/releases")
+    }
 }
 
 dependencies {
@@ -27,6 +31,7 @@ dependencies {
     shade("com.zaxxer:HikariCP:7.1.0")
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.3")   // compatible with MySQL 5.7+ and 8.x
     shade("org.postgresql:postgresql:42.7.4")
+    shade("com.tcoded:FoliaLib:0.5.2")
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
@@ -64,6 +69,7 @@ tasks.shadowJar {
     relocate("org.mariadb.jdbc", "com.enhancedechest.libs.mariadb")
     relocate("org.postgresql",   "com.enhancedechest.libs.postgresql")
     relocate("com.ongres",       "com.enhancedechest.libs.ongres")
+    relocate("com.tcoded.folialib", "com.enhancedechest.libs.folialib")
 
     mergeServiceFiles()
     // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))

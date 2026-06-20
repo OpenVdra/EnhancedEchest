@@ -15,6 +15,7 @@ import com.enhancedechest.storage.EnderChestStorage;
 import com.enhancedechest.storage.StorageFactory;
 import com.enhancedechest.update.UpdateChecker;
 import com.enhancedechest.update.UpdateNotifyListener;
+import com.tcoded.folialib.FoliaLib;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public final class EnhancedEChestPlugin extends JavaPlugin {
     private EnderChestService enderChestService;
     private MigrationService migrationService;
     private UpdateChecker updateChecker;
+    private FoliaLib foliaLib;
 
     @Override
     public void onEnable() {
@@ -38,6 +40,7 @@ public final class EnhancedEChestPlugin extends JavaPlugin {
         migrateConfigFile();
         reloadConfig();
 
+        foliaLib        = new FoliaLib(this);
         pluginConfig    = new PluginConfig(getConfig());
         codec           = new ContainerCodec();
         storage         = StorageFactory.create(pluginConfig, getDataFolder().toPath());
@@ -51,26 +54,33 @@ public final class EnhancedEChestPlugin extends JavaPlugin {
         }
 
         languageManager   = new LanguageManager(this, pluginConfig.getLocale());
-        enderChestService = new EnderChestService(languageManager, codec, storage, getSLF4JLogger());
+        enderChestService = new EnderChestService(languageManager, codec, storage,
+                getSLF4JLogger(), foliaLib);
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger());
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(new VanillaEnderChestListener(enderChestService, languageManager), this);
-        pm.registerEvents(new EnderChestGuiListener(enderChestService), this);
-        pm.registerEvents(new PlayerQuitListener(enderChestService), this);
+        pm.registerEvents(new EnderChestGuiListener(enderChestService, foliaLib), this);
+        pm.registerEvents(new PlayerQuitListener(enderChestService, foliaLib), this);
         pm.registerEvents(new JoinMigrationListener(pluginConfig, migrationService), this);
 
         updateChecker = new UpdateChecker(getPluginMeta().getVersion(), getSLF4JLogger());
-        pm.registerEvents(new UpdateNotifyListener(this, updateChecker, languageManager), this);
-        updateChecker.checkAsync(this);
+        pm.registerEvents(new UpdateNotifyListener(foliaLib, updateChecker, languageManager), this);
+        updateChecker.checkAsync(foliaLib);
 
         printStartupBanner(getSLF4JLogger());
     }
 
     @Override
     public void onDisable() {
+        if (enderChestService != null) {
+            enderChestService.shutdown();
+        }
         if (storage != null) {
             storage.close();
+        }
+        if (foliaLib != null) {
+            foliaLib.getScheduler().cancelAllTasks();
         }
         getSLF4JLogger().info("EnhancedEChest disabled.");
     }
@@ -97,11 +107,13 @@ public final class EnhancedEChestPlugin extends JavaPlugin {
         String storage   = pluginConfig.getDatabaseType().toUpperCase();
         String locale    = pluginConfig.getLocale();
         String migration = pluginConfig.isMigrationEnabled() ? "ON" : "OFF";
+        String folia     = foliaLib.isFolia() ? "Folia" : (foliaLib.isPaper() ? "Paper" : "Spigot");
         String sep       = "——————————————[ EnhancedEChest ]——————————————";
 
         log.info("> {}", sep);
         log.info(">");
         log.info(">   Version   : {}", version);
+        log.info(">   Platform  : {}", folia);
         log.info(">   Storage   : {}", storage);
         log.info(">   Language  : {}", locale);
         log.info(">   Migration : {}", migration);
