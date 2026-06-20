@@ -30,7 +30,7 @@ dependencies {
     // Shaded and relocated — no server-side drivers required
     shade("com.zaxxer:HikariCP:7.1.0")
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.3")   // compatible with MySQL 5.7+ and 8.x
-    shade("org.postgresql:postgresql:42.7.4")
+    shade("org.postgresql:postgresql:42.7.11")
     shade("com.tcoded:FoliaLib:0.5.2")
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
