@@ -41,6 +41,9 @@ import java.util.concurrent.TimeUnit;
  */
 public final class EnderChestService {
 
+    /** Permission to open the ender chest by command; also gates the dialog's "set as main" action. */
+    private static final String OPEN_GUI_PERMISSION = "enhancedechest.command.open";
+
     /** Identifies an in-flight save by owner + chest index, so unrelated chests never block each other. */
     private record SaveKey(UUID owner, int index) {}
 
@@ -78,22 +81,42 @@ public final class EnderChestService {
     // ---- opening ----
 
     /**
-     * Opens the player's primary ender chest (creating their first chest if they own none).
+     * Default open entry point for {@code /enderchest} and right-click:
+     * <ul>
+     *   <li>0 or 1 chest — opens the primary chest directly (creating chest #1 if the player owns none);</li>
+     *   <li>2+ chests — opens the management list dialog so the player picks which to open.</li>
+     * </ul>
      *
      * @param sourceBlock ender chest block location if opened via right-click; null for command/dialog
      */
     public void open(Player player, @Nullable Location sourceBlock) {
         UUID uuid = player.getUniqueId();
+        boolean canSetMain = canSetMain(player);
         foliaLib.getScheduler().runAtEntity(player, outerTask -> {
             closeExistingGui(player);
-            CompletableFuture
-                    .supplyAsync(() -> resolvePrimaryIndex(uuid), asyncExecutor)
-                    .thenCompose(index -> waitPending(uuid, index).thenApply(v -> index))
-                    .thenCompose(index -> CompletableFuture.supplyAsync(
-                            () -> storage.loadChest(uuid, index), asyncExecutor))
-                    .thenAccept(data -> openLoaded(player, data, sourceBlock))
+            listChestsAsync(uuid)
+                    .thenAccept(chests -> {
+                        if (chests.size() >= 2) {
+                            foliaLib.getScheduler().runAtEntity(player, task -> {
+                                if (player.isOnline()) player.showDialog(dialogs.listDialog(chests, canSetMain));
+                            });
+                        } else {
+                            openPrimaryChest(player, uuid, sourceBlock);
+                        }
+                    })
                     .exceptionally(e -> reportOpenFailure(player, e));
         });
+    }
+
+    /** Loads and opens the player's primary chest inventory directly (creating chest #1 if none exist). */
+    private void openPrimaryChest(Player player, UUID uuid, @Nullable Location sourceBlock) {
+        CompletableFuture
+                .supplyAsync(() -> resolvePrimaryIndex(uuid), asyncExecutor)
+                .thenCompose(index -> waitPending(uuid, index).thenApply(v -> index))
+                .thenCompose(index -> CompletableFuture.supplyAsync(
+                        () -> storage.loadChest(uuid, index), asyncExecutor))
+                .thenAccept(data -> openLoaded(player, data, sourceBlock))
+                .exceptionally(e -> reportOpenFailure(player, e));
     }
 
     /**
@@ -214,6 +237,7 @@ public final class EnderChestService {
     /** Loads the player's chests and shows the /eclist management dialog. */
     public void openListDialog(Player player) {
         UUID uuid = player.getUniqueId();
+        boolean canSetMain = canSetMain(player);
         listChestsAsync(uuid).thenAccept(chests ->
                 foliaLib.getScheduler().runAtEntity(player, task -> {
                     if (!player.isOnline()) return;
@@ -221,14 +245,23 @@ public final class EnderChestService {
                         player.sendMessage(lang.get("chest.none"));
                         return;
                     }
-                    player.showDialog(dialogs.listDialog(chests));
+                    player.showDialog(dialogs.listDialog(chests, canSetMain));
                 })
         ).exceptionally(e -> reportOpenFailure(player, e));
     }
 
     /** Shows the per-chest detail dialog (Open / Rename / Set-main / Back). */
     public void openDetailDialog(Player player, int index) {
-        showChestDialog(player, index, dialogs::detailDialog);
+        boolean canSetMain = canSetMain(player);
+        showChestDialog(player, index, chest -> dialogs.detailDialog(chest, canSetMain));
+    }
+
+    /**
+     * Whether the player may set a chest as their main: gated on the open-by-command permission,
+     * since the "main" chest only matters when {@code /enderchest} can be used to open it.
+     */
+    private boolean canSetMain(Player player) {
+        return player.hasPermission(OPEN_GUI_PERMISSION);
     }
 
     /** Shows the dedicated rename dialog for a chest. */

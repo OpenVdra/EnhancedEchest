@@ -19,7 +19,7 @@ Two command roots: `/enderchest` for players and `/enhancedechest` for admins. C
 <div class="command-section">
 
 <CommandRow commands="/enderchest" aliases="/ec" permission="enhancedechest.command.open">
-Open your <strong>main</strong> ender chest (same as right-clicking a block). Your first chest is created automatically at the default size.
+Open your ender chest (same as right-clicking a block). With one chest it opens directly; with several it opens the management menu to pick one. Your first chest is created automatically at the default size.
 </CommandRow>
 
 <CommandRow commands="/eclist" permission="enhancedechest.command.open">

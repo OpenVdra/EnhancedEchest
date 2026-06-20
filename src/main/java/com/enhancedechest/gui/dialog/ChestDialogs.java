@@ -47,8 +47,13 @@ public final class ChestDialogs {
         this.lang = lang;
     }
 
-    /** Top-level list: one button per chest, clicking opens that chest's detail dialog in place. */
-    public Dialog listDialog(List<ChestSummary> chests) {
+    /**
+     * Top-level list: one button per chest, clicking opens that chest's detail dialog in place.
+     *
+     * @param canSetMain whether the viewer may set a chest as their main (gated on the
+     *                   open-by-command permission); threaded into each detail dialog
+     */
+    public Dialog listDialog(List<ChestSummary> chests, boolean canSetMain) {
         List<ActionButton> buttons = new ArrayList<>(chests.size());
         for (ChestSummary chest : chests) {
             Component label = lang.getChestTitle(chest.index(), chest.customName());
@@ -58,7 +63,7 @@ public final class ChestDialogs {
             Component tooltip = lang.getGui("dialog.slots", "size", Integer.toString(chest.size()));
             // Forward, in-place: open this chest's detail dialog client-side (no cursor reset).
             buttons.add(ActionButton.create(label, tooltip, BUTTON_WIDTH,
-                    DialogAction.staticAction(ClickEvent.showDialog(detailDialog(chest)))));
+                    DialogAction.staticAction(ClickEvent.showDialog(detailDialog(chest, canSetMain)))));
         }
 
         return Dialog.create(builder -> builder.empty()
@@ -66,8 +71,13 @@ public final class ChestDialogs {
                 .type(DialogType.multiAction(buttons, null, 1)));
     }
 
-    /** Per-chest detail: Open / Rename / Set-as-main / Back. */
-    public Dialog detailDialog(ChestSummary chest) {
+    /**
+     * Per-chest detail: Open / Rename / Set-as-main / Back.
+     *
+     * @param canSetMain whether to show the "set as main" button; hidden for viewers without the
+     *                   open-by-command permission, for whom a main chest is meaningless
+     */
+    public Dialog detailDialog(ChestSummary chest, boolean canSetMain) {
         int index = chest.index();
         List<ActionButton> buttons = new ArrayList<>(4);
 
@@ -82,7 +92,7 @@ public final class ChestDialogs {
                 DialogAction.staticAction(ClickEvent.showDialog(renameDialog(chest)))));
 
         // Set as main — mutates data, so it re-queries and is re-pushed from the server.
-        if (!chest.primary()) {
+        if (canSetMain && !chest.primary()) {
             buttons.add(ActionButton.create(lang.getGui("dialog.set-main"), lang.getGui("dialog.main-desc"),
                     BUTTON_WIDTH, click((view, audience) -> {
                         if (!(audience instanceof Player p)) return;
