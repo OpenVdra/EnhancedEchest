@@ -3,6 +3,11 @@
 # Language locale to load from language/<locale>/
 language: en_US
 
+enderchest:
+  # Slot count of the chest auto-created the first time a player ever opens their ender chest.
+  # Must be a multiple of 9, between 9 and 54. Invalid values are rounded to the nearest valid size.
+  default-size: 54
+
 database:
   # Storage backend: sqlite | mysql | mariadb | postgres
   type: sqlite

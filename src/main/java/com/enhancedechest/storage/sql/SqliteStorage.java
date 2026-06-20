@@ -8,25 +8,20 @@ public final class SqliteStorage extends AbstractSqlStorage {
 
     private static final String INIT_SQL = """
             CREATE TABLE IF NOT EXISTS enderchests (
-                player_uuid    TEXT    PRIMARY KEY,
-                container_data BLOB    NOT NULL,
+                player_uuid    TEXT    NOT NULL,
+                chest_index    INTEGER NOT NULL,
+                size           INTEGER NOT NULL,
+                custom_name    TEXT,
+                is_primary     INTEGER NOT NULL DEFAULT 0,
+                container_data BLOB,
                 migrated       INTEGER NOT NULL DEFAULT 0,
-                last_updated   INTEGER NOT NULL DEFAULT 0
+                last_updated   INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (player_uuid, chest_index)
             )
             """;
 
-    // ON CONFLICT ... DO UPDATE is SQLite 3.24+ (available in all Paper-bundled versions)
-    // and is also valid Postgres syntax. Migrated flag is intentionally not overwritten on save.
-    private static final String UPSERT_SQL = """
-            INSERT INTO enderchests (player_uuid, container_data, migrated, last_updated)
-            VALUES (?, ?, 0, ?)
-            ON CONFLICT(player_uuid) DO UPDATE SET
-                container_data = excluded.container_data,
-                last_updated   = excluded.last_updated
-            """;
-
     public SqliteStorage(Path dataFolder, String fileName) {
-        super(buildConfig(dataFolder, fileName), INIT_SQL, UPSERT_SQL);
+        super(buildConfig(dataFolder, fileName), INIT_SQL);
     }
 
     private static HikariConfig buildConfig(Path dataFolder, String fileName) {

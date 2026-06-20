@@ -1,4 +1,4 @@
-prefix: '<#9B59B6>EɴʜᴀɴᴄᴇᴅECʜᴇsᴛ <dark_gray>» <reset>'
+prefix: '<#9B59B6>EɴʜᴀɴᴄᴇᴅEᴄʜᴇsᴛ <dark_gray>» <reset>'
 
 command:
   not-player: '{prefix}<red>Only players can use the ender chest.'
@@ -7,6 +7,8 @@ chest:
   no-permission: '{prefix}<red>You do not have permission to use the ender chest.'
   load-failed: '{prefix}<red>Could not load your ender chest. Please contact an admin.'
   codec-failed: '{prefix}<red>Your ender chest data could not be read. Please contact an admin.'
+  not-found: '{prefix}<red>That ender chest no longer exists.'
+  none: '{prefix}<yellow>You do not have any ender chests yet.'
 
 migrate:
   no-players: '{prefix}<yellow>No players are online.'
@@ -17,6 +19,12 @@ migrate:
 
 admin:
   reload-success: '{prefix}<green>Configuration reloaded.'
+  player-not-found: '{prefix}<red>Player <yellow>{player}</yellow> was not found.'
+  invalid-size: '{prefix}<red>Size must be a multiple of 9 between 9 and 54.'
+  chest-not-found: '{prefix}<red>{player} has no ender chest with index <yellow>{index}</yellow>.'
+  chest-added: '{prefix}<green>Added Ender Chest <yellow>{index}</yellow> (<yellow>{size}</yellow> slots) to <yellow>{player}</yellow>.'
+  chest-resized: '{prefix}<green>Resized {player} ender chest <yellow>{index}</yellow> to <yellow>{size}</yellow> slots.'
+  chest-deleted: '{prefix}<green>Deleted ender chest <yellow>{index}</yellow> of <yellow>{player}</yellow>.'
 
 update:
   available: '{prefix}<yellow>New update available! <gray>(<white>{current} <dark_gray>→ <green>{latest}<gray>)'

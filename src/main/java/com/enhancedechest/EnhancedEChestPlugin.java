@@ -55,7 +55,7 @@ public final class EnhancedEChestPlugin extends JavaPlugin {
 
         languageManager   = new LanguageManager(this, pluginConfig.getLocale());
         enderChestService = new EnderChestService(languageManager, codec, storage,
-                getSLF4JLogger(), foliaLib);
+                getSLF4JLogger(), foliaLib, pluginConfig.getDefaultSize());
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger());
 
         var pm = getServer().getPluginManager();

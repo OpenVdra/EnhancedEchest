@@ -26,4 +26,21 @@ public final class EnderChestOpenCommand {
         plugin.getEnderChestService().open(player, null);
         return Command.SINGLE_SUCCESS;
     }
+
+    /** /ec list — opens the management dialog listing all of the player's chests. */
+    public static int executeList(CommandSourceStack source) {
+        EnhancedEChestPlugin plugin = (EnhancedEChestPlugin) Bukkit.getPluginManager().getPlugin("EnhancedEChest");
+        if (plugin == null || !plugin.isEnabled()) {
+            source.getSender().sendMessage(Component.text("[EnhancedEChest] Plugin is not available."));
+            return 0;
+        }
+
+        if (!(source.getSender() instanceof Player player)) {
+            source.getSender().sendMessage(plugin.getLanguageManager().get("command.not-player"));
+            return 0;
+        }
+
+        plugin.getEnderChestService().openListDialog(player);
+        return Command.SINGLE_SUCCESS;
+    }
 }

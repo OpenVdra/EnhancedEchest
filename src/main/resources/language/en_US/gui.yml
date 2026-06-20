@@ -1,2 +1,21 @@
 enderchest:
+  # Title of the first chest (index 1) when it has no custom name — no number shown.
   title: 'Ender Chest'
+  # Title of chests 2+ when they have no custom name. {index} is the chest number.
+  title-numbered: 'Ender Chest {index}'
+
+# /ec list dialog labels. Buttons and titles are intentionally uncoloured; only the
+# main tag is coloured. The "Set as main" button carries a hover lore explaining what main means.
+dialog:
+  list-title: 'Your Ender Chests'
+  slots: '{size} slots'
+  open: 'Open'
+  rename: 'Rename'
+  set-main: 'Set as main'
+  # Hover lore (tooltip) shown on the "Set as main" button.
+  main-desc: '<gray>Makes this the chest opened by <white>/ec</white> and by right-clicking an ender chest block.'
+  back: 'Back'
+  save-name: 'Save'
+  cancel: 'Cancel'
+  name-label: 'Chest name'
+  main-tag: '<green>(main)'

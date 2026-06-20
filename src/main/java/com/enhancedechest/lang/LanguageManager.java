@@ -29,7 +29,8 @@ public final class LanguageManager {
 
     // Hot-path values resolved once per (re)load instead of on every message/open.
     private String cachedPrefix;
-    private Component cachedGuiTitle;
+    private String cachedTitleBase;
+    private String cachedTitleTemplate;
 
     public LanguageManager(JavaPlugin plugin, String locale) {
         this.plugin = plugin;
@@ -58,8 +59,9 @@ public final class LanguageManager {
         messages = loadFile(base + "messages.yml");
         gui      = loadFile(base + "gui.yml");
 
-        cachedPrefix   = messages.getString("prefix", "[EnhancedEChest] ");
-        cachedGuiTitle = parse(gui.getString("enderchest.title", "Ender Chest"));
+        cachedPrefix        = messages.getString("prefix", "[EnhancedEChest] ");
+        cachedTitleBase     = gui.getString("enderchest.title", "Ender Chest");
+        cachedTitleTemplate = gui.getString("enderchest.title-numbered", "Ender Chest {index}");
     }
 
     private void saveDefault(String path) {
@@ -106,9 +108,31 @@ public final class LanguageManager {
         return parse(raw);
     }
 
-    /** Returns the pre-parsed inventory title; recomputed only on reload. */
-    public Component getGuiTitle() {
-        return cachedGuiTitle;
+    /**
+     * Resolves the inventory/display title for a chest. A non-blank custom name is shown
+     * verbatim as plain text (no player-supplied formatting). Otherwise chest #1 uses the
+     * un-numbered base title ("Ender Chest") and chests 2+ use the numbered template.
+     */
+    public Component getChestTitle(int index, @org.jetbrains.annotations.Nullable String customName) {
+        if (customName != null && !customName.isBlank()) {
+            return Component.text(customName);
+        }
+        if (index <= 1) {
+            return parse(cachedTitleBase);
+        }
+        return parse(cachedTitleTemplate.replace("{index}", Integer.toString(index)));
+    }
+
+    /**
+     * Resolves a GUI/dialog label from gui.yml (no prefix), substituting {placeholders}
+     * and parsing the result. Used for the /ec list dialog labels.
+     */
+    public Component getGui(String key, String... replacements) {
+        String raw = gui.getString(key, key);
+        for (int i = 0; i + 1 < replacements.length; i += 2) {
+            raw = raw.replace("{" + replacements[i] + "}", replacements[i + 1]);
+        }
+        return parse(raw);
     }
 
     private Component parse(String text) {

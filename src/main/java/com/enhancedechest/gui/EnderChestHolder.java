@@ -18,20 +18,24 @@ public final class EnderChestHolder implements InventoryHolder {
 
     private final UUID owner;
 
+    /** 1-based index of which of the owner's chests this inventory represents. */
+    private final int index;
+
+    /** Slot count of this chest (multiple of 9, 9..54) — the inventory was created at this size. */
+    private final int size;
+
     /**
      * Location of the ender chest block if the GUI was opened by right-clicking a block.
-     * Null when opened via /ec command (no physical block involved).
+     * Null when opened via /ec command or the management dialog (no physical block involved).
      * Used to play the open/close animation on the block.
      */
     @Nullable
     private final Location sourceBlock;
 
-    public EnderChestHolder(UUID owner) {
-        this(owner, null);
-    }
-
-    public EnderChestHolder(UUID owner, @Nullable Location sourceBlock) {
+    public EnderChestHolder(UUID owner, int index, int size, @Nullable Location sourceBlock) {
         this.owner = owner;
+        this.index = index;
+        this.size = size;
         this.sourceBlock = sourceBlock;
     }
 

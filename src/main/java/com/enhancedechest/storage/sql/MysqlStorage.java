@@ -9,24 +9,19 @@ public final class MysqlStorage extends AbstractSqlStorage {
     private static final String INIT_SQL = """
             CREATE TABLE IF NOT EXISTS enderchests (
                 player_uuid    VARCHAR(36)  NOT NULL,
-                container_data MEDIUMBLOB   NOT NULL,
+                chest_index    INT          NOT NULL,
+                size           INT          NOT NULL,
+                custom_name    VARCHAR(64),
+                is_primary     TINYINT(1)   NOT NULL DEFAULT 0,
+                container_data MEDIUMBLOB,
                 migrated       TINYINT(1)   NOT NULL DEFAULT 0,
                 last_updated   BIGINT       NOT NULL DEFAULT 0,
-                PRIMARY KEY (player_uuid)
+                PRIMARY KEY (player_uuid, chest_index)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """;
 
-    // MySQL / MariaDB upsert syntax. Migrated is preserved on plain save.
-    private static final String UPSERT_SQL = """
-            INSERT INTO enderchests (player_uuid, container_data, migrated, last_updated)
-            VALUES (?, ?, 0, ?)
-            ON DUPLICATE KEY UPDATE
-                container_data = VALUES(container_data),
-                last_updated   = VALUES(last_updated)
-            """;
-
     public MysqlStorage(PluginConfig config) {
-        super(buildConfig(config), INIT_SQL, UPSERT_SQL);
+        super(buildConfig(config), INIT_SQL);
     }
 
     private static HikariConfig buildConfig(PluginConfig config) {

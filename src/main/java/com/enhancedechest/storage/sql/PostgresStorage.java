@@ -9,24 +9,19 @@ public final class PostgresStorage extends AbstractSqlStorage {
     private static final String INIT_SQL = """
             CREATE TABLE IF NOT EXISTS enderchests (
                 player_uuid    VARCHAR(36)  NOT NULL,
-                container_data BYTEA        NOT NULL,
+                chest_index    INTEGER      NOT NULL,
+                size           INTEGER      NOT NULL,
+                custom_name    VARCHAR(64),
+                is_primary     SMALLINT     NOT NULL DEFAULT 0,
+                container_data BYTEA,
                 migrated       SMALLINT     NOT NULL DEFAULT 0,
                 last_updated   BIGINT       NOT NULL DEFAULT 0,
-                PRIMARY KEY (player_uuid)
+                PRIMARY KEY (player_uuid, chest_index)
             )
             """;
 
-    // PostgreSQL and SQLite share this standard ISO upsert syntax.
-    private static final String UPSERT_SQL = """
-            INSERT INTO enderchests (player_uuid, container_data, migrated, last_updated)
-            VALUES (?, ?, 0, ?)
-            ON CONFLICT (player_uuid) DO UPDATE SET
-                container_data = EXCLUDED.container_data,
-                last_updated   = EXCLUDED.last_updated
-            """;
-
     public PostgresStorage(PluginConfig config) {
-        super(buildConfig(config), INIT_SQL, UPSERT_SQL);
+        super(buildConfig(config), INIT_SQL);
     }
 
     private static HikariConfig buildConfig(PluginConfig config) {

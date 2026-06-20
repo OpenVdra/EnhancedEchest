@@ -1,5 +1,6 @@
 package com.enhancedechest.migration;
 
+import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.storage.EnderChestStorage;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,9 @@ public final class MigrationService {
     private final Logger logger;
 
     /**
-     * Migrates a live online player's vanilla enderchest (27 slots) into the
-     * first 27 slots of the custom 54-slot storage.
+     * Migrates a live online player's vanilla enderchest (27 slots) into their chest #1.
+     * Chest #1 is created at full size if the player does not have it yet, then the vanilla
+     * contents are mapped into its first slots.
      *
      * @return true if migration ran; false if the player was already migrated or encode failed.
      */
@@ -35,11 +37,17 @@ public final class MigrationService {
             return false;
         }
 
+        // Ensure chest #1 exists (full size so all 27 vanilla slots always fit), then use its size.
+        storage.ensureChest(uuid, 1, ContainerCodec.MAX_SIZE);
+        EnderChestData chest = storage.loadChest(uuid, 1);
+        int size = chest != null ? chest.size() : ContainerCodec.MAX_SIZE;
+
         ItemStack[] vanilla = player.getEnderChest().getContents();
 
-        // Map vanilla slots 0-26 into custom slots 0-26; slots 27-53 stay empty.
-        ItemStack[] combined = new ItemStack[ContainerCodec.CHEST_SIZE];
-        System.arraycopy(vanilla, 0, combined, 0, vanilla.length);
+        // Map vanilla slots into the head of chest #1; remaining slots stay empty.
+        ItemStack[] combined = new ItemStack[size];
+        int copy = Math.min(vanilla.length, size);
+        System.arraycopy(vanilla, 0, combined, 0, copy);
 
         byte[] encoded;
         try {
@@ -51,7 +59,7 @@ public final class MigrationService {
 
         // Persist to DB, clear vanilla EC, and flag migrated — all in the same main-thread tick.
         // No window where items exist in both locations.
-        storage.save(uuid, encoded);
+        storage.saveChest(uuid, 1, encoded);
         player.getEnderChest().clear();
         storage.setMigrated(uuid, true);
 
