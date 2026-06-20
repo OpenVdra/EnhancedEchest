@@ -76,9 +76,11 @@ This is the most important part of the system and must not be regressed.
 
 `EnderChestService.save(holder, inventory)`:
 
-1. **Encode** the contents to bytes **synchronously** on the calling (entity) thread — fast, and
-   guarantees the snapshot reflects the inventory at close time.
-2. Submit the DB write to the async executor, storing the `CompletableFuture` in `pendingSaves`
+1. **Snapshot** visible slot contents synchronously on the calling (entity) thread.
+2. On the async executor: load the current DB row and `mergeAndEncode` — overlay the visible snapshot
+   onto any hidden trailing slots already stored (required when the GUI is smaller than the stored
+   byte length after a shrink). If no hidden slots exist, encode the snapshot directly.
+3. Submit the merged bytes via `saveChest`, storing the `CompletableFuture` in `pendingSaves`
    keyed by `SaveKey(owner, index)`. The future removes itself on completion.
 
 `waitPending` + this map are what let an open wait for a prior close's write to land. Encoding
@@ -124,8 +126,10 @@ or primary.
 ## Serialization
 
 `ContainerCodec` converts `ItemStack[] ⇄ byte[]`, parameterized by chest size on decode. `MAX_SIZE`
-is 54 and `SLOT_STEP` is 9. Decode failures throw `CodecException`, which the service surfaces to the
-player (`chest.codec-failed`) and refuses to open rather than risk clobbering stored data.
+is 54 and `SLOT_STEP` is 9. `storedSlotCount(byte[])` reads the positional slot count from stored
+bytes; `mergeAndEncode` preserves hidden trailing slots when saving a shrunk GUI. Decode failures
+throw `CodecException`, which the service surfaces to the player (`chest.codec-failed`) and refuses
+to open rather than risk clobbering stored data.
 
 ## Multi-chest UI (Dialog API)
 
@@ -152,8 +156,7 @@ There is never a window where the items exist in both places. Each player migrat
 ## Config & language
 
 `PluginConfig` reads `config.yml` (language, `enderchest.default-size`, database block, migration
-flag) and provides `isValidSize` / `sanitizeSize` (multiple of 9, clamped 9–54). `ConfigMigrations`
-defines key-rename rules applied by `YamlMigrator` on load so existing config/language files upgrade
+flag) and provides `isValidSize` / `sanitizeSize` (multiple of 9, clamped 9–54). `ConfigMigrations` defines key-rename rules applied by `YamlMigrator` on load so existing config/language files upgrade
 without manual edits.
 
 `LanguageManager` loads `language/<locale>/{messages,gui}.yml`, falling back to `en_US` if the locale

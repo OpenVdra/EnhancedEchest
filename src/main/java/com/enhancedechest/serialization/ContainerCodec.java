@@ -4,6 +4,7 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -103,6 +104,59 @@ public final class ContainerCodec {
         } catch (Exception e) {
             throw new CodecException("Failed to deserialize container vehicle", e);
         }
+    }
+
+    /**
+     * Returns how many positional slots are stored in {@code data}, capped at {@link #MAX_SIZE}.
+     * Returns 0 when data is null, empty, or malformed (malformed throws {@link CodecException}).
+     */
+    public int storedSlotCount(byte[] data) throws CodecException {
+        if (data == null || data.length < 2) {
+            return 0;
+        }
+
+        byte version = data[0];
+        if (version != FORMAT_VERSION) {
+            throw new CodecException("Unknown format version 0x" + String.format("%02X", version)
+                    + " — plugin may need updating before this data can be read");
+        }
+
+        byte[] vehicleBytes = Arrays.copyOfRange(data, 1, data.length);
+
+        try {
+            ItemStack vehicle = ItemStack.deserializeBytes(vehicleBytes);
+            ItemContainerContents containerContents = vehicle.getData(DataComponentTypes.CONTAINER);
+            if (containerContents == null) {
+                return 0;
+            }
+            return Math.min(containerContents.contents().size(), MAX_SIZE);
+        } catch (Exception e) {
+            throw new CodecException("Failed to read stored slot count", e);
+        }
+    }
+
+    /**
+     * Encodes a visible inventory snapshot, preserving hidden trailing slots from {@code existingData}
+     * when the stored container has more slots than the GUI that was open (shrink scenarios).
+     */
+    public byte[] mergeAndEncode(ItemStack[] visible, int visibleSize, @Nullable byte[] existingData)
+            throws CodecException {
+        if (existingData == null || existingData.length < 2) {
+            return encode(visible);
+        }
+
+        int stored = storedSlotCount(existingData);
+        if (stored <= visibleSize) {
+            return encode(visible);
+        }
+
+        ItemStack[] merged = decode(existingData, MAX_SIZE);
+        int copy = Math.min(visibleSize, visible != null ? visible.length : 0);
+        for (int i = 0; i < copy; i++) {
+            ItemStack item = visible[i];
+            merged[i] = isEmpty(item) ? ItemStack.empty() : item;
+        }
+        return encode(merged);
     }
 
     private static boolean isEmpty(ItemStack item) {

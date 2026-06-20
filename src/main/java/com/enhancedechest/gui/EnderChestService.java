@@ -13,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -34,8 +35,8 @@ import java.util.concurrent.TimeUnit;
  * <ul>
  *   <li>opening always closes any existing GUI first (sync, entity thread), then waits for any
  *       in-flight async DB save <i>of that same chest</i> before loading fresh data.</li>
- *   <li>save() encodes inventory bytes synchronously on the calling thread, then flushes to DB
- *       on a daemon thread, keyed by (owner, index).</li>
+ *   <li>save() snapshots inventory bytes synchronously on the calling thread, then flushes to DB
+ *       on a daemon thread, keyed by (owner, index). Shrunk GUIs merge with hidden trailing slots.</li>
  *   <li>flushPendingSaves() in onDisable() blocks until all writes finish before the pool closes.</li>
  * </ul>
  */
@@ -179,7 +180,6 @@ public final class EnderChestService {
     private int resolvePrimaryIndex(UUID uuid) {
         int index = storage.getPrimaryIndex(uuid);
         if (index == -1) {
-            // First-ever access: createChest flags this first chest as primary automatically.
             index = storage.createChest(uuid, defaultSize);
         }
         return index;
@@ -287,24 +287,19 @@ public final class EnderChestService {
 
     /**
      * Saves the inventory to the database asynchronously, keyed by (owner, chest index).
-     * Encodes bytes synchronously on the calling (entity) thread, then writes on a daemon thread.
+     * Snapshots visible slots synchronously on the calling (entity) thread, then merges with any
+     * hidden trailing slots from the DB row before writing on a daemon thread.
      */
     public void save(EnderChestHolder holder, Inventory inventory) {
         UUID uuid = holder.getOwner();
         int index = holder.getIndex();
-
-        byte[] encoded;
-        try {
-            encoded = codec.encode(inventory.getContents());
-        } catch (Exception e) {
-            logger.error("Codec encode failure for {} chest {} — data NOT saved to prevent corruption",
-                    uuid, index, e);
-            return;
-        }
+        int visibleSize = holder.getSize();
+        ItemStack[] visibleSnapshot = snapshotContents(inventory.getContents());
 
         SaveKey key = new SaveKey(uuid, index);
         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
             try {
+                byte[] encoded = encodeForSave(uuid, index, visibleSnapshot, visibleSize);
                 storage.saveChest(uuid, index, encoded);
             } catch (Exception e) {
                 logger.error("DB save failure for {} chest {}", uuid, index, e);
@@ -313,6 +308,23 @@ public final class EnderChestService {
 
         pendingSaves.put(key, future);
         future.whenComplete((v, e) -> pendingSaves.remove(key, future));
+    }
+
+    private byte[] encodeForSave(UUID uuid, int index, ItemStack[] visible, int visibleSize)
+            throws CodecException {
+        EnderChestData existing = storage.loadChest(uuid, index);
+        byte[] existingData = existing != null ? existing.containerData() : null;
+        return codec.mergeAndEncode(visible, visibleSize, existingData);
+    }
+
+    private static ItemStack[] snapshotContents(ItemStack[] contents) {
+        if (contents == null) return new ItemStack[0];
+        ItemStack[] copy = new ItemStack[contents.length];
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack item = contents[i];
+            copy[i] = (item == null || item.isEmpty()) ? ItemStack.empty() : item.clone();
+        }
+        return copy;
     }
 
     private CompletableFuture<Void> waitPending(UUID uuid, int index) {
