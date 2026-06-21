@@ -402,6 +402,17 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
     }
 
     @Override
+    public void clearPrimary(UUID owner) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_CLEAR_PRIMARY)) {
+            ps.setString(1, owner.toString());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to clear primary chest for " + owner, e);
+        }
+    }
+
+    @Override
     public boolean isMigrated(UUID owner) {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_IS_MIGRATED)) {

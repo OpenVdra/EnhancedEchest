@@ -13,7 +13,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Admin chest management: /ee add|resize|delete &lt;player&gt; [index] [size] [duration|force].
@@ -28,14 +31,19 @@ public final class ChestAdminCommand {
     private ChestAdminCommand() {}
 
     public static int add(CommandSourceStack source, String playerName, int size) {
-        return doAdd(source, playerName, size, null);
+        return doAdd(source, playerName, size, 1, null);
     }
 
-    public static int add(CommandSourceStack source, String playerName, int size, String duration) {
-        return doAdd(source, playerName, size, duration);
+    public static int add(CommandSourceStack source, String playerName, int size, int count) {
+        return doAdd(source, playerName, size, count, null);
     }
 
-    private static int doAdd(CommandSourceStack source, String playerName, int size, @Nullable String duration) {
+    public static int add(CommandSourceStack source, String playerName, int size, int count, String duration) {
+        return doAdd(source, playerName, size, count, duration);
+    }
+
+    private static int doAdd(CommandSourceStack source, String playerName, int size, int count,
+                             @Nullable String duration) {
         Ctx ctx = resolve(source, playerName);
         if (ctx == null) return 0;
 
@@ -43,6 +51,8 @@ public final class ChestAdminCommand {
             ctx.sender.sendMessage(ctx.lang.get("admin.invalid-size"));
             return 0;
         }
+
+        int total = Math.max(1, count);
 
         Long expiresAt = null;
         String durationLabel = null;
@@ -59,21 +69,58 @@ public final class ChestAdminCommand {
         }
 
         final String label = durationLabel;
-        ctx.service.createChestAsync(ctx.target, size, expiresAt).thenAccept(index -> {
+        createChests(ctx, total, size, expiresAt).thenAccept(indices -> {
+            if (indices.size() == 1) {
+                int index = indices.get(0);
+                if (label == null) {
+                    ctx.sender.sendMessage(ctx.lang.get("admin.chest-added",
+                            "player", playerName,
+                            "index", Integer.toString(index),
+                            "size", Integer.toString(size)));
+                } else {
+                    ctx.sender.sendMessage(ctx.lang.get("admin.chest-added-expiring",
+                            "player", playerName,
+                            "index", Integer.toString(index),
+                            "size", Integer.toString(size),
+                            "duration", label));
+                }
+                return;
+            }
+            String range = "#" + indices.get(0) + "–#" + indices.get(indices.size() - 1);
             if (label == null) {
-                ctx.sender.sendMessage(ctx.lang.get("admin.chest-added",
+                ctx.sender.sendMessage(ctx.lang.get("admin.chests-added",
                         "player", playerName,
-                        "index", Integer.toString(index),
+                        "count", Integer.toString(indices.size()),
+                        "range", range,
                         "size", Integer.toString(size)));
             } else {
-                ctx.sender.sendMessage(ctx.lang.get("admin.chest-added-expiring",
+                ctx.sender.sendMessage(ctx.lang.get("admin.chests-added-expiring",
                         "player", playerName,
-                        "index", Integer.toString(index),
+                        "count", Integer.toString(indices.size()),
+                        "range", range,
                         "size", Integer.toString(size),
                         "duration", label));
             }
         });
         return 1;
+    }
+
+    /**
+     * Creates {@code count} chests one after another (not concurrently): each {@code createChest}
+     * allocates the next free index as {@code max(index)+1}, so running them in parallel would race
+     * and could collide on that index. Returns the assigned indices in creation order.
+     */
+    private static CompletableFuture<List<Integer>> createChests(Ctx ctx, int count, int size,
+                                                                 @Nullable Long expiresAt) {
+        CompletableFuture<List<Integer>> chain = CompletableFuture.completedFuture(new ArrayList<>());
+        for (int i = 0; i < count; i++) {
+            chain = chain.thenCompose(indices ->
+                    ctx.service.createChestAsync(ctx.target, size, expiresAt).thenApply(index -> {
+                        indices.add(index);
+                        return indices;
+                    }));
+        }
+        return chain;
     }
 
     public static int resize(CommandSourceStack source, String playerName, int index, int size) {

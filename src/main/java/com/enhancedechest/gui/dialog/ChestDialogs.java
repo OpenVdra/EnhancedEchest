@@ -22,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -64,8 +65,15 @@ public final class ChestDialogs {
      *                    or null when opened by command; threaded into each detail dialog's Open
      */
     public Dialog listDialog(List<ChestSummary> chests, boolean canSetMain, @Nullable Location sourceBlock) {
-        List<ActionButton> buttons = new ArrayList<>(chests.size());
-        for (ChestSummary chest : chests) {
+        // Temporary chests always sort to the top so players notice them (they expire); within each
+        // group the natural index order is preserved.
+        List<ChestSummary> ordered = new ArrayList<>(chests);
+        ordered.sort(Comparator
+                .comparingInt((ChestSummary c) -> c.kind() == ChestKind.TEMP ? 0 : 1)
+                .thenComparingInt(ChestSummary::index));
+
+        List<ActionButton> buttons = new ArrayList<>(ordered.size());
+        for (ChestSummary chest : ordered) {
             Component label = lang.getChestLabel(chest.index(), chest.customName(), chest.kind());
             if (chest.primary()) {
                 label = label.append(Component.text(" ")).append(lang.getGui("dialog.main-tag"));
@@ -75,11 +83,17 @@ public final class ChestDialogs {
                     DialogAction.staticAction(ClickEvent.showDialog(detailDialog(chest, canSetMain, sourceBlock)))));
         }
 
+        // Dedicated close button (the dialog's exit action) — no action set means clicking it just
+        // dismisses the menu.
+        ActionButton close = ActionButton.builder(lang.getGui("dialog.close"))
+                .width(BUTTON_WIDTH)
+                .build();
+
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(lang.getGui("dialog.list-title"))
                         .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.list-body"), BODY_WIDTH)))
                         .build())
-                .type(DialogType.multiAction(buttons, null, 1)));
+                .type(DialogType.multiAction(buttons, close, 1)));
     }
 
     /**
@@ -107,12 +121,19 @@ public final class ChestDialogs {
             buttons.add(ActionButton.create(lang.getGui("dialog.rename"), lang.getGui("dialog.rename-desc"), BUTTON_WIDTH,
                     DialogAction.staticAction(ClickEvent.showDialog(renameDialog(chest)))));
 
-            // Set as main — mutates data, so it re-queries and is re-pushed from the server.
+            // Set as main / Unset main — mutates data, so it re-queries and is re-pushed from the server.
             if (canSetMain && !chest.primary()) {
                 buttons.add(ActionButton.create(lang.getGui("dialog.set-main"), lang.getGui("dialog.set-main-desc"),
                         BUTTON_WIDTH, click((view, audience) -> {
                             if (!(audience instanceof Player p)) return;
                             service.setPrimaryAsync(p.getUniqueId(), index)
+                                    .thenRun(() -> service.openDetailDialog(p, index));
+                        })));
+            } else if (canSetMain && chest.primary()) {
+                buttons.add(ActionButton.create(lang.getGui("dialog.unset-main"), lang.getGui("dialog.unset-main-desc"),
+                        BUTTON_WIDTH, click((view, audience) -> {
+                            if (!(audience instanceof Player p)) return;
+                            service.clearPrimaryAsync(p.getUniqueId())
                                     .thenRun(() -> service.openDetailDialog(p, index));
                         })));
             }

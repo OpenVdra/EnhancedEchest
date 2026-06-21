@@ -43,8 +43,8 @@ permission `enhancedechest.admin` **and** the command-specific permission listed
 
 <div class="command-section">
 
-<CommandRow :commands="['/ee add &lt;player&gt; &lt;size&gt; [duration]']" permission="enhancedechest.admin.add">
-Give a player a new chest. <code>&lt;size&gt;</code> is the slot count — a multiple of <code>9</code> from <code>9</code> to <code>54</code>. The optional <code>[duration]</code> makes it a <strong>temporary chest</strong> that expires after that time (e.g. <code>7d</code>, <code>1h</code>, <code>1d_12h</code>); omit it for a permanent chest. The new chest is added at the next free index and is not made main.
+<CommandRow :commands="['/ee add &lt;player&gt; &lt;size&gt; [count] [duration]']" permission="enhancedechest.admin.add">
+Give a player a new chest. <code>&lt;size&gt;</code> is the slot count — a multiple of <code>9</code> from <code>9</code> to <code>54</code>. The optional <code>[count]</code> creates several chests at once (defaults to <code>1</code>). The optional <code>[duration]</code> — pass it after a count, e.g. <code>/ee add Steve 54 1 7d</code> — makes them <strong>temporary chests</strong> that expire after that time (e.g. <code>7d</code>, <code>1h</code>, <code>1d_12h</code>); omit it for permanent chests. Each new chest is added at the next free index and is not made main.
 </CommandRow>
 
 <CommandRow :commands="['/ee resize &lt;player&gt; &lt;index&gt; &lt;size&gt;']" permission="enhancedechest.admin.resize">

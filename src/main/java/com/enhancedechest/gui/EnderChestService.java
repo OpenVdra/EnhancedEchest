@@ -397,6 +397,10 @@ public final class EnderChestService {
         return CompletableFuture.runAsync(() -> storage.setPrimary(owner, index), asyncExecutor);
     }
 
+    public CompletableFuture<Void> clearPrimaryAsync(UUID owner) {
+        return CompletableFuture.runAsync(() -> storage.clearPrimary(owner), asyncExecutor);
+    }
+
     /** Runs the given action on the player's entity thread (helper for command/dialog callbacks). */
     public void runForPlayer(Player player, Runnable action) {
         foliaLib.getScheduler().runAtEntity(player, task -> action.run());

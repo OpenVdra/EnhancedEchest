@@ -107,6 +107,9 @@ public interface EnderChestStorage {
     /** Makes the given chest the player's primary, clearing the flag from all others. */
     void setPrimary(UUID owner, int index);
 
+    /** Clears the primary flag from all of the player's chests, leaving them with no main chest. */
+    void clearPrimary(UUID owner);
+
     /** Returns true if the player's chest #1 has its migrated flag set. */
     boolean isMigrated(UUID owner);
 

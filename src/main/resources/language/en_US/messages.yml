@@ -34,6 +34,8 @@ admin:
   chest-not-found: '{prefix}&f{player} has no ender chest with index {index}.'
   chest-added: '{prefix}&fAdded ender chest {index} with {size} slots to {player}.'
   chest-added-expiring: '{prefix}&fAdded ender chest {index} with {size} slots to {player}. It will expire in {duration}.'
+  chests-added: '{prefix}&fAdded {count} ender chests ({range}) with {size} slots to {player}.'
+  chests-added-expiring: '{prefix}&fAdded {count} ender chests ({range}) with {size} slots to {player}. They will expire in {duration}.'
   chest-resized: '{prefix}&fResized ender chest {index} of {player} to {size} slots.'
   chest-deleted: '{prefix}&fDeleted ender chest {index} of {player}. Its items were discarded.'
   chest-deleted-spilled: '{prefix}&fDeleted ender chest {index} of {player}. Any items it held were moved to a temporary chest.'

@@ -51,8 +51,15 @@ dialog:
   set-main: '<gold>★ <white>Set as main'
   set-main-desc: '<white>Make this the chest opened by /ec and by right-clicking an ender chest block.'
 
+  # Unset-main button — clears the main flag (shown only on the current main chest).
+  unset-main: '<gray>☆ <white>Unset main'
+  unset-main-desc: '<white>Stop using this chest as your main. /ec will open the management menu again.'
+
   # Back button — returns to the chest list.
   back: '<gray>← <white>Back'
+
+  # Close button — closes the chest list dialog (shown on the list as the exit action).
+  close: '<red>✖ <white>Close'
 
   # Save button — saves the typed name (rename dialog).
   save-name: '<green>✔ <white>Save'
