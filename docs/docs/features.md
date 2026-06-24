@@ -2,7 +2,7 @@
 
 Here is an overview of everything **EnhancedEchest** brings to your Minecraft server.
 
-<img class="showcase-shot" alt="Managing several ender chests in EnhancedEchest" src="/EnhancedEchest/multiple-enderchests.gif" />
+<img class="showcase-shot" alt="Managing several ender chests in EnhancedEchest" src="/multiple-enderchests.gif" />
 
 ## 📦 Larger Ender Chests
 
