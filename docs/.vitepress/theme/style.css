@@ -81,7 +81,10 @@
 .placeholder-row img {
     display: block;
     width: 100%;
-    height: auto;
+    /* Normalize side-by-side screenshots to one box shape so the columns line up.
+       Ratio matches the more portrait shot, so only side background gets cropped. */
+    aspect-ratio: 1013 / 1067;
+    object-fit: cover;
     border-radius: 12px;
     border: 1px solid var(--vp-c-border);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);

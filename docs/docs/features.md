@@ -1,10 +1,24 @@
 # Features ✨
 
-Here is an overview of everything **EnhancedEchest** brings to your Minecraft server.
+Here is an overview of everything **EnhancedEchest** brings to your Minecraft server. Jump straight to what you're after:
 
-<img class="showcase-shot" alt="Managing several ender chests in EnhancedEchest" src="/multiple-enderchests.gif" />
+<CardGrid>
 
-## 📦 Larger Ender Chests
+<DocCard icon="📦" title="Larger Ender Chests" link="#larger-ender-chests" desc="Up to 54 slots, configurable in multiples of nine." />
+
+<DocCard icon="🗂️" title="Multi-Chest System" link="#multi-chest-system" desc="Own several chests, each managed from an in-game menu." />
+
+<DocCard icon="💾" title="Database Storage" link="#database-storage" desc="SQLite, MySQL, MariaDB, or PostgreSQL; async and pooled." />
+
+<DocCard icon="🛡️" title="No Item Duplication" link="#no-item-duplication" desc="Dupe-safe by design, even with shared and admin viewers." />
+
+<DocCard icon="🔄" title="Migration" link="#migration" desc="Import players' existing vanilla ender chest data." />
+
+<DocCard icon="🌿" title="Cross-Platform" link="#cross-platform-support" desc="One jar for Paper, Folia, and Purpur forks." />
+
+</CardGrid>
+
+## 📦 Larger Ender Chests {#larger-ender-chests}
 
 EnhancedEchest replaces the vanilla 27-slot ender chest with a configurable GUI of up to **54 slots**.
 
@@ -36,7 +50,7 @@ The default size for a player's first chest is set with <code>enderchest.default
 
 ---
 
-## 🗂️ Multi-Chest System
+## 🗂️ Multi-Chest System {#multi-chest-system}
 
 Players are no longer limited to one ender chest. Each player can own several, managed through an in-game menu.
 
@@ -77,21 +91,25 @@ With <code>/ee view &lt;player&gt;</code> an admin can open any player's chest, 
 
 </CardGrid>
 
-<!-- Customization flow screenshots. Replace each placeholder <div> with an image, e.g.:
-       <figure><img alt="..." src="..." /><figcaption>Caption</figcaption></figure>
-     The .placeholder-row frames and sizes any <img> dropped inside it. Delete a box you don't want. -->
 <div class="placeholder-row">
-<img width="1162" height="1067" alt="detail" src="https://github.com/user-attachments/assets/76bc97fa-1dcb-4e39-8bde-9504ebc4d768" />
-
-<img width="1013" height="1067" alt="rename" src="https://github.com/user-attachments/assets/573814dd-6f58-4e9c-b65a-58842e3ba2a2" />
-
-<img width="1802" height="1068" alt="icon" src="https://github.com/user-attachments/assets/ce6b235b-980c-4403-86d3-503c25f32d77" />
-
+  <figure>
+    <img width="1162" height="1067" alt="A chest's management menu with rename, icon, and set-as-main options" src="https://github.com/user-attachments/assets/76bc97fa-1dcb-4e39-8bde-9504ebc4d768" />
+    <figcaption>A chest's management screen: rename it, choose an icon, or set it as your main.</figcaption>
+  </figure>
+  <figure>
+    <img width="1013" height="1067" alt="The rename prompt for an ender chest" src="https://github.com/user-attachments/assets/573814dd-6f58-4e9c-b65a-58842e3ba2a2" />
+    <figcaption>Renaming a chest; the name you enter becomes its inventory title.</figcaption>
+  </figure>
 </div>
+
+<figure class="feature-figure">
+  <img width="1802" height="1068" alt="The searchable item picker for choosing a chest icon" src="https://github.com/user-attachments/assets/ce6b235b-980c-4403-86d3-503c25f32d77" />
+  <figcaption>Pick any item as the chest's icon with the searchable item picker.</figcaption>
+</figure>
 
 ---
 
-## 💾 Database Storage
+## 💾 Database Storage {#database-storage}
 
 Every chest's contents are serialized and stored in a database, not in flat player files.
 
@@ -115,7 +133,7 @@ See the [Database](/docs/database) page for connection setup.
 
 ---
 
-## 🛡️ No Item Duplication
+## 🛡️ No Item Duplication {#no-item-duplication}
 
 EnhancedEchest is built so that ender chest contents can never be duplicated through reload exploits.
 
@@ -126,7 +144,7 @@ EnhancedEchest is built so that ender chest contents can never be duplicated thr
 
 ---
 
-## 🔄 Migration
+## 🔄 Migration {#migration}
 
 Already have players with vanilla ender chest data? EnhancedEchest can import it.
 
@@ -138,7 +156,7 @@ See the [Migration](/docs/migration) page for details.
 
 ---
 
-## 🌿 Cross-Platform Support
+## 🌿 Cross-Platform Support {#cross-platform-support}
 
 EnhancedEchest uses a region-aware scheduler (FoliaLib) under the hood, so the same jar runs on:
 
