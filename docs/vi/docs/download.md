@@ -1,6 +1,6 @@
-# Download EnhancedEchest
+# Tải về EnhancedEchest
 
-Choose your preferred download source:
+Chọn nguồn tải bạn ưa thích:
 
 <div style="display: flex; gap: 16px; flex-wrap: wrap; margin: 2rem 0;">
   <a href="https://modrinth.com/plugin/enhancedechest" target="_blank" rel="noreferrer" style="display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-border); border-radius: 10px; text-decoration: none; color: var(--vp-c-text-1); font-weight: 600; transition: border-color 0.2s;">
@@ -17,23 +17,23 @@ Choose your preferred download source:
   </a>
 </div>
 
-::: info Modrinth release
-The Modrinth page is being prepared and may not be public yet. Until it goes live, grab the latest build from **Spigot** or **Hangar** above.
+::: info Bản phát hành trên Modrinth
+Trang Modrinth đang được chuẩn bị và có thể chưa công khai. Cho đến khi nó hoạt động, hãy lấy bản build mới nhất từ **Spigot** hoặc **Hangar** ở trên.
 :::
 
-## Requirements
+## Yêu cầu
 
-| Requirement | Specification |
-|-------------|---------------|
-| **Minecraft Version** | 26.1.x only |
-| **Server Software** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) or compatible Paper forks |
-| **Java Version** | Java 25 |
+| Yêu cầu | Thông số |
+|---------|----------|
+| **Phiên bản Minecraft** | Chỉ 26.1.x |
+| **Phần mềm máy chủ** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) hoặc các bản fork tương thích Paper |
+| **Phiên bản Java** | Java 25 |
 
-## Installation
+## Cài đặt
 
-1. **Stop your server** completely
-2. Download the latest `.jar` file from a source above
-3. Place it in your server's `plugins/` folder
-4. **Start your server** (do not use `/reload`)
+1. **Dừng máy chủ** của bạn hoàn toàn
+2. Tải file `.jar` mới nhất từ một nguồn ở trên
+3. Đặt nó vào thư mục `plugins/` của máy chủ
+4. **Khởi động máy chủ** (đừng dùng `/reload`)
 
-See the [Installation Guide](/docs/installation) for full setup instructions.
+Xem [Hướng dẫn cài đặt](/vi/docs/installation) để biết hướng dẫn thiết lập đầy đủ.

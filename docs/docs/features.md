@@ -189,13 +189,6 @@ code path in the plugin. Keep your Geyser build reasonably up to date for the sm
 conversion.
 :::
 
-<!-- TODO(showcase): replace this box with a screenshot of the /eclist menu as a Bedrock form via Geyser. -->
-<div class="showcase-placeholder">
-  <span class="sp-icon">🪨</span>
-  <span class="sp-title">Showcase: the menu as a Bedrock form</span>
-  <span class="sp-hint">Drop a screenshot of a Bedrock client viewing the chest menu through Geyser here.</span>
-</div>
-
 ---
 
 ## 🔔 Update Notifications

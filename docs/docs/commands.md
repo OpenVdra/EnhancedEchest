@@ -28,13 +28,6 @@ Always open the <strong>management menu</strong> listing all your chests, even i
 
 </div>
 
-<!-- TODO(showcase): replace this box with a screenshot or GIF of the /eclist management menu. -->
-<div class="showcase-placeholder">
-  <span class="sp-icon">🖼️</span>
-  <span class="sp-title">Showcase: the <code>/eclist</code> management menu</span>
-  <span class="sp-hint">Drop a screenshot or GIF of the in-game chest list here.</span>
-</div>
-
 ::: tip Right-clicking an ender chest block
 Right-clicking a placed ender chest block opens your chest with the **same routing** as `/ec` (single
 chest → direct; several + main set → main; several without a main → menu). The block itself needs **no
@@ -82,13 +75,6 @@ Reload the configuration and language files from disk without restarting the ser
 Import vanilla ender chest contents into the plugin's storage, either for a single online <code>&lt;player&gt;</code> or for everyone with <code>all</code>. Each player's vanilla chest is migrated into their chest&nbsp;#1 only once.
 </CommandRow>
 
-</div>
-
-<!-- TODO(showcase): replace this box with a screenshot or GIF of /ee view on another player's chest. -->
-<div class="showcase-placeholder">
-  <span class="sp-icon">🛠️</span>
-  <span class="sp-title">Showcase: an admin using <code>/ee view</code></span>
-  <span class="sp-hint">Drop a screenshot or GIF of viewing another player's chest here.</span>
 </div>
 
 ::: tip Offline players

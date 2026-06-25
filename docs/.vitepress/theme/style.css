@@ -26,39 +26,6 @@
     font-weight: 600;
 }
 
-/* Placeholder slots for screenshots / GIFs. Drop an <img> in place of the box,
-   or keep the box while the media is being prepared. */
-.showcase-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    text-align: center;
-    min-height: 200px;
-    margin: 24px 0;
-    padding: 28px 20px;
-    border: 2px dashed var(--vp-c-border);
-    border-radius: 14px;
-    background: var(--vp-c-bg-soft);
-    color: var(--vp-c-text-2);
-}
-
-.showcase-placeholder .sp-icon {
-    font-size: 2rem;
-    line-height: 1;
-}
-
-.showcase-placeholder .sp-title {
-    font-weight: 700;
-    color: var(--vp-c-text-1);
-}
-
-.showcase-placeholder .sp-hint {
-    font-size: 0.85rem;
-    color: var(--vp-c-text-3);
-}
-
 /* Row of placeholders/screenshots that sit side by side on wide viewports and
    wrap to one column on narrow ones. Any <img> dropped in gets framed to match. */
 .placeholder-row {

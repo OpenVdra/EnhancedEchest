@@ -2,13 +2,6 @@
 
 **EnhancedEchest** is a free, open-source Minecraft plugin that upgrades the vanilla ender chest into a larger, persistent, multi-chest storage system. Instead of three cramped rows that live inside a single player file, every player gets ender chests of up to **54 slots**, saved to a real database so the contents survive restarts, world resets, and server migrations.
 
-<!-- TODO(showcase): replace this box with a screenshot or GIF showing the plugin overview. -->
-<div class="showcase-placeholder">
-  <span class="sp-icon">🎬</span>
-  <span class="sp-title">Showcase: EnhancedEchest overview</span>
-  <span class="sp-hint">Drop a banner screenshot or short GIF tour of the plugin here.</span>
-</div>
-
 ## Quick Navigation
 
 <CardGrid>

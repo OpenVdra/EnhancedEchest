@@ -14,7 +14,7 @@ docs/
 │   │   └── table/         # CommandRow, PermCommandRow, PermRow, BaseTable
 │   ├── theme/             # Custom theme overrides (style.css, index.js)
 │   └── config.mts         # VitePress config (nav, sidebar)
-├── docs/                  # All documentation pages
+├── docs/                  # All documentation pages (English, root locale)
 │   ├── commands.md
 │   ├── configuration.md
 │   ├── database.md
@@ -24,10 +24,26 @@ docs/
 │   ├── language.md
 │   ├── migration.md
 │   └── permissions.md
+├── vi/                    # Vietnamese locale, mirrors the root structure
+│   ├── docs/              # Translated documentation pages
+│   └── index.md           # Translated home page
 ├── public/                # Static assets (logo, favicon)
 ├── index.md               # Home page
 └── package.json
 ```
+
+## Internationalization (i18n)
+
+The site is multilingual via VitePress's built-in i18n. Locales are declared in
+`.vitepress/config.mts` under `locales`: `root` (English, served from `/`) and `vi`
+(Tiếng Việt, served from `/vi/`). Each locale carries its own `nav`, `sidebar`, and UI
+labels; shared `themeConfig` (logo, social links, search) stays at the top level and is
+merged in. A language-switcher dropdown is added to the nav automatically.
+
+To add another language, add a locale entry in `config.mts` and create a folder mirroring
+the root content (`<lang>/index.md` + `<lang>/docs/*.md`). The Vue components are registered
+globally, so only the text inside the markdown needs translating. Use locale-prefixed links
+(e.g. `/vi/docs/database`) inside translated pages.
 
 ## Development
 
