@@ -2,7 +2,8 @@ package com.enhancedechest;
 
 import com.enhancedechest.command.EnderChestOpenCommand;
 import com.enhancedechest.command.admin.ChestAdminCommand;
-import com.enhancedechest.command.admin.MigrateRunCommand;
+import com.enhancedechest.command.admin.MigrateAxVaultsCommand;
+import com.enhancedechest.command.admin.MigrateVanillaCommand;
 import com.enhancedechest.command.admin.ReloadCommand;
 import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.Message;
@@ -31,11 +32,10 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
 
     /** Permission to open the ender chest GUI via command ({@code /enderchest}, {@code /eclist}). */
     private static final String OPEN_GUI_PERMISSION = "enhancedechest.command.open";
-    // Admin commands require the base node AND the command-specific node. Brigadier enforces both:
-    // the root literal checks the base, each subcommand checks its own node.
-    private static final String ADMIN_BASE_PERMISSION = "enhancedechest.command.admin";
+    // Admin subcommands each gate on their own permission node; there is no separate base-command
+    // permission on the root literal (a player with any one node can run that subcommand).
     private static final String ADMIN_RELOAD_PERMISSION = "enhancedechest.admin.reload";
-    private static final String ADMIN_MIGRATE_PERMISSION = "enhancedechest.admin.migrate.run";
+    private static final String ADMIN_MIGRATE_PERMISSION = "enhancedechest.admin.migrate";
     private static final String ADMIN_ADD_PERMISSION = "enhancedechest.admin.add";
     private static final String ADMIN_RESIZE_PERMISSION = "enhancedechest.admin.resize";
     private static final String ADMIN_DELETE_PERMISSION = "enhancedechest.admin.delete";
@@ -300,15 +300,26 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     private void registerAdminCommands(Commands commands) {
         commands.register(
                 Commands.literal("enhancedechest")
-                        .requires(src -> src.getSender().hasPermission(ADMIN_BASE_PERMISSION))
                         .then(Commands.literal("migrate")
-                                .then(Commands.literal("run")
+                                // /ee migrate vanilla [all|<player>] — import vanilla ender chests
+                                .then(Commands.literal("vanilla")
                                         .requires(src -> src.getSender().hasPermission(ADMIN_MIGRATE_PERMISSION))
                                         .then(Commands.literal("all")
-                                                .executes(ctx -> MigrateRunCommand.executeAll(ctx.getSource())))
+                                                .executes(ctx -> MigrateVanillaCommand.executeAll(ctx.getSource())))
                                         .then(Commands.argument("player", StringArgumentType.word())
                                                 .suggests(ONLINE_PLAYERS)
-                                                .executes(ctx -> MigrateRunCommand.executePlayer(
+                                                .executes(ctx -> MigrateVanillaCommand.executePlayer(
+                                                        ctx.getSource(),
+                                                        StringArgumentType.getString(ctx, "player")))))
+                                // /ee migrate axvaults [all|<player>] — import vaults from AxVaults
+                                .then(Commands.literal("axvaults")
+                                        .requires(src -> src.getSender().hasPermission(ADMIN_MIGRATE_PERMISSION))
+                                        .executes(ctx -> MigrateAxVaultsCommand.executeAll(ctx.getSource()))
+                                        .then(Commands.literal("all")
+                                                .executes(ctx -> MigrateAxVaultsCommand.executeAll(ctx.getSource())))
+                                        .then(Commands.argument("player", StringArgumentType.word())
+                                                .suggests(KNOWN_PLAYERS)
+                                                .executes(ctx -> MigrateAxVaultsCommand.executePlayer(
                                                         ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "player"))))))
                         .then(Commands.literal("reload")

@@ -107,11 +107,11 @@ With <code>/ee view &lt;player&gt;</code> an admin can open any player's chest, 
 
 ## Migration {#migration}
 
-Already have players with vanilla ender chest data? EnhancedEchest can import it.
+Already have players with ender chest data? EnhancedEchest can import it from vanilla ender chests or from the AxVaults plugin.
 
 - When <code>migration.enabled</code> is <code>true</code>, an un-migrated player's vanilla ender chest is imported automatically on join
-- Admins can trigger migration manually for one player or everyone online with <code>/ee migrate run</code>
-- Each player is migrated only once
+- Admins can trigger vanilla migration manually with <code>/ee migrate vanilla</code>
+- Import from AxVaults with <code>/ee migrate axvaults</code>, including offline players (tested with AxVaults 2.15.0)
 
 See the [Migration](/docs/migration) page for details.
 

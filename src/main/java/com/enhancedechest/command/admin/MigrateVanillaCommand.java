@@ -10,9 +10,14 @@ import org.bukkit.entity.Player;
 
 import java.util.Collection;
 
-public final class MigrateRunCommand {
+/**
+ * {@code /enhancedechest migrate vanilla [all|<player>]} — migrates online players' vanilla
+ * ender chests into their EnhancedEchest chest #1. For importing from the AxVaults plugin instead,
+ * see {@link MigrateAxVaultsCommand}.
+ */
+public final class MigrateVanillaCommand {
 
-    private MigrateRunCommand() {}
+    private MigrateVanillaCommand() {}
 
     public static int executeAll(CommandSourceStack source) {
         EnhancedEchestPlugin plugin = resolve(source);

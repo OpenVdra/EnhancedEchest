@@ -10,8 +10,9 @@ via `ChestAdminCommand.resolveUuid` → `OfflinePlayer#hasPlayedBefore`), so the
 provider — online names first, then offline names once a prefix is typed (capped at
 `MAX_PLAYER_SUGGESTIONS`, scanned only when non-empty to keep the empty state tidy and cheap). `view`'s
 index suggestions (`TARGET_CHESTS`) resolve the target via `knownPlayerUuid` (cache-only, no blocking
-`getOfflinePlayer(String)` web lookup), so they work for offline owners too. `migrate run` is
-**online-only** (it reads the live vanilla ender chest), so it keeps the `ONLINE_PLAYERS` provider.
+`getOfflinePlayer(String)` web lookup), so they work for offline owners too. `migrate vanilla` is
+**online-only** (it reads the live vanilla ender chest), so it keeps the `ONLINE_PLAYERS` provider;
+`migrate axvaults` reads the AxVaults DB and works offline, so it uses `KNOWN_PLAYERS`.
 
 ## Player commands (`command/EnderChestOpenCommand`)
 
@@ -54,13 +55,14 @@ feature stops syncing but leaves existing PERM chests in place. No schema change
 
 ## Admin commands (`/enhancedechest`, alias `/ee` — `command/admin/`)
 
-Root requires `enhancedechest.command.admin`; each subcommand additionally requires its own node (Brigadier
-checks both).
+The root literal has **no permission requirement** of its own; each subcommand gates on its own node only
+(there is no base `enhancedechest.command.admin` permission).
 
 | Subcommand | Permission | Action |
 |-----------|-----------|--------|
 | `reload` | `enhancedechest.admin.reload` | Reload config + language (`ReloadCommand`) |
-| `migrate run <player>\|all` | `enhancedechest.admin.migrate.run` | Import vanilla EC → chest #1 (`MigrateRunCommand`, see [migration-config-language.md](migration-config-language.md)) |
+| `migrate vanilla <player>\|all` | `enhancedechest.admin.migrate` | Import vanilla EC → chest #1 (`MigrateVanillaCommand`, see [migration-config-language.md](migration-config-language.md)) |
+| `migrate axvaults [<player>]` | `enhancedechest.admin.migrate` | Import AxVaults vaults → matching chest index (`MigrateAxVaultsCommand` / `AxVaultsReader` / `AxVaultsMigrationService`; skips a chest that already has data) |
 | `add <player> <size> [count] [duration]` | `enhancedechest.admin.add` | Grant chest(s); `duration` makes them expire (`ChestAdminCommand.add`) |
 | `resize <player> <index> <size>` | `enhancedechest.admin.resize` | Resize, spilling cut-off items to a temp chest. **Rejected on a PERM chest** (`admin.cannot-modify-perm`) |
 | `delete <player> <count> [force]` | `enhancedechest.admin.delete` | Delete the `count` newest **NORMAL** chests; first chest always kept; `force` discards items. PERM chests are skipped |
@@ -95,9 +97,8 @@ owner operations) — see [ui-dialogs.md](ui-dialogs.md).
 enhancedechest.command.open       open /ec, /eclist, "set as main"
 enhancedechest.additional_amount.<count>.slot.<size>
                                   grant <count> chests of <size> slots (stacks; no op default)
-enhancedechest.command.admin      root for all admin subcommands
 enhancedechest.admin.reload
-enhancedechest.admin.migrate.run
+enhancedechest.admin.migrate       /ee migrate vanilla and /ee migrate axvaults
 enhancedechest.admin.add
 enhancedechest.admin.resize
 enhancedechest.admin.delete

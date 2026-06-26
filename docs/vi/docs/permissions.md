@@ -14,7 +14,7 @@ Xem [Rương Cấp Theo Quyền](#permission-granted-chests) bên dưới để 
 
 ## Quản Trị Viên
 
-Mọi lệnh `/ee` đều cần node cơ sở **`enhancedechest.command.admin`** cùng với node riêng của từng lệnh:
+Mỗi lệnh `/ee` chỉ cần đúng node riêng của lệnh đó. Không còn node cơ sở chung:
 
 **`enhancedechest.admin.add`** — `/ee add`: cấp cho người chơi một rương mới.
 
@@ -28,10 +28,10 @@ Mọi lệnh `/ee` đều cần node cơ sở **`enhancedechest.command.admin`**
 
 **`enhancedechest.admin.reload`** — `/ee reload`: tải lại file cấu hình và ngôn ngữ.
 
-**`enhancedechest.admin.migrate.run`** — `/ee migrate run`: nhập dữ liệu rương Ender vanilla.
+**`enhancedechest.admin.migrate`** — `/ee migrate vanilla` và `/ee migrate axvaults`: nhập dữ liệu từ rương Ender vanilla hoặc từ plugin AxVaults.
 
 ::: tip
-Để cấp toàn quyền quản trị một lần, cấp cả `enhancedechest.command.admin` và `enhancedechest.admin.*` (nếu plugin quyền của bạn hỗ trợ wildcard).
+Để cấp toàn quyền quản trị một lần, cấp `enhancedechest.admin.*` (nếu plugin quyền của bạn hỗ trợ wildcard).
 :::
 
 ## Rương Cấp Theo Quyền {#permission-granted-chests}

@@ -34,6 +34,8 @@ dependencies {
     shade("com.zaxxer:HikariCP:7.1.0")
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.9")   // compatible with MySQL 5.7+ and 8.x
     shade("org.postgresql:postgresql:42.7.11")
+    // Read-only driver for migrating from H2-backed AxVaults installs (matches AxVaults' H2 version).
+    shade("com.h2database:h2:2.1.214")
     shade("com.tcoded:FoliaLib:0.5.2")
     shade("org.bstats:bstats-bukkit:3.2.1")
 
@@ -72,6 +74,7 @@ tasks.shadowJar {
     relocate("com.zaxxer.hikari", "com.enhancedechest.libs.hikari")
     relocate("org.mariadb.jdbc", "com.enhancedechest.libs.mariadb")
     relocate("org.postgresql",   "com.enhancedechest.libs.postgresql")
+    relocate("org.h2",           "com.enhancedechest.libs.h2")
     relocate("com.ongres",       "com.enhancedechest.libs.ongres")
     relocate("com.tcoded.folialib", "com.enhancedechest.libs.folialib")
     relocate("org.bstats",          "com.enhancedechest.libs.bstats")
@@ -96,6 +99,7 @@ tasks.processResources {
 tasks.runServer {
 //    downloadPlugins {
 //        modrinth("luckperms", "v5.5.53-bukkit")
+//        modrinth("axvaults", "2.15.0")
 //    }
     minecraftVersion("26.1.2")
 }

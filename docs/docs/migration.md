@@ -1,12 +1,16 @@
 # Migration
 
-If your players already have items in their **vanilla** ender chests, EnhancedEchest can import that data into its own storage so nothing is lost when you install the plugin.
+EnhancedEchest can import existing ender chest data into its own storage so nothing is lost when you install it. Two sources are supported: the **vanilla** ender chest, and the **AxVaults** plugin.
 
-## How It Works
+## From Vanilla Ender Chests
+
+If your players already have items in their vanilla ender chests, EnhancedEchest can import that data.
+
+### How It Works
 
 When a player is migrated, their vanilla ender chest slots are copied into their EnhancedEchest **chest #1**, and the vanilla ender chest is cleared. Each player is migrated **only once** and is skipped on subsequent joins.
 
-## Automatic Migration on Join
+### Automatic Migration on Join
 
 To migrate players automatically the first time they join after the plugin is installed, enable it in `config.yml`:
 
@@ -17,21 +21,47 @@ migration:
 
 With this on, any un-migrated player has their vanilla ender chest imported the moment they join. Once everyone you care about has logged in, you can turn it back off.
 
-## Manual Migration
+### Manual Migration
 
 Admins can trigger migration on demand for players who are online:
 
 | Command | Effect |
 |---------|--------|
-| `/ee migrate run <player>` | Migrate a single online player |
-| `/ee migrate run all` | Migrate every player currently online |
+| `/ee migrate vanilla <player>` | Migrate a single online player |
+| `/ee migrate vanilla all` | Migrate every player currently online |
 
-Both require the `enhancedechest.admin.migrate.run` permission. Players who are already migrated are reported as skipped.
+Both require the `enhancedechest.admin.migrate` permission. Players who are already migrated are reported as skipped.
 
 ::: warning Online players only
 Migration reads the player's live vanilla ender chest, so it only works for players who are **currently online**. Offline players are migrated automatically on their next join if `migration.enabled` is `true`.
 :::
 
-## Purpur (and Paper forks) {#purpur}
+### Purpur (and Paper forks) {#purpur}
 
 Purpur's enlarged ender chest (`ender-chest.six-rows` / per-permission rows `purpur.enderchest.rows.<n>`) is supported with no extra setup. Purpur keeps it in the standard ender chest data, so migration captures all rows the player had (up to the full 54 slots), not just the first 27. Just run the migration as above while the server runs on Purpur.
+
+## From AxVaults {#axvaults}
+
+EnhancedEchest can import vaults from the [AxVaults](https://modrinth.com/plugin/axvaults) plugin, including all items with their custom names, lore, and enchantments. This was tested against **AxVaults 2.15.0**.
+
+Each AxVaults vault is imported into the EnhancedEchest chest with the **same number**: vault #1 becomes chest #1, vault #2 becomes chest #2, and so on. The vault size is matched to a chest large enough to hold every item.
+
+### Before You Start
+
+The migration reads the AxVaults database directly, so two things matter:
+
+- **Save AxVaults first.** AxVaults keeps open vaults in memory and only writes them to its database periodically. Run `/vaultadmin save` once so every vault is flushed to disk before you migrate.
+- **Use SQLite, or stop AxVaults for H2.** AxVaults' default H2 database is locked while AxVaults is running, so it cannot be read live. Either set `database.type: sqlite` in `AxVaults/config.yml` (its `data.db` can be read while the server runs), or stop the source server first if it uses H2. EnhancedEchest auto-detects whichever AxVaults database file is present in `plugins/AxVaults`.
+
+### Running It
+
+| Command | Effect |
+|---------|--------|
+| `/ee migrate axvaults` | Import vaults for every player in the AxVaults database |
+| `/ee migrate axvaults <player>` | Import vaults for a single player (online or offline) |
+
+Both require the `enhancedechest.admin.migrate` permission. The import runs in the background and reports how many players and vaults were imported when it finishes.
+
+::: tip Safe to re-run
+A vault is **never** imported over a chest that already holds items. If a player already has a chest at that number, that vault is reported as skipped and left untouched, so running the command twice will not duplicate or overwrite anything.
+:::

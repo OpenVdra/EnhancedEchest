@@ -29,6 +29,13 @@ migrate:
   player-offline: '{prefix}&f{player} không trực tuyến.'
   success: '{prefix}&fĐã chuyển dữ liệu cho {player} thành công.'
   already-done: '{prefix}&f{player} đã được chuyển dữ liệu từ trước.'
+  axvaults:
+    no-source: '{prefix}&fKhông tìm thấy cơ sở dữ liệu AxVaults trong plugins/AxVaults (data.db hoặc data.mv.db).'
+    started: '{prefix}&fĐang nhập kho từ AxVaults… tiến trình chạy nền.'
+    complete: '{prefix}&fNhập AxVaults xong. {players} người chơi, {vaults} kho đã nhập, {skipped} bỏ qua, {failed} lỗi.'
+    player-complete: '{prefix}&fNhập AxVaults cho {player}: {vaults} kho đã nhập, {skipped} bỏ qua.'
+    unknown-player: '{prefix}&fKhông tìm thấy người chơi tên "{player}".'
+    failed: '{prefix}&fNhập AxVaults thất bại: {error}'
 
 admin:
   reload-success: '{prefix}&fĐã tải lại cấu hình.'

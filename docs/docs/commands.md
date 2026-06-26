@@ -26,7 +26,7 @@ Right-clicking an ender chest block follows the same routing as `/ec`. No permis
 
 ## Admin Commands
 
-All `/ee` commands require `enhancedechest.command.admin` plus the specific permission listed on each command.
+Each `/ee` command requires only the specific permission listed on it. There is no separate base permission. All admin nodes default to `op`.
 
 <CommandRow commands="/ee add &lt;player&gt; &lt;size&gt; [count] [duration]" permission="enhancedechest.admin.add">
 
@@ -58,8 +58,14 @@ Reloads config and language files without restarting.
 
 </CommandRow>
 
-<CommandRow :commands="['/ee migrate run &lt;player&gt;', '/ee migrate run all']" permission="enhancedechest.admin.migrate.run">
+<CommandRow :commands="['/ee migrate vanilla &lt;player&gt;', '/ee migrate vanilla all']" permission="enhancedechest.admin.migrate">
 
 Imports vanilla ender chest contents into the plugin. Each player is migrated only once. Requires the player to be online.
+
+</CommandRow>
+
+<CommandRow :commands="['/ee migrate axvaults', '/ee migrate axvaults &lt;player&gt;']" permission="enhancedechest.admin.migrate">
+
+Imports vaults from the AxVaults plugin into matching EnhancedEchest chests. Works for offline players and reads the AxVaults database directly. See the [Migration](/docs/migration#axvaults) page for setup.
 
 </CommandRow>

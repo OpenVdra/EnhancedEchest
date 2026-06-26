@@ -36,7 +36,7 @@ com.enhancedechest
 ├── EnhancedEchestPlugin      JavaPlugin — wires services, listeners, startup banner, shutdown
 ├── command/
 │   ├── EnderChestOpenCommand        /enderchest (open, #index, name), /eclist
-│   └── admin/ChestAdminCommand      /ee add | resize | delete | view  (+ reload, migrate run)
+│   └── admin/ChestAdminCommand      /ee add | resize | delete | view  (+ reload, migrate vanilla | axvaults)
 ├── service/
 │   ├── ChestSessionManager   dupe-safety core: shared live-inventory sessions registry, attach/detach,
 │   │                         pending-save tracking, runExclusive / forceCloseAll (one closed class)

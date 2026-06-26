@@ -1,12 +1,26 @@
 # Migration, config, language & updates
 
-## Migration (`migration/MigrationService`)
+## Migration (`migration/MigrationService`) — vanilla
 
 `migrateOnline(player)` imports a player's 27-slot vanilla ender chest into their EnhancedEchest chest #1,
 in a single main-thread tick: ensure chest #1 exists at full size → copy vanilla contents into its head
 slots → save to DB → clear the vanilla EC → set the `migrated` flag. There is never a window where the
 items exist in both places. Each player migrates once (`isMigrated` guard). Triggered automatically on
-join when `migration.enabled` (`JoinMigrationListener`), or manually with `/ee migrate run <player>|all`.
+join when `migration.enabled` (`JoinMigrationListener`), or manually with `/ee migrate vanilla <player>|all`.
+
+## Migration (`migration/AxVaultsReader` + `AxVaultsMigrationService`) — AxVaults
+
+Offline-capable import from the AxVaults plugin: `/ee migrate axvaults [<player>]` (`MigrateAxVaultsCommand`,
+runs on `DbExecutor`). `AxVaultsReader` opens the AxVaults DB in `plugins/AxVaults` directly — SQLite
+`data.db` (read-only, readable while the source server runs) or H2 `data.mv.db` (file-locked while AxVaults
+runs, so the source must be stopped or switched to SQLite); the shaded+relocated H2 driver
+(`com.enhancedechest.libs.h2`) handles the latter. The `axvaults_data.storage` blob is big-endian
+`[int slotCount]` then per slot `[ushort len][len bytes]`; each item's bytes are gzip-NBT **identical to
+Paper `ItemStack.serializeAsBytes`**, so each decodes via `ItemStack.deserializeBytes`. Each vault is
+written into the EE chest of the **same index** (`ensureChest`/`resize`+`saveChest`), sized up to a multiple
+of 9 (cap 54). **Skip-guard:** a chest that already has `container_data` is never overwritten (reported as
+skipped), so the import is idempotent and dupe-safe. AxVaults flushes to its DB only on autosave/quit/
+`/vaultadmin save`, so save before importing. Tested against AxVaults 2.15.0.
 
 ## Config (`config/PluginConfig`)
 

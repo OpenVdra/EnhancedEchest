@@ -14,7 +14,7 @@ See [Permission-Granted Chests](#permission-granted-chests) below for full detai
 
 ## Admin
 
-Every `/ee` command requires the base node **`enhancedechest.command.admin`** plus a specific node:
+Each `/ee` command requires only its own node. There is no separate base permission:
 
 **`enhancedechest.admin.add`** — `/ee add`: give a player a new chest.
 
@@ -28,10 +28,10 @@ Every `/ee` command requires the base node **`enhancedechest.command.admin`** pl
 
 **`enhancedechest.admin.reload`** — `/ee reload`: reload config and language files.
 
-**`enhancedechest.admin.migrate.run`** — `/ee migrate run`: import vanilla ender chest data.
+**`enhancedechest.admin.migrate`** — `/ee migrate vanilla` and `/ee migrate axvaults`: import data from vanilla ender chests or from the AxVaults plugin.
 
 ::: tip
-To grant full admin access in one go, give both `enhancedechest.command.admin` and `enhancedechest.admin.*` (if your plugin supports wildcards).
+To grant full admin access in one go, give `enhancedechest.admin.*` (if your permission plugin supports wildcards).
 :::
 
 ## Permission-Granted Chests {#permission-granted-chests}

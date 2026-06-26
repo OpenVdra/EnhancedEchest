@@ -18,29 +18,25 @@ commands:
   enhancedechest:
     description: EnhancedEchest admin commands
     aliases: [ ee ]
-    usage: /enhancedechest <migrate run> | reload
-    permission: enhancedechest.command.admin
+    usage: /enhancedechest <migrate vanilla|axvaults> | reload | add | resize | delete | view
 
 permissions:
   enhancedechest.command.open:
     description: Open the ender chest GUI via command (/enderchest, /eclist). Block right-click never needs this.
     default: op
-  # Admin commands require the base node AND the command-specific node below (no inheritance).
-  enhancedechest.command.admin:
-    description: Base permission required for every /enhancedechest admin command
-    default: op
+  # Each admin command gates on its own node; there is no separate base-command permission.
   enhancedechest.admin.reload:
-    description: Use /ee reload (also requires enhancedechest.command.admin)
+    description: Use /ee reload
     default: op
-  enhancedechest.admin.migrate.run:
-    description: Use /ee migrate run (also requires enhancedechest.command.admin)
+  enhancedechest.admin.migrate:
+    description: Use /ee migrate vanilla and /ee migrate axvaults
     default: op
   enhancedechest.admin.add:
-    description: Use /ee add (also requires enhancedechest.command.admin)
+    description: Use /ee add
     default: op
   enhancedechest.admin.resize:
-    description: Use /ee resize (also requires enhancedechest.command.admin)
+    description: Use /ee resize
     default: op
   enhancedechest.admin.delete:
-    description: Use /ee delete (also requires enhancedechest.command.admin)
+    description: Use /ee delete
     default: op
