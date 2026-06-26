@@ -4,7 +4,7 @@ Nếu người chơi của bạn đã có vật phẩm trong rương Ender **van
 
 ## Cách Hoạt Động
 
-Khi một người chơi được chuyển, 27 ô rương Ender vanilla của họ được sao chép vào **rương #1** của EnhancedEchest và rương Ender vanilla được xóa sạch. Mỗi người chơi chỉ được chuyển **đúng một lần** và bị bỏ qua trong các lần tiếp theo.
+Khi một người chơi được chuyển, các ô rương Ender vanilla của họ được sao chép vào **rương #1** của EnhancedEchest và rương Ender vanilla được xóa sạch. Mỗi người chơi chỉ được chuyển **đúng một lần** và bị bỏ qua trong các lần tiếp theo.
 
 ## Tự Động Chuyển Khi Vào
 
@@ -31,3 +31,7 @@ Cả hai đều cần quyền `enhancedechest.admin.migrate.run`. Người chơi
 ::: warning Chỉ người chơi trực tuyến
 Việc chuyển đọc rương Ender vanilla trực tiếp của người chơi, nên chỉ hoạt động với người **đang trực tuyến**. Người chơi ngoại tuyến sẽ được chuyển tự động ở lần vào tiếp theo nếu `migration.enabled` là `true`.
 :::
+
+## Purpur (và các bản fork của Paper) {#purpur}
+
+Rương Ender mở rộng của Purpur (`ender-chest.six-rows` / số hàng theo quyền `purpur.enderchest.rows.<n>`) được hỗ trợ mà không cần cấu hình thêm. Purpur lưu nó trong dữ liệu rương Ender tiêu chuẩn, nên khi chuyển sẽ lấy được toàn bộ số hàng người chơi đã có (lên tới đủ 54 ô), chứ không chỉ 27 ô đầu. Chỉ cần chạy chuyển dữ liệu như trên trong khi server đang chạy Purpur.
