@@ -4,41 +4,43 @@
 
 # EnhancedEchest
 
-Give players multiple ender chests with up to 54 slots each, custom names, and icons, all from one clean in-game menu.
+A Paper plugin that replaces the vanilla ender chest with a larger, multi-chest, database-backed storage system.
 
 [![Modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/modrinth_vector.svg)](https://modrinth.com/plugin/enhancedechest)
 [![Spigot](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/spigot_vector.svg)](https://www.spigotmc.org/resources/enhancedechest-double-echest-plugin-%E2%9C%A8-26-1-2-26-2-%EF%B8%8F.136442/)
-
 [![Hangar](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/hangar_vector.svg)](https://hangar.papermc.io/Nighter/EnhancedEchest)
 [![Documentation](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/documentation/ghpages_vector.svg)](https://openvdra.github.io/EnhancedEchest/)
-[![discord-plural](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/social/discord-plural_46h.png)](http://discord.com/invite/FJN7hJKPyb)
+[![Discord](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/social/discord-plural_46h.png)](http://discord.com/invite/FJN7hJKPyb)
 
 </div>
 
-## Features
-
-- 📦 **Up to 54 slots**: a full double chest instead of the vanilla 27
-- 🗂️ **Multiple chests per player**: open, name, and switch between them from an in-game menu
-- 💾 **Database-backed**: SQLite (zero setup), MySQL, MariaDB, or PostgreSQL
-- 🛡️ **No duplication**: fresh load on open, immediate save on close
-- 🔄 **Migration**: import existing vanilla ender chest contents
-- 🌿 **Folia ready**: runs on Paper, Folia, and Paper forks; all libraries bundled
-
 ## Requirements
 
-- Paper 26.1.x (or Folia / a Paper fork), this exact minor line only
+- Paper 26.1.x (or a compatible fork such as Purpur / Folia)
 - Java 25
 
-## Quick Start
+## Installation
 
 1. Download the latest `.jar` from [Releases](https://github.com/OpenVdra/EnhancedEchest/releases) or [Modrinth](https://modrinth.com/plugin/enhancedechest).
-2. Drop it into your server's `plugins/` folder.
-3. Restart the server. It runs on SQLite out of the box.
+2. Place it in your server's `plugins/` directory.
+3. Restart the server. SQLite is used by default and requires no additional setup.
+
+## Building from source
+
+```bash
+./gradlew build
+```
+
+The output jar is placed in `build/libs/` and copied to `TestServer/plugins/` automatically via the `shadowJar` task. Adjust the destination path in `build.gradle.kts` if your test server is located elsewhere.
+
+## Documentation
+
+Full configuration reference, command list, permission nodes, and database setup are available at [openvdra.github.io/EnhancedEchest](https://openvdra.github.io/EnhancedEchest/).
+
+## License
+
+Licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
 
 ## Credits
 
 Plugin icon by [m11.dalp.sh](https://m11.dalp.sh/).
-
-## License
-
-Licensed under the GPLv3 License. See [LICENSE](LICENSE) for details.
