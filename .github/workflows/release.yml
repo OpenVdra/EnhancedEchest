@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Dry run: build and validate, but do not publish to Modrinth, Hangar, or Discord"
+        description: "Dry run: build only, do not publish to Modrinth, Hangar, or Discord"
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: write   # needed to attach the built jar to the release
@@ -19,7 +19,7 @@ permissions:
 env:
   # Game versions these uploads target. Must match the version lists that exist on
   # Modrinth and Hangar. Keep this set in sync with the platforms when you add a new one.
-  GAME_VERSIONS: "26.1, 26.1.1, 26.1.2, 26.2"
+  GAME_VERSIONS: "26.1,26.1.1,26.1.2,26.2"
   MODRINTH_ID: "xgEWccga"
   # Your project slug on hangar.papermc.io. Verify it matches the project you created.
   HANGAR_SLUG: "EnhancedEchest"
@@ -57,6 +57,7 @@ jobs:
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
 
       - name: Publish to Modrinth and attach to the GitHub release
+        if: env.DRY_RUN != 'true'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ env.MODRINTH_ID }}
@@ -68,8 +69,10 @@ jobs:
           version-type: release
           loaders: paper
           game-versions: ${{ env.GAME_VERSIONS }}
+          # Pass the versions through verbatim; the default filter drops any version
+          # not in mc-publish's bundled Minecraft manifest (which has no 26.x entries).
+          game-version-filter: none
           changelog: ${{ github.event.release.body }}
-          dry-run: ${{ env.DRY_RUN }}
 
       - name: Publish to Hangar
         if: env.DRY_RUN != 'true'
