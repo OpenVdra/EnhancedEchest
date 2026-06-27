@@ -11,10 +11,9 @@ permissions:
   contents: write   # needed to attach the built jar to the release
 
 env:
-  # Minecraft version(s) these uploads target on Modrinth and Hangar. Matches the
-  # minecraftVersion / api-version in the build. Adjust if you publish for more versions,
-  # e.g. "1.21.4" or a comma/space separated list.
-  GAME_VERSIONS: "26.1.2"
+  # Game versions these uploads target. Must match the version lists that exist on
+  # Modrinth and Hangar. Keep this set in sync with the platforms when you add a new one.
+  GAME_VERSIONS: "26.1, 26.1.1, 26.1.2, 26.2"
   MODRINTH_ID: "xgEWccga"
   # Your project slug on hangar.papermc.io. Verify it matches the project you created.
   HANGAR_SLUG: "EnhancedEchest"
@@ -74,7 +73,7 @@ jobs:
               { "path": "${{ steps.meta.outputs.jar }}", "platforms": ["PAPER"] }
             ]
           platform_dependencies: |
-            { "PAPER": ["${{ env.GAME_VERSIONS }}"] }
+            { "PAPER": ["26.1", "26.1.1", "26.1.2", "26.2"] }
 
       - name: Announce on Discord
         if: success()
