@@ -55,48 +55,33 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
 
-      # Make sure a GitHub Release (and its tag) exists for this version. On a
-      # `release: published` event it already does — we just take its tag. On a manual
-      # `workflow_dispatch` run we create the tag + Release from the Gradle version if it
-      # isn't there yet, so "Run workflow" is enough to cut a release. The tag is the bare
-      # version (e.g. 1.0.2), no "v" prefix. Creating a release with GITHUB_TOKEN does not
-      # re-trigger this workflow, so there is no double publish.
-      - name: Ensure GitHub release exists
-        id: release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          VERSION: ${{ steps.meta.outputs.version }}
-          INPUT_CHANGELOG: ${{ github.event.inputs.changelog }}
-        run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            TAG="${{ github.event.release.tag_name }}"
-          else
-            TAG="$VERSION"
-            if ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
-              if [ -n "$INPUT_CHANGELOG" ]; then
-                gh release create "$TAG" --repo "$REPO" --target "${{ github.ref_name }}" \
-                  --title "EnhancedEchest $VERSION" --notes "$INPUT_CHANGELOG"
-              else
-                gh release create "$TAG" --repo "$REPO" --target "${{ github.ref_name }}" \
-                  --title "EnhancedEchest $VERSION" --generate-notes
-              fi
-            fi
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      # Resolve the changelog once from the GitHub Release (single source of truth) and
-      # reuse it for Modrinth, Hangar and Discord. This is why the version showed up but
-      # the changelog was blank before — version comes from Gradle, the changelog lives on
-      # the release.
+      # Resolve the changelog, in priority order:
+      #   1. the changelog typed into the "Run workflow" input (manual override);
+      #   2. the section for this version in CHANGELOG.md (the `## <version> - <date>`
+      #      block, keep-a-changelog style) — this is the normal path: keep CHANGELOG.md
+      #      up to date and the notes flow automatically;
+      #   3. the body of an already-published GitHub Release (UI publish);
+      #   4. a fallback line.
+      # Reused for the auto-created release, Modrinth, Hangar and Discord.
       - name: Resolve changelog
         id: changelog
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          INPUT_CHANGELOG: ${{ github.event.inputs.changelog }}
+          RELEASE_BODY: ${{ github.event.release.body }}
         run: |
-          BODY=$(gh release view "$TAG" --repo "$REPO" --json body --jq '.body' 2>/dev/null || true)
+          BODY="$INPUT_CHANGELOG"
+          if [ -z "$BODY" ] && [ -f CHANGELOG.md ]; then
+            # Print everything between `## <version> ...` and the next `## ` heading,
+            # then strip leading/trailing blank lines.
+            BODY=$(awk -v ver="$VERSION" '
+              /^## / { if (found) exit; if ($2 == ver) { found=1; next } }
+              found { print }
+            ' CHANGELOG.md | awk 'NF {p=1} p' | tac | awk 'NF {p=1} p' | tac)
+          fi
+          if [ -z "$BODY" ]; then
+            BODY="$RELEASE_BODY"
+          fi
           if [ -z "$BODY" ]; then
             BODY="See the GitHub release for details."
           fi
@@ -105,6 +90,31 @@ jobs:
             echo "$BODY"
             echo "__CHANGELOG_EOF__"
           } >> "$GITHUB_OUTPUT"
+
+      # Make sure a GitHub Release (and its tag) exists for this version. On a
+      # `release: published` event it already does — we just take its tag. On a manual
+      # `workflow_dispatch` run we create the tag + Release from the Gradle version (using
+      # the changelog resolved above) if it isn't there yet, so "Run workflow" is enough to
+      # cut a release. The tag is the bare version (e.g. 1.0.2), no "v" prefix. Creating a
+      # release with GITHUB_TOKEN does not re-trigger this workflow, so no double publish.
+      - name: Ensure GitHub release exists
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          CHANGELOG: ${{ steps.changelog.outputs.body }}
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="$VERSION"
+            if ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+              gh release create "$TAG" --repo "$REPO" --target "${{ github.ref_name }}" \
+                --title "EnhancedEchest $VERSION" --notes "$CHANGELOG"
+            fi
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           URL=$(gh release view "$TAG" --repo "$REPO" --json url --jq '.url' 2>/dev/null || true)
           if [ -z "$URL" ]; then
             URL="https://github.com/$REPO/releases"
@@ -147,7 +157,7 @@ jobs:
               version_type: "release",
               changelog: $changelog,
               game_versions: $game_versions,
-              loaders: ["paper"],
+              loaders: ["paper", "purpur", "folia"],
               dependencies: [],
               featured: true,
               file_parts: ["file"],
@@ -181,5 +191,5 @@ jobs:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
           embed-title: "EnhancedEchest ${{ steps.meta.outputs.version }} released"
           embed-description: ${{ steps.changelog.outputs.body }}
-          embed-url: ${{ steps.changelog.outputs.url }}
+          embed-url: ${{ steps.release.outputs.url }}
           embed-color: "5763719"
