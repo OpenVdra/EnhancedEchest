@@ -56,29 +56,25 @@ database:
 
 The default PostgreSQL port is **5432**, so remember to change `port` from the MySQL default.
 
-## Tables & Schema
+## Tables
 
-The plugin creates and manages its own tables — you never write any SQL yourself. On the current version these are:
+The plugin creates and manages its own database tables automatically. You never need to write any SQL yourself.
 
-| Table | Purpose |
-|-------|---------|
-| `enderchests` | One row per chest (contents, size, name, icon, kind, expiry) — the core storage. |
-| `players` | One row per player: preferences (edit-mode), the permission-managed base-chest size baseline, and their most recent in-game name (for resolving **offline** players — see below). |
-| `schema_meta` | Records the schema version the database is on, used by the automatic upgrader below. |
+| Table | Stores |
+|-------|--------|
+| `enderchests` | Every chest's contents, size, name, and icon. |
+| `players` | Each player's settings and their last known username (used for offline lookups, see below). |
+| `schema_meta` | The database version, used for automatic upgrades. |
 
-### Automatic, versioned upgrades
+### Automatic upgrades
 
-When you update the plugin, its database schema can change (new columns, renamed/merged tables). EnhancedEchest upgrades an existing database **automatically and safely** on startup:
+When you update the plugin, it upgrades your existing database automatically on startup. No manual steps, no data loss, existing chests and their contents are always preserved.
 
-- A fresh database is created directly at the latest schema.
-- An existing database is compared against the version recorded in `schema_meta`, and only the newer migration steps are applied. Each step first checks whether its change is already present (column exists, old table is gone, etc.), so a re-run — or a partially-upgraded database — never errors.
-- Every migration is additive — existing rows and their contents are preserved. (Upgrading from a version before 1.0.4, the old `player_settings` table is merged into `players` and then dropped.)
-
-No manual migration or `ALTER TABLE` is ever required. As always, keep a backup (the SQLite [auto-backup](/docs/configuration), or your own MySQL/Postgres dump) before a major upgrade, just in case.
+As always, keep a backup (the SQLite [auto-backup](/docs/configuration), or your own MySQL/PostgreSQL dump) before a major upgrade, just in case.
 
 ### Offline player lookups
 
-`/ee view`, `/ee add`, `/ee resize`, `/ee delete`, and `/ee transfer` can find a player by name while they are offline, including while you are still typing the name for tab completion. This uses the plugin's own record of player names, kept up to date automatically the first time each player opens their ender chest. A brand new player is found this way after their first login and chest open; before that, the server's own player list is used instead.
+`/ee view`, `/ee add`, `/ee resize`, `/ee delete`, and `/ee transfer` can find a player by name even while they are offline, including while you are still typing the name for tab completion. This works automatically once a player has opened their ender chest at least once. Brand new players are found through the server's own player list until then.
 
 ## Sharing Data Across Servers
 

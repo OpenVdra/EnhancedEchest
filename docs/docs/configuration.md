@@ -32,12 +32,12 @@ Slot count of the chest that is auto-created the first time a player ever opens 
 | <code>45</code> | 5 |
 | <code>54</code> | 6 (double chest) |
 
-You can also override the base chest size <strong>per player</strong> with the <code>enhancedechest.default_size.&lt;size&gt;</code> permission (always available, no config needed) — see the <a href="/docs/permissions#default-size-permission">Permissions</a> page.
+You can also override the base chest size <strong>per player</strong> with the <code>enhancedechest.default_size.&lt;size&gt;</code> permission (always available, no config needed). See the <a href="/docs/permissions#default-size-permission">Permissions</a> page.
 
 </ConfigProperty>
 
 <ConfigProperty name="features.rename" value="true" type="boolean">
-Whether players may give a chest a custom display name from the <strong>Edit mode</strong> menu. Turning this off hides the <strong>Rename</strong> button; chests that already have a name keep it. This is a <strong>global</strong> switch — it applies to every player the same way.
+Whether players may give a chest a custom display name from the <strong>Edit mode</strong> menu. Turning this off hides the <strong>Rename</strong> button; chests that already have a name keep it. This is a <strong>global</strong> switch, it applies to every player the same way.
 </ConfigProperty>
 
 <ConfigProperty name="features.icon" value="true" type="boolean">

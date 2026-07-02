@@ -63,12 +63,12 @@ Việc cấp theo quyền chỉ hoạt động khi `permission-chests.enabled: t
 Mỗi người chơi có một rương Ender **cơ bản** (rương đầu tiên của họ, số `#1`). Kích thước của nó bình thường là `enderchest.default-size` toàn cục. Quyền `enhancedechest.default_size.<size>` ghi đè kích thước đó **theo từng người chơi**, để một rank có thể nhận rương khởi đầu lớn hơn (hoặc nhỏ hơn) mà không cần dùng lệnh nào.
 
 - **`<size>`**: số ô, bội số của 9 từ 9 đến 54.
-- **Lớn nhất thắng**: nếu người chơi vô tình giữ cả `...27` và `...54`, họ sẽ nhận 54. (Khác với các rương *bổ sung*, vốn cộng dồn — người chơi chỉ có một rương cơ bản, nên chỉ có một kích thước để chọn.)
-- **Cấp thì tăng, thu hồi thì giảm**: nhận quyền sẽ đổi kích thước rương cơ bản theo đó. Tăng kích thước giữ nguyên mọi vật phẩm. Giảm kích thước (quyền nhỏ hơn, hoặc mất quyền hoàn toàn) sẽ dồn phần dư sang một rương tạm khôi phục được — giống hệt quyền rương bổ sung. Mất quyền sẽ đưa rương cơ bản về lại `enderchest.default-size`.
-- **Được quyền quản lý khi đang áp dụng**: khi một quyền `default_size` đang áp dụng cho người chơi, rương cơ bản của họ hoạt động như một rương được cấp theo quyền đối với quản trị viên — `/ee resize` từ chối thay đổi nó (kích thước thuộc quyền sở hữu của quyền đó). Điều này đúng cả với người chơi ngoại tuyến.
-- **Luôn khả dụng**: đây là tính năng thuần theo quyền, không có công tắc cấu hình — chỉ cần cấp (hoặc không cấp) node.
-- Đồng bộ ở lần mở rương tiếp theo của người chơi — không cần đăng nhập lại.
+- **Lớn nhất thắng**: nếu người chơi vô tình giữ cả `...27` và `...54`, họ sẽ nhận 54. (Khác với các rương *bổ sung*, vốn cộng dồn, vì người chơi chỉ có một rương cơ bản, nên chỉ có một kích thước để chọn.)
+- **Cấp thì tăng, thu hồi thì giảm**: nhận quyền sẽ đổi kích thước rương cơ bản theo đó. Tăng kích thước giữ nguyên mọi vật phẩm. Giảm kích thước (quyền nhỏ hơn, hoặc mất quyền hoàn toàn) sẽ dồn phần dư sang một rương tạm khôi phục được, giống hệt quyền rương bổ sung. Mất quyền sẽ đưa rương cơ bản về lại `enderchest.default-size`.
+- **Được quyền quản lý khi đang áp dụng**: khi một quyền `default_size` đang áp dụng cho người chơi, rương cơ bản của họ hoạt động như một rương được cấp theo quyền đối với quản trị viên. `/ee resize` từ chối thay đổi nó, vì kích thước thuộc quyền sở hữu của quyền đó. Điều này đúng cả với người chơi ngoại tuyến.
+- **Luôn khả dụng**: đây là tính năng thuần theo quyền, không có công tắc cấu hình, chỉ cần cấp (hoặc không cấp) node.
+- Đồng bộ ở lần mở rương tiếp theo của người chơi, không cần đăng nhập lại.
 
 ::: tip Tương tác với rương bổ sung
-Node này định kích thước rương **cơ bản**; `additional_amount` cấp các rương **bổ sung**. Chúng độc lập với nhau — một người chơi có thể có rương cơ bản 54 ô từ `default_size.54` *và* thêm hai rương nữa từ `additional_amount.2.slot.54`.
+Node này định kích thước rương **cơ bản**; `additional_amount` cấp các rương **bổ sung**. Chúng độc lập với nhau: một người chơi có thể có rương cơ bản 54 ô từ `default_size.54` *và* thêm hai rương nữa từ `additional_amount.2.slot.54`.
 :::

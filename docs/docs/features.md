@@ -43,7 +43,7 @@ The default size for a player's first chest is set with <code>enderchest.default
 - Valid sizes: <code>9</code>, <code>18</code>, <code>27</code>, <code>36</code>, <code>45</code>, <code>54</code>
 - Invalid values are rounded to the nearest valid size
 - Defaults to <code>54</code> (a full double chest)
-- Per-player override by permission — see the <a href="/docs/permissions#default-size-permission">Permissions</a> page
+- Per-player override by permission, see the <a href="/docs/permissions#default-size-permission">Permissions</a> page
 
 </FeatureCard>
 
@@ -73,9 +73,9 @@ Players personalize their chests straight from the in-game menu, no commands nee
 
 - <strong>Rename it</strong>: a named chest shows that name as its inventory title
 - <strong>Choose an icon</strong>: pick any item to represent the chest in the list, with a searchable item picker, or reset to the default ender-chest icon
-- <strong>Sort it</strong>: tidy the chest in one click — identical items are merged into full stacks and everything is reordered by item type (off by default; enable it under <code>enderchest.features.sort</code>)
+- <strong>Sort it</strong>: tidy the chest in one click. Identical items are merged into full stacks and everything is reordered by item type (off by default; enable it under <code>enderchest.features.sort</code>)
 
-Each of these can be turned on or off server-wide under <code>enderchest.features</code> in <code>config.yml</code>. The toggles are global (they apply to every player) — see the <a href="/docs/configuration">Configuration</a> page.
+Each of these can be turned on or off server-wide under <code>enderchest.features</code> in <code>config.yml</code>. The toggles are global (they apply to every player), see the <a href="/docs/configuration">Configuration</a> page.
 
 </FeatureCard>
 

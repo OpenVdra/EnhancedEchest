@@ -63,12 +63,12 @@ Permission grants only apply while `permission-chests.enabled: true` in `config.
 Every player has one **base** ender chest (their first chest, number `#1`). Its size is normally the global `enderchest.default-size`. The `enhancedechest.default_size.<size>` permission overrides that size **per player**, so a rank can get a bigger (or smaller) starting chest without any command.
 
 - **`<size>`**: slot count, a multiple of 9 from 9 to 54.
-- **Largest wins**: if a player somehow holds `...27` and `...54`, they get 54. (This differs from the *additional* chests, which stack — a player only has one base chest, so there is one size to pick.)
-- **Grant grows, revoke shrinks**: gaining the permission resizes the base chest to it. Growing keeps every item. Shrinking (a smaller permission, or losing it entirely) moves the overflow into a recoverable temporary chest — exactly like the additional-chest permission. Losing the permission shrinks the base chest back to `enderchest.default-size`.
-- **Permission-managed while set**: while a `default_size` permission applies to a player, their base chest behaves like a permission-granted chest for admins — `/ee resize` refuses to change it (its size is owned by the permission). This holds even for offline players.
-- **Always available**: this is a pure permission feature with no config switch — simply grant (or don't grant) the node.
-- Syncs on the player's next chest open — no relog needed.
+- **Largest wins**: if a player somehow holds `...27` and `...54`, they get 54. (This differs from the *additional* chests, which stack, since a player only has one base chest, so there is one size to pick.)
+- **Grant grows, revoke shrinks**: gaining the permission resizes the base chest to it. Growing keeps every item. Shrinking (a smaller permission, or losing it entirely) moves the overflow into a recoverable temporary chest, exactly like the additional-chest permission. Losing the permission shrinks the base chest back to `enderchest.default-size`.
+- **Permission-managed while set**: while a `default_size` permission applies to a player, their base chest behaves like a permission-granted chest for admins. `/ee resize` refuses to change it, since its size is owned by the permission. This holds even for offline players.
+- **Always available**: this is a pure permission feature with no config switch, simply grant (or don't grant) the node.
+- Syncs on the player's next chest open, no relog needed.
 
 ::: tip Interaction with additional chests
-This node sizes the **base** chest; `additional_amount` grants **extra** chests. They are independent — a player can have a 54-slot base chest from `default_size.54` *and* two more from `additional_amount.2.slot.54`.
+This node sizes the **base** chest; `additional_amount` grants **extra** chests. They are independent: a player can have a 54-slot base chest from `default_size.54` *and* two more from `additional_amount.2.slot.54`.
 :::

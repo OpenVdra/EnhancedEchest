@@ -56,29 +56,25 @@ database:
 
 Port mặc định của PostgreSQL là **5432**, nhớ đổi `port` khỏi giá trị mặc định của MySQL.
 
-## Bảng & Schema
+## Các Bảng
 
-Plugin tự tạo và quản lý các bảng của riêng nó — bạn không bao giờ phải tự viết SQL. Ở phiên bản hiện tại, đó là:
+Plugin tự tạo và quản lý các bảng cơ sở dữ liệu của riêng nó. Bạn không bao giờ cần tự viết SQL.
 
-| Bảng | Mục đích |
-|------|----------|
-| `enderchests` | Mỗi hàng là một rương (nội dung, kích thước, tên, biểu tượng, loại, thời hạn) — nơi lưu trữ chính. |
-| `players` | Mỗi hàng là một người chơi: tùy chọn (chế độ chỉnh sửa), kích thước rương cơ bản do quyền quản lý, và tên trong game gần nhất của họ (để tra cứu người chơi **ngoại tuyến** — xem bên dưới). |
-| `schema_meta` | Ghi lại phiên bản schema mà cơ sở dữ liệu đang dùng, được bộ nâng cấp tự động bên dưới sử dụng. |
+| Bảng | Lưu gì |
+|------|--------|
+| `enderchests` | Nội dung, kích thước, tên và biểu tượng của mọi rương. |
+| `players` | Tùy chọn của từng người chơi và tên trong game gần nhất của họ (dùng để tra cứu người chơi ngoại tuyến, xem bên dưới). |
+| `schema_meta` | Phiên bản cơ sở dữ liệu, dùng cho việc nâng cấp tự động. |
 
-### Nâng Cấp Tự Động, Có Phiên Bản
+### Nâng cấp tự động
 
-Khi bạn cập nhật plugin, schema cơ sở dữ liệu có thể thay đổi (thêm cột, đổi tên/gộp bảng). EnhancedEchest nâng cấp một cơ sở dữ liệu sẵn có **tự động và an toàn** khi khởi động:
+Khi bạn cập nhật plugin, cơ sở dữ liệu sẵn có sẽ tự động được nâng cấp khi khởi động. Không cần thao tác thủ công, không mất dữ liệu, các rương và nội dung sẵn có luôn được giữ nguyên.
 
-- Một cơ sở dữ liệu mới được tạo thẳng ở schema mới nhất.
-- Một cơ sở dữ liệu sẵn có được so sánh với phiên bản ghi trong `schema_meta`, và chỉ những bước nâng cấp mới hơn mới được áp dụng. Mỗi bước đều kiểm tra trước xem thay đổi của nó đã tồn tại chưa (cột đã có, bảng cũ đã mất, v.v.), nên chạy lại — hay một cơ sở dữ liệu nâng cấp dở dang — không bao giờ báo lỗi.
-- Mọi bước nâng cấp đều chỉ thêm vào — các hàng và nội dung sẵn có luôn được giữ nguyên. (Khi nâng cấp từ phiên bản trước 1.0.4, bảng `player_settings` cũ được gộp vào `players` rồi xóa đi.)
+Như thường lệ, hãy giữ một bản sao lưu (SQLite [tự động sao lưu](/vi/docs/configuration), hoặc bản dump MySQL/PostgreSQL của riêng bạn) trước khi nâng cấp lớn, để phòng hờ.
 
-Không bao giờ cần chuyển dữ liệu thủ công hay `ALTER TABLE`. Như thường lệ, hãy giữ một bản sao lưu (SQLite [tự động sao lưu](/vi/docs/configuration), hoặc bản dump MySQL/Postgres của riêng bạn) trước khi nâng cấp lớn, để phòng hờ.
+### Tra cứu người chơi ngoại tuyến
 
-### Tra Cứu Người Chơi Ngoại Tuyến
-
-`/ee view`, `/ee add`, `/ee resize`, `/ee delete` và `/ee transfer` đều tìm được người chơi qua tên dù họ đang ngoại tuyến, kể cả khi bạn mới gõ tên và đang chờ gợi ý. Tính năng này dùng dữ liệu tên người chơi riêng của plugin, được cập nhật tự động ngay lần đầu tiên mỗi người chơi mở rương Ender của họ. Một người chơi mới sẽ được tìm theo cách này sau lần đăng nhập và mở rương đầu tiên; trước đó, plugin dùng danh sách người chơi có sẵn của server.
+`/ee view`, `/ee add`, `/ee resize`, `/ee delete` và `/ee transfer` đều tìm được người chơi qua tên dù họ đang ngoại tuyến, kể cả khi bạn mới gõ tên và đang chờ gợi ý. Tính năng này hoạt động tự động ngay khi người chơi đã mở rương Ender của họ ít nhất một lần. Người chơi mới sẽ được tìm qua danh sách người chơi có sẵn của server cho đến lúc đó.
 
 ## Chia Sẻ Dữ Liệu Giữa Các Máy Chủ
 
