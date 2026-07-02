@@ -125,16 +125,54 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
     private static final String SQL_SET_MIGRATED =
             "UPDATE enderchests SET migrated = ? WHERE player_uuid = ? AND chest_index = 1";
 
-    // Per-player settings (one row per player). DML is portable; the CREATE is dialect-specific.
-    // Save is an UPDATE-else-INSERT upsert (avoids the per-dialect ON CONFLICT / ON DUPLICATE split).
+    // Per-player row (one row per player: settings + the name index). DML is portable; the CREATE is
+    // dialect-specific. Save is an UPDATE-else-INSERT upsert (avoids the per-dialect ON CONFLICT / ON
+    // DUPLICATE split). Each targeted upsert lists only the column(s) it writes, so the columns it omits
+    // keep their value (on UPDATE) or fall back to their DB default (on INSERT) — never clobbering a
+    // sibling column.
     private static final String SQL_SETTINGS_LOAD =
-            "SELECT edit_mode FROM player_settings WHERE player_uuid = ?";
+            "SELECT username, edit_mode, applied_default_size FROM players WHERE player_uuid = ?";
 
+    // Whole-object save of editMode/appliedDefaultSize, used by saveSettings. Deliberately excludes
+    // username — that is written only via upsertPlayerName (see below), so a save built from a stale
+    // in-memory PlayerSettings can never clobber a name recorded since it was loaded.
+    private static final String SQL_SETTINGS_UPDATE_ALL =
+            "UPDATE players SET edit_mode = ?, applied_default_size = ? WHERE player_uuid = ?";
+
+    private static final String SQL_SETTINGS_INSERT_ALL =
+            "INSERT INTO players (player_uuid, edit_mode, applied_default_size) VALUES (?, ?, ?)";
+
+    // Targeted edit_mode-only upsert.
     private static final String SQL_SETTINGS_UPDATE =
-            "UPDATE player_settings SET edit_mode = ? WHERE player_uuid = ?";
+            "UPDATE players SET edit_mode = ? WHERE player_uuid = ?";
 
     private static final String SQL_SETTINGS_INSERT =
-            "INSERT INTO player_settings (player_uuid, edit_mode) VALUES (?, ?)";
+            "INSERT INTO players (player_uuid, edit_mode) VALUES (?, ?)";
+
+    // Targeted applied_default_size read and upsert (the permission-managed base-chest baseline).
+    private static final String SQL_APPLIED_LOAD =
+            "SELECT applied_default_size FROM players WHERE player_uuid = ?";
+
+    private static final String SQL_SETTINGS_UPDATE_APPLIED =
+            "UPDATE players SET applied_default_size = ? WHERE player_uuid = ?";
+
+    private static final String SQL_SETTINGS_INSERT_APPLIED =
+            "INSERT INTO players (player_uuid, applied_default_size) VALUES (?, ?)";
+
+    // Player name index (offline /ee view name→UUID resolution) — the username column on the same players
+    // row, written lazily by ChestOpener's open prelude only when the name changed (the first time the
+    // player opens their ender chest after a rename, or ever) — not on join. The lookup lower-cases both
+    // sides; LIMIT 1 with no ordering is an arbitrary pick if the same name was ever recorded for more
+    // than one UUID (a rename-reuse edge case this table doesn't track history for). NULL usernames (a
+    // row created before any name was recorded) never match, since LOWER(NULL) is NULL.
+    private static final String SQL_NAME_UPDATE =
+            "UPDATE players SET username = ? WHERE player_uuid = ?";
+
+    private static final String SQL_NAME_INSERT =
+            "INSERT INTO players (player_uuid, username) VALUES (?, ?)";
+
+    private static final String SQL_NAME_FIND =
+            "SELECT player_uuid FROM players WHERE LOWER(username) = ? LIMIT 1";
 
     protected final HikariDataSource dataSource;
 
@@ -158,6 +196,9 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
         } catch (SQLException e) {
             throw new RuntimeException("Failed to initialize database schema", e);
         }
+        // Bring an existing (older) database up to the current schema version. On a fresh install the
+        // CREATE statements above already carry every column, so the migrator's guarded steps no-op.
+        SchemaMigrator.migrate(dataSource);
         // Best-effort secondary index on expires_at for the expiry sweeper. Created here rather than
         // inline because CREATE INDEX has no portable IF NOT EXISTS; an "already exists" error on a
         // subsequent startup is expected and ignored.
@@ -707,7 +748,8 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
             ps.setString(1, owner.toString());
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) return PlayerSettings.defaults();
-                return new PlayerSettings(rs.getInt("edit_mode") != 0);
+                return new PlayerSettings(rs.getInt("edit_mode") != 0, rs.getInt("applied_default_size"),
+                        rs.getString("username"));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to load settings for " + owner, e);
@@ -716,36 +758,24 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
 
     @Override
     public void saveSettings(UUID owner, PlayerSettings settings) {
-        // Whole-object save. With a single column today this is exactly the edit-mode upsert; when
-        // more settings are added, extend this (and the SQL constants) to write every column.
-        upsertEditMode(owner, settings.editMode());
-    }
-
-    @Override
-    public void setEditMode(UUID owner, boolean editMode) {
-        upsertEditMode(owner, editMode);
-    }
-
-    /**
-     * Portable upsert of the edit_mode column: try UPDATE first, INSERT only when no row matched.
-     * Avoids the dialect-specific ON CONFLICT / ON DUPLICATE KEY syntax used by native upserts, and
-     * needs no preceding read. The UPDATE touches only edit_mode and the INSERT lists only it, so
-     * other (future) columns keep their value or fall back to their DB default.
-     */
-    private void upsertEditMode(UUID owner, boolean editMode) {
+        // Whole-object save: writes every column, so it never depends on a column's DB default. Targeted
+        // callers (setEditMode / setAppliedDefaultSize) stay for single-field toggles that must not touch
+        // the sibling column.
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
                 int updated;
-                try (PreparedStatement ps = conn.prepareStatement(SQL_SETTINGS_UPDATE)) {
-                    ps.setInt(1, editMode ? 1 : 0);
-                    ps.setString(2, owner.toString());
+                try (PreparedStatement ps = conn.prepareStatement(SQL_SETTINGS_UPDATE_ALL)) {
+                    ps.setInt(1, settings.editMode() ? 1 : 0);
+                    ps.setInt(2, settings.appliedDefaultSize());
+                    ps.setString(3, owner.toString());
                     updated = ps.executeUpdate();
                 }
                 if (updated == 0) {
-                    try (PreparedStatement ps = conn.prepareStatement(SQL_SETTINGS_INSERT)) {
+                    try (PreparedStatement ps = conn.prepareStatement(SQL_SETTINGS_INSERT_ALL)) {
                         ps.setString(1, owner.toString());
-                        ps.setInt(2, editMode ? 1 : 0);
+                        ps.setInt(2, settings.editMode() ? 1 : 0);
+                        ps.setInt(3, settings.appliedDefaultSize());
                         ps.executeUpdate();
                     }
                 }
@@ -758,6 +788,107 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to save settings for " + owner, e);
+        }
+    }
+
+    @Override
+    public void setEditMode(UUID owner, boolean editMode) {
+        upsertSettingsField(owner, SQL_SETTINGS_UPDATE, SQL_SETTINGS_INSERT, editMode ? 1 : 0);
+    }
+
+    @Override
+    public int getAppliedDefaultSize(UUID owner) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_APPLIED_LOAD)) {
+            ps.setString(1, owner.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load applied default size for " + owner, e);
+        }
+    }
+
+    @Override
+    public void setAppliedDefaultSize(UUID owner, int size) {
+        upsertSettingsField(owner, SQL_SETTINGS_UPDATE_APPLIED, SQL_SETTINGS_INSERT_APPLIED, size);
+    }
+
+    /**
+     * Portable single-column upsert of a {@code players} field: try the targeted UPDATE first,
+     * INSERT only when no row matched. Avoids the dialect-specific ON CONFLICT / ON DUPLICATE KEY syntax
+     * and needs no preceding read. Both statements list only this column, so the sibling column keeps its
+     * value (UPDATE) or falls back to its DB default (INSERT) — the two toggles never clobber each other.
+     */
+    private void upsertSettingsField(UUID owner, String updateSql, String insertSql, int value) {
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int updated;
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setInt(1, value);
+                    ps.setString(2, owner.toString());
+                    updated = ps.executeUpdate();
+                }
+                if (updated == 0) {
+                    try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                        ps.setString(1, owner.toString());
+                        ps.setInt(2, value);
+                        ps.executeUpdate();
+                    }
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to save settings for " + owner, e);
+        }
+    }
+
+    @Override
+    public void upsertPlayerName(UUID owner, String name) {
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int updated;
+                try (PreparedStatement ps = conn.prepareStatement(SQL_NAME_UPDATE)) {
+                    ps.setString(1, name);
+                    ps.setString(2, owner.toString());
+                    updated = ps.executeUpdate();
+                }
+                if (updated == 0) {
+                    try (PreparedStatement ps = conn.prepareStatement(SQL_NAME_INSERT)) {
+                        ps.setString(1, owner.toString());
+                        ps.setString(2, name);
+                        ps.executeUpdate();
+                    }
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to record player name for " + owner, e);
+        }
+    }
+
+    @Override
+    public @Nullable UUID findUuidByName(String name) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_NAME_FIND)) {
+            ps.setString(1, name.toLowerCase(java.util.Locale.ROOT));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? UUID.fromString(rs.getString(1)) : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to resolve UUID for name " + name, e);
         }
     }
 

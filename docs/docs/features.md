@@ -38,11 +38,12 @@ Players open their ender chest the same way they always have, by right-clicking 
 
 <FeatureCard icon="Sliders" title="Configurable Size">
 
-The default size for a player's first chest is set with <code>enderchest.default-size</code> in <code>config.yml</code>. Admins can also resize any individual chest with <code>/ee resize</code>.
+The default size for a player's first chest is set with <code>enderchest.default-size</code> in <code>config.yml</code>. Admins can also resize any individual chest with <code>/ee resize</code>, and you can override the base size <strong>per rank</strong> with the <code>enhancedechest.default_size.&lt;size&gt;</code> permission.
 
 - Valid sizes: <code>9</code>, <code>18</code>, <code>27</code>, <code>36</code>, <code>45</code>, <code>54</code>
 - Invalid values are rounded to the nearest valid size
 - Defaults to <code>54</code> (a full double chest)
+- Per-player override by permission — see the <a href="/docs/permissions#default-size-permission">Permissions</a> page
 
 </FeatureCard>
 

@@ -126,7 +126,9 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         pm.registerEvents(new PlayerSettingsListener(settingsCache, chestOpener), this);
 
         // Preload settings for players already online (a /reload or hot-load fires no join event for
-        // them); without this their first dialog open would fall back to a DB read each time.
+        // them); without this their first dialog open would fall back to a DB read each time. The name
+        // index is unaffected here — it is written lazily by ChestOpener the first time a player opens
+        // their ender chest, not on join/preload.
         getServer().getOnlinePlayers().forEach(p -> settingsCache.preloadSettings(p.getUniqueId()));
 
         updateChecker = new UpdateChecker(getPluginMeta().getVersion(), getSLF4JLogger());
@@ -183,7 +185,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         chestOpener.setDefaultSize(pluginConfig.getDefaultSize());
         spillService.setTempExpiry(pluginConfig.getTempExpiryMillis());
         chestTransferService.setTempExpiry(pluginConfig.getTempExpiryMillis());
-        permissionChestService.setConfig(pluginConfig.isPermissionChestsEnabled(), pluginConfig.getDefaultSize());
+        permissionChestService.setConfig(pluginConfig.isPermissionChestsEnabled(),
+                pluginConfig.getDefaultSize());
         expirySweeper.reschedule(pluginConfig.getExpiryCheckIntervalMillis());
         backupService.reschedule(pluginConfig.isBackupEnabled(), pluginConfig.getBackupIntervalMillis(),
                 pluginConfig.getBackupKeep());

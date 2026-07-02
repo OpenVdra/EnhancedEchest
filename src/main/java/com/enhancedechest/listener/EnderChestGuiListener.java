@@ -16,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 
 import java.util.Map;
@@ -38,7 +39,11 @@ public final class EnderChestGuiListener implements Listener {
     private final LanguageManager lang;
     private final PluginConfig config;
 
-    /** Last time (ms) each player heard the deny sound; cleared on chest close. */
+    /**
+     * Last time (ms) each player heard the deny sound; cleared on chest close, and on quit as a backstop
+     * (see {@link #onQuit}) so a player who disconnects without a close event (e.g. a forced disconnect,
+     * mirroring the edge case {@link PlayerQuitListener} exists for) doesn't leak an entry here forever.
+     */
     private final Map<UUID, Long> lastDenySoundAt = new ConcurrentHashMap<>();
 
     // Wiring note: 'sessions' and 'foliaLib' are still injected by the plugin; sessions is used by
@@ -169,5 +174,16 @@ public final class EnderChestGuiListener implements Listener {
 
         lastDenySoundAt.remove(event.getPlayer().getUniqueId());
         sessions.detach((Player) event.getPlayer(), ecHolder);
+    }
+
+    /**
+     * Backstop cleanup for {@link #lastDenySoundAt}: unconditional, since a quitting player might not
+     * have had a chest open (nothing to do) or might have closed without firing {@link #onClose} (the
+     * same edge case {@link PlayerQuitListener} backstops for sessions). Idempotent — a no-op if the
+     * entry is already gone.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(PlayerQuitEvent event) {
+        lastDenySoundAt.remove(event.getPlayer().getUniqueId());
     }
 }

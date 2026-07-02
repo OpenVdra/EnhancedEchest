@@ -25,10 +25,16 @@ public final class SqliteStorage extends AbstractSqlStorage {
             )
             """;
 
+    // Per-player row: settings plus the name index for offline /ee view resolution (name -> UUID),
+    // written lazily by ChestOpener's open prelude the first time a player opens their ender chest after
+    // a rename (or ever) — not on join. username is nullable — a row can exist (e.g. from an offline
+    // admin resize) before any name has ever been recorded.
     private static final String INIT_SETTINGS_SQL = """
-            CREATE TABLE IF NOT EXISTS player_settings (
-                player_uuid TEXT    NOT NULL,
-                edit_mode   INTEGER NOT NULL DEFAULT 0,
+            CREATE TABLE IF NOT EXISTS players (
+                player_uuid          TEXT    NOT NULL,
+                username             TEXT,
+                edit_mode            INTEGER NOT NULL DEFAULT 0,
+                applied_default_size INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY (player_uuid)
             )
             """;

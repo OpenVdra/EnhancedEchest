@@ -48,6 +48,8 @@ admin:
   chest-not-found: '{prefix}&f{player} không có rương ender nào với số thứ tự {index}.'
   # /ee resize trên rương cấp theo quyền — chúng được quản lý bởi quyền, không phải lệnh quản trị.
   cannot-modify-perm: '{prefix}&fRương ender {index} của {player} được cấp bởi một quyền và không thể chỉnh sửa.'
+  # /ee resize trên rương gốc khi kích thước được đặt bởi quyền enhancedechest.default_size.<size>.
+  cannot-modify-default-size: '{prefix}&fRương ender {index} của {player} có kích thước do một quyền quy định và không thể đổi kích thước.'
   # /ee view <player> — người được xem chưa có rương nào nên không có gì để mở.
   view-no-chests: '{prefix}&f{player} chưa có rương ender nào.'
   chest-added: '{prefix}&fĐã thêm rương ender {index} với {size} ô cho {player}.'

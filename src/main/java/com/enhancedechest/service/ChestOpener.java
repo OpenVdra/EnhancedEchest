@@ -124,11 +124,10 @@ public final class ChestOpener {
         boolean canSetMain = canSetMain(player);
         foliaLib.getScheduler().runAtEntity(player, outerTask -> {
             closeExistingGui(player);
-            // Reconcile permission-granted chests against the player's permissions before routing, reusing
-            // the list /ec already fetches (no extra query in the common case where nothing changed).
-            java.util.Map<Integer, Integer> target = permService.resolveDesired(player);
-            storageGateway.listChestsAsync(uuid)
-                    .thenCompose(c -> permService.reconcile(uuid, target, c))
+            // Reconcile permission-granted chests and the base-chest size override against the player's
+            // permissions before routing, reusing the list /ec already fetches (no extra query in the
+            // common case where nothing changed).
+            reconcileForOpen(player, uuid)
                     .thenAccept(chests -> {
                         // Spilled items live in TEMP chests that can ONLY be retrieved from the list
                         // dialog, so any temp chest forces the dialog regardless of how many normal
@@ -281,9 +280,7 @@ public final class ChestOpener {
         // Reconcile permission-granted chests before building the list, so /eclist reflects the current
         // grants. resolveDesired must read permissions on the entity thread.
         foliaLib.getScheduler().runAtEntity(player, outerTask -> {
-            java.util.Map<Integer, Integer> target = permService.resolveDesired(player);
-            storageGateway.listChestsAsync(uuid)
-                    .thenCompose(c -> permService.reconcile(uuid, target, c))
+            reconcileForOpen(player, uuid)
                     .thenAccept(chests ->
                             foliaLib.getScheduler().runAtEntity(player, task -> {
                                 if (!player.isOnline()) return;
@@ -297,6 +294,49 @@ public final class ChestOpener {
                             }))
                     .exceptionally(e -> reportOpenFailure(player, e));
         });
+    }
+
+    /**
+     * Resolves the player's permission-derived targets (PERM chests + base-chest size override),
+     * reconciles them against storage reusing a single chest list, and persists the new default-size
+     * baseline when it changed — the shared prelude for every self-open path ({@code /ec}, {@code /eclist},
+     * right-click). Also owns the lazy name-index write (see {@link #recordNameIfChanged}): the first time
+     * a player opens their ender chest after a rename (or ever), not on join.
+     *
+     * <p>Must be called on the player's entity thread: {@link PermissionChestService#resolveDesired} and
+     * {@link PermissionChestService#resolveDefaultTarget} read the player's effective permissions. Settings
+     * are served from the write-through cache (warm for any online player), so the common "nothing changed"
+     * case adds no DB query beyond the one chest list.
+     */
+    private java.util.concurrent.CompletableFuture<List<ChestSummary>> reconcileForOpen(Player player, UUID uuid) {
+        java.util.Map<Integer, Integer> permTarget = permService.resolveDesired(player);
+        int defaultTarget = permService.resolveDefaultTarget(player);
+        return settings.loadSettingsAsync(uuid).thenCompose(s -> {
+            int applied = s.appliedDefaultSize();
+            recordNameIfChanged(uuid, player.getName(), s.username());
+            return storageGateway.listChestsAsync(uuid)
+                    .thenCompose(chests -> permService.reconcile(uuid, permTarget, defaultTarget, applied, chests))
+                    .thenApply(chests -> {
+                        // The reconcile moved items; record the new baseline (which equals defaultTarget,
+                        // i.e. the largest default_size permission held, or 0 for none) when it changed.
+                        if (defaultTarget != applied) {
+                            settings.setAppliedDefaultSizeAsync(uuid, defaultTarget);
+                        }
+                        return chests;
+                    });
+        });
+    }
+
+    /**
+     * Lazily records the player's current name against their UUID (offline {@code /ee view} resolution):
+     * reuses the settings row {@link #reconcileForOpen} already loaded, and writes only when it differs
+     * from {@code loadedUsername} — a never-recorded name (first-ever open) or a rename. A returning
+     * player whose name hasn't changed costs no write, unlike writing unconditionally on every open.
+     */
+    private void recordNameIfChanged(UUID uuid, String currentName, @Nullable String loadedUsername) {
+        if (!currentName.equals(loadedUsername)) {
+            settings.setUsernameAsync(uuid, currentName);
+        }
     }
 
     /**

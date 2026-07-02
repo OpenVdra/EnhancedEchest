@@ -54,4 +54,14 @@ public final class StorageGateway {
     public CompletableFuture<Void> clearPrimaryAsync(UUID owner) {
         return db.run(() -> storage.clearPrimary(owner));
     }
+
+    /** Reads the persisted permission-managed base-chest baseline (0 = base chest is not managed). */
+    public CompletableFuture<Integer> getAppliedDefaultSizeAsync(UUID owner) {
+        return db.supply(() -> storage.getAppliedDefaultSize(owner));
+    }
+
+    /** Resolves a stored in-game name to its UUID (case-insensitive), or completes with null on a miss. */
+    public CompletableFuture<UUID> findUuidByNameAsync(String name) {
+        return db.supply(() -> storage.findUuidByName(name));
+    }
 }

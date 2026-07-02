@@ -32,6 +32,8 @@ Slot count of the chest that is auto-created the first time a player ever opens 
 | <code>45</code> | 5 |
 | <code>54</code> | 6 (double chest) |
 
+You can also override the base chest size <strong>per player</strong> with the <code>enhancedechest.default_size.&lt;size&gt;</code> permission (always available, no config needed) — see the <a href="/docs/permissions#default-size-permission">Permissions</a> page.
+
 </ConfigProperty>
 
 <ConfigProperty name="features.rename" value="true" type="boolean">
@@ -153,6 +155,7 @@ language: en_US
 enderchest:
   # Slot count of the chest auto-created the first time a player opens their ender chest.
   # Must be a multiple of 9, between 9 and 54.
+  # Per-player override is available via the enhancedechest.default_size.<size> permission (no config).
   default-size: 54
 
   # Server-wide switches for the "Edit mode" buttons (Rename / Choose icon / Sort).

@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class LanguageManager {
 
@@ -33,6 +35,15 @@ public final class LanguageManager {
     private String cachedTitleBase;
     private String cachedTitleTemplate;
     private String cachedTitleTemp;
+
+    // Parsed-Component cache for zero-replacement lookups (the overwhelming majority of dialog button
+    // labels/tooltips: no {placeholder} substitution means the parsed result is identical every call).
+    // Dialogs are rebuilt on essentially every navigation click, each pulling a dozen-plus getGui()/get()
+    // values, so without this every click re-tokenizes and re-parses the same static MiniMessage/legacy
+    // strings. Keyed separately per file since "messages" and "gui" keys are independent namespaces;
+    // cleared on reload() (via load()) so a changed locale/file is never served stale.
+    private final Map<String, Component> messageCache = new ConcurrentHashMap<>();
+    private final Map<String, Component> guiCache = new ConcurrentHashMap<>();
 
     public LanguageManager(JavaPlugin plugin, String locale) {
         this.plugin = plugin;
@@ -65,6 +76,11 @@ public final class LanguageManager {
         cachedTitleBase     = gui.getString("enderchest.title", "Ender Chest");
         cachedTitleTemplate = gui.getString("enderchest.title-numbered", "Ender Chest {index}");
         cachedTitleTemp     = gui.getString("enderchest.title-temp", "Temporary Storage");
+
+        // A (re)load can change any key's raw text (locale switch, or edited file re-read on /ee reload),
+        // so every previously parsed Component is now potentially stale.
+        messageCache.clear();
+        guiCache.clear();
     }
 
     private void saveDefault(String path) {
@@ -101,8 +117,16 @@ public final class LanguageManager {
      * Format auto-detection (checked after all substitutions):
      *   - Contains '<'  → MiniMessage
      *   - Otherwise     → legacy '&' codes
+     *
+     * <p>A zero-replacement call is cached by key ({@code {prefix}} is the only substitution, and it is
+     * itself stable per load) — the common case for static labels, so a call site invoked repeatedly
+     * (e.g. every dialog rebuild) skips the parse after the first call. Callers passing replacements are
+     * data-dependent and always parse fresh.
      */
     public Component get(String key, String... replacements) {
+        if (replacements.length == 0) {
+            return messageCache.computeIfAbsent(key, k -> parse(messages.getString(k, k).replace("{prefix}", cachedPrefix)));
+        }
         String raw = messages.getString(key, key);
         raw = raw.replace("{prefix}", cachedPrefix);
         for (int i = 0; i + 1 < replacements.length; i += 2) {
@@ -141,8 +165,16 @@ public final class LanguageManager {
     /**
      * Resolves a GUI/dialog label from gui.yml (no prefix), substituting {placeholders}
      * and parsing the result. Used for the /ec list dialog labels.
+     *
+     * <p>Cached the same way as {@link #get}: a zero-replacement call (most dialog button labels/
+     * tooltips/descriptions — the overwhelming majority of {@code gui.yml} keys) is parsed once and
+     * reused, which matters here specifically because a dialog is rebuilt on essentially every
+     * navigation click, each pulling a dozen-plus of these.
      */
     public Component getGui(String key, String... replacements) {
+        if (replacements.length == 0) {
+            return guiCache.computeIfAbsent(key, k -> parse(gui.getString(k, k)));
+        }
         String raw = gui.getString(key, key);
         for (int i = 0; i + 1 < replacements.length; i += 2) {
             raw = raw.replace("{" + replacements[i] + "}", replacements[i + 1]);

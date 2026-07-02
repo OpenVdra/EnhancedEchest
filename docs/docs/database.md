@@ -56,6 +56,30 @@ database:
 
 The default PostgreSQL port is **5432**, so remember to change `port` from the MySQL default.
 
+## Tables & Schema
+
+The plugin creates and manages its own tables — you never write any SQL yourself. On the current version these are:
+
+| Table | Purpose |
+|-------|---------|
+| `enderchests` | One row per chest (contents, size, name, icon, kind, expiry) — the core storage. |
+| `players` | One row per player: preferences (edit-mode), the permission-managed base-chest size baseline, and their most recent in-game name (for resolving **offline** players — see below). |
+| `schema_meta` | Records the schema version the database is on, used by the automatic upgrader below. |
+
+### Automatic, versioned upgrades
+
+When you update the plugin, its database schema can change (new columns, renamed/merged tables). EnhancedEchest upgrades an existing database **automatically and safely** on startup:
+
+- A fresh database is created directly at the latest schema.
+- An existing database is compared against the version recorded in `schema_meta`, and only the newer migration steps are applied. Each step first checks whether its change is already present (column exists, old table is gone, etc.), so a re-run — or a partially-upgraded database — never errors.
+- Every migration is additive — existing rows and their contents are preserved. (Upgrading from a version before 1.0.4, the old `player_settings` table is merged into `players` and then dropped.)
+
+No manual migration or `ALTER TABLE` is ever required. As always, keep a backup (the SQLite [auto-backup](/docs/configuration), or your own MySQL/Postgres dump) before a major upgrade, just in case.
+
+### Offline player lookups
+
+Admin commands that take a player name — `/ee view`, `/ee add`, `/ee resize`, `/ee delete`, `/ee transfer` — resolve that name to a UUID from the `players` table's name index. That index is kept up to date the first time a player opens their ender chest (not on login), and only written to when their name has actually changed since it was last recorded — a returning player with an unchanged name costs no extra write. This means `/ee view <name>` works for **offline** players who have opened their ender chest at least once since you installed this version, without depending on the server usercache or a Mojang lookup. A player who has only joined but never opened an ender chest yet — or who last did so on an older version, before name indexing — is resolved by the server's usercache the first time, and indexed the next time they open a chest.
+
 ## Sharing Data Across Servers
 
 Pointing several servers at the **same** MySQL/MariaDB/PostgreSQL database lets them share ender chest storage. Players see the same contents regardless of which server they log in to, as long as they are only on one server at a time.

@@ -38,11 +38,12 @@ Người chơi mở rương Ender đúng theo cách họ vẫn làm, bằng các
 
 <FeatureCard icon="Sliders" title="Kích Thước Tùy Chỉnh">
 
-Kích thước mặc định cho rương đầu tiên của người chơi được đặt bằng <code>enderchest.default-size</code> trong <code>config.yml</code>. Quản trị viên cũng có thể đổi kích thước từng rương bằng <code>/ee resize</code>.
+Kích thước mặc định cho rương đầu tiên của người chơi được đặt bằng <code>enderchest.default-size</code> trong <code>config.yml</code>. Quản trị viên cũng có thể đổi kích thước từng rương bằng <code>/ee resize</code>, và bạn có thể ghi đè kích thước rương cơ bản <strong>theo từng rank</strong> bằng quyền <code>enhancedechest.default_size.&lt;size&gt;</code>.
 
 - Kích thước hợp lệ: <code>9</code>, <code>18</code>, <code>27</code>, <code>36</code>, <code>45</code>, <code>54</code>
 - Giá trị không hợp lệ được làm tròn về kích thước gần nhất
 - Mặc định là <code>54</code> (rương đôi đầy đủ)
+- Ghi đè theo từng người chơi bằng quyền — xem trang <a href="/vi/docs/permissions#default-size-permission">Quyền</a>
 
 </FeatureCard>
 

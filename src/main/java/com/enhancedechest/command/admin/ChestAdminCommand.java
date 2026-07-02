@@ -3,6 +3,8 @@ package com.enhancedechest.command.admin;
 import com.enhancedechest.EnhancedEchestPlugin;
 import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.lang.LanguageManager;
+import com.enhancedechest.model.ChestKind;
+import com.enhancedechest.model.ChestSummary;
 import com.enhancedechest.service.ChestOpener;
 import com.enhancedechest.service.ChestSpillService;
 import com.enhancedechest.service.StorageGateway;
@@ -10,7 +12,6 @@ import com.enhancedechest.util.DurationFormat;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +30,9 @@ import java.util.concurrent.CompletableFuture;
  * with the literal {@code force}; the player's first chest is always kept. All DB work runs async on
  * the service executor (which serializes item-moving operations and force-closes open GUIs); the
  * result is reported to the sender.
+ *
+ * <p>The target player is resolved asynchronously via {@link PlayerResolver}, so an offline owner is
+ * found from the plugin's own name index even when the server usercache does not know them.
  */
 public final class ChestAdminCommand {
 
@@ -48,63 +52,64 @@ public final class ChestAdminCommand {
 
     private static int doAdd(CommandSourceStack source, String playerName, int size, int count,
                              @Nullable String duration) {
-        Ctx ctx = resolve(source, playerName);
-        if (ctx == null) return 0;
+        resolveAsync(source, playerName).thenAccept(ctx -> {
+            if (ctx == null) return;
 
-        if (!PluginConfig.isValidSize(size)) {
-            ctx.sender.sendMessage(ctx.lang.get("admin.invalid-size"));
-            return 0;
-        }
-
-        int total = Math.max(1, count);
-
-        Long expiresAt = null;
-        String durationLabel = null;
-        if (duration != null) {
-            long durationMillis;
-            try {
-                durationMillis = DurationFormat.parse(duration);
-            } catch (IllegalArgumentException e) {
-                ctx.sender.sendMessage(ctx.lang.get("admin.invalid-duration", "duration", duration));
-                return 0;
+            if (!PluginConfig.isValidSize(size)) {
+                ctx.sender.sendMessage(ctx.lang.get("admin.invalid-size"));
+                return;
             }
-            expiresAt = System.currentTimeMillis() + durationMillis;
-            durationLabel = DurationFormat.formatRemaining(durationMillis);
-        }
 
-        final String label = durationLabel;
-        createChests(ctx, total, size, expiresAt).thenAccept(indices -> {
-            if (indices.size() == 1) {
-                int index = indices.get(0);
+            int total = Math.max(1, count);
+
+            Long expiresAt = null;
+            String durationLabel = null;
+            if (duration != null) {
+                long durationMillis;
+                try {
+                    durationMillis = DurationFormat.parse(duration);
+                } catch (IllegalArgumentException e) {
+                    ctx.sender.sendMessage(ctx.lang.get("admin.invalid-duration", "duration", duration));
+                    return;
+                }
+                expiresAt = System.currentTimeMillis() + durationMillis;
+                durationLabel = DurationFormat.formatRemaining(durationMillis);
+            }
+
+            final String label = durationLabel;
+            createChests(ctx, total, size, expiresAt).thenAccept(indices -> {
+                if (indices.size() == 1) {
+                    int index = indices.get(0);
+                    if (label == null) {
+                        ctx.sender.sendMessage(ctx.lang.get("admin.chest-added",
+                                "player", playerName,
+                                "index", Integer.toString(index),
+                                "size", Integer.toString(size)));
+                    } else {
+                        ctx.sender.sendMessage(ctx.lang.get("admin.chest-added-expiring",
+                                "player", playerName,
+                                "index", Integer.toString(index),
+                                "size", Integer.toString(size),
+                                "duration", label));
+                    }
+                    return;
+                }
+                String range = "#" + indices.get(0) + "–#" + indices.get(indices.size() - 1);
                 if (label == null) {
-                    ctx.sender.sendMessage(ctx.lang.get("admin.chest-added",
+                    ctx.sender.sendMessage(ctx.lang.get("admin.chests-added",
                             "player", playerName,
-                            "index", Integer.toString(index),
+                            "count", Integer.toString(indices.size()),
+                            "range", range,
                             "size", Integer.toString(size)));
                 } else {
-                    ctx.sender.sendMessage(ctx.lang.get("admin.chest-added-expiring",
+                    ctx.sender.sendMessage(ctx.lang.get("admin.chests-added-expiring",
                             "player", playerName,
-                            "index", Integer.toString(index),
+                            "count", Integer.toString(indices.size()),
+                            "range", range,
                             "size", Integer.toString(size),
                             "duration", label));
                 }
-                return;
-            }
-            String range = "#" + indices.get(0) + "–#" + indices.get(indices.size() - 1);
-            if (label == null) {
-                ctx.sender.sendMessage(ctx.lang.get("admin.chests-added",
-                        "player", playerName,
-                        "count", Integer.toString(indices.size()),
-                        "range", range,
-                        "size", Integer.toString(size)));
-            } else {
-                ctx.sender.sendMessage(ctx.lang.get("admin.chests-added-expiring",
-                        "player", playerName,
-                        "count", Integer.toString(indices.size()),
-                        "range", range,
-                        "size", Integer.toString(size),
-                        "duration", label));
-            }
+            });
         });
         return 1;
     }
@@ -128,35 +133,56 @@ public final class ChestAdminCommand {
     }
 
     public static int resize(CommandSourceStack source, String playerName, int index, int size) {
-        Ctx ctx = resolve(source, playerName);
-        if (ctx == null) return 0;
+        resolveAsync(source, playerName).thenAccept(ctx -> {
+            if (ctx == null) return;
 
-        if (!PluginConfig.isValidSize(size)) {
-            ctx.sender.sendMessage(ctx.lang.get("admin.invalid-size"));
-            return 0;
-        }
-
-        ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
-            var target = chests.stream().filter(c -> c.index() == index).findFirst().orElse(null);
-            if (target == null) {
-                ctx.sender.sendMessage(ctx.lang.get("admin.chest-not-found",
-                        "player", playerName, "index", Integer.toString(index)));
+            if (!PluginConfig.isValidSize(size)) {
+                ctx.sender.sendMessage(ctx.lang.get("admin.invalid-size"));
                 return;
             }
-            // Permission-granted chests are managed by permissions, not admin commands — leave them alone.
-            if (target.kind() == com.enhancedechest.model.ChestKind.PERM) {
-                ctx.sender.sendMessage(ctx.lang.get("admin.cannot-modify-perm",
-                        "player", playerName, "index", Integer.toString(index)));
-                return;
-            }
-            // Routes through the spill-aware path: a shrink below used slots overflows to a temp chest.
-            ctx.spillService.resizeOrSpill(ctx.target, index, size).thenRun(() ->
-                    ctx.sender.sendMessage(ctx.lang.get("admin.chest-resized",
-                            "player", playerName,
-                            "index", Integer.toString(index),
-                            "size", Integer.toString(size))));
+
+            ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
+                ChestSummary target = chests.stream().filter(c -> c.index() == index).findFirst().orElse(null);
+                if (target == null) {
+                    ctx.sender.sendMessage(ctx.lang.get("admin.chest-not-found",
+                            "player", playerName, "index", Integer.toString(index)));
+                    return;
+                }
+                // Permission-granted chests are managed by permissions, not admin commands — leave them alone.
+                if (target.kind() == ChestKind.PERM) {
+                    ctx.sender.sendMessage(ctx.lang.get("admin.cannot-modify-perm",
+                            "player", playerName, "index", Integer.toString(index)));
+                    return;
+                }
+                // The base chest (lowest-indexed NORMAL chest) is off-limits while its size is dictated by a
+                // default_size permission — its size is permission-managed, exactly like a PERM chest. The
+                // baseline is read from storage so this holds even for an offline owner.
+                int baseIndex = chests.stream().filter(c -> c.kind() == ChestKind.NORMAL)
+                        .mapToInt(ChestSummary::index).min().orElse(-1);
+                if (index == baseIndex) {
+                    ctx.storageGateway.getAppliedDefaultSizeAsync(ctx.target).thenAccept(applied -> {
+                        if (applied > 0) {
+                            ctx.sender.sendMessage(ctx.lang.get("admin.cannot-modify-default-size",
+                                    "player", playerName, "index", Integer.toString(index)));
+                            return;
+                        }
+                        doResize(ctx, playerName, index, size);
+                    });
+                } else {
+                    doResize(ctx, playerName, index, size);
+                }
+            });
         });
         return 1;
+    }
+
+    /** Routes a resize through the spill-aware path (a shrink below used slots overflows to a temp chest). */
+    private static void doResize(Ctx ctx, String playerName, int index, int size) {
+        ctx.spillService.resizeOrSpill(ctx.target, index, size).thenRun(() ->
+                ctx.sender.sendMessage(ctx.lang.get("admin.chest-resized",
+                        "player", playerName,
+                        "index", Integer.toString(index),
+                        "size", Integer.toString(size))));
     }
 
     public static int delete(CommandSourceStack source, String playerName, int count) {
@@ -174,21 +200,22 @@ public final class ChestAdminCommand {
      * deleted; otherwise the actual number removed (capped at the eligible count) is reported.
      */
     private static int doDelete(CommandSourceStack source, String playerName, int count, boolean force) {
-        Ctx ctx = resolve(source, playerName);
-        if (ctx == null) return 0;
+        resolveAsync(source, playerName).thenAccept(ctx -> {
+            if (ctx == null) return;
 
-        ctx.spillService.removeNewestChests(ctx.target, count, force).thenAccept(deleted -> {
-            if (deleted == 0) {
-                ctx.sender.sendMessage(ctx.lang.get("admin.no-chests-deletable", "player", playerName));
-            } else if (deleted == 1) {
-                ctx.sender.sendMessage(ctx.lang.get(
-                        force ? "admin.chest-deleted-newest" : "admin.chest-deleted-newest-spilled",
-                        "player", playerName));
-            } else {
-                ctx.sender.sendMessage(ctx.lang.get(
-                        force ? "admin.chests-deleted-newest" : "admin.chests-deleted-newest-spilled",
-                        "player", playerName, "count", Integer.toString(deleted)));
-            }
+            ctx.spillService.removeNewestChests(ctx.target, count, force).thenAccept(deleted -> {
+                if (deleted == 0) {
+                    ctx.sender.sendMessage(ctx.lang.get("admin.no-chests-deletable", "player", playerName));
+                } else if (deleted == 1) {
+                    ctx.sender.sendMessage(ctx.lang.get(
+                            force ? "admin.chest-deleted-newest" : "admin.chest-deleted-newest-spilled",
+                            "player", playerName));
+                } else {
+                    ctx.sender.sendMessage(ctx.lang.get(
+                            force ? "admin.chests-deleted-newest" : "admin.chests-deleted-newest-spilled",
+                            "player", playerName, "count", Integer.toString(deleted)));
+                }
+            });
         });
         return 1;
     }
@@ -217,43 +244,50 @@ public final class ChestAdminCommand {
      *   <li><b>2+ chests</b>, or the literal {@code list} → the admin chest-list dialog to pick one.</li>
      * </ul>
      * An explicit index opens that chest directly (verified to exist first). Offline owners are
-     * supported (the admin becomes the sole viewer; the chest persists on close).
+     * supported (the admin becomes the sole viewer; the chest persists on close), and are resolved from
+     * the plugin's own name index so an offline target is found even when the usercache does not know them.
      */
     private static int doView(CommandSourceStack source, String playerName,
                               @Nullable Integer index, boolean forceList) {
-        Ctx ctx = resolve(source, playerName);
-        if (ctx == null) return 0;
-
-        if (!(ctx.sender instanceof Player admin)) {
-            ctx.sender.sendMessage(ctx.lang.get("command.not-player"));
+        CommandSender sender = source.getSender();
+        if (!(sender instanceof Player admin)) {
+            EnhancedEchestPlugin plugin =
+                    (EnhancedEchestPlugin) Bukkit.getPluginManager().getPlugin("EnhancedEchest");
+            sender.sendMessage(plugin != null && plugin.isEnabled()
+                    ? plugin.getLanguageManager().get("command.not-player")
+                    : Component.text("[EnhancedEchest] Plugin is not available."));
             return 0;
         }
 
-        if (index != null) {
-            int idx = index;
-            ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
-                if (chests.stream().noneMatch(c -> c.index() == idx)) {
-                    ctx.sender.sendMessage(ctx.lang.get("admin.chest-not-found",
-                            "player", playerName, "index", Integer.toString(idx)));
-                    return;
-                }
-                ctx.chestOpener.openAdminDetail(admin, playerName, ctx.target, idx);
-            });
-            return 1;
-        }
+        resolveAsync(source, playerName).thenAccept(ctx -> {
+            if (ctx == null) return;
 
-        ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
-            if (chests.isEmpty()) {
-                ctx.sender.sendMessage(ctx.lang.get("admin.view-no-chests", "player", playerName));
+            if (index != null) {
+                int idx = index;
+                ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
+                    if (chests.stream().noneMatch(c -> c.index() == idx)) {
+                        ctx.sender.sendMessage(ctx.lang.get("admin.chest-not-found",
+                                "player", playerName, "index", Integer.toString(idx)));
+                        return;
+                    }
+                    ctx.chestOpener.openAdminDetail(admin, playerName, ctx.target, idx);
+                });
                 return;
             }
-            // A lone chest goes straight to its detail dialog unless 'list' was given; 2+ always show the
-            // picker. The detail dialog (Open / Clear chest [Admin] / Back) is the hub for admin actions.
-            if (!forceList && chests.size() == 1) {
-                ctx.chestOpener.openAdminDetail(admin, playerName, ctx.target, chests.get(0).index());
-            } else {
-                ctx.chestOpener.showAdminViewList(admin, playerName, ctx.target, chests);
-            }
+
+            ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
+                if (chests.isEmpty()) {
+                    ctx.sender.sendMessage(ctx.lang.get("admin.view-no-chests", "player", playerName));
+                    return;
+                }
+                // A lone chest goes straight to its detail dialog unless 'list' was given; 2+ always show the
+                // picker. The detail dialog (Open / Clear chest [Admin] / Back) is the hub for admin actions.
+                if (!forceList && chests.size() == 1) {
+                    ctx.chestOpener.openAdminDetail(admin, playerName, ctx.target, chests.get(0).index());
+                } else {
+                    ctx.chestOpener.showAdminViewList(admin, playerName, ctx.target, chests);
+                }
+            });
         });
         return 1;
     }
@@ -263,30 +297,28 @@ public final class ChestAdminCommand {
     private record Ctx(CommandSender sender, ChestOpener chestOpener, ChestSpillService spillService,
                        StorageGateway storageGateway, LanguageManager lang, UUID target) {}
 
-    private static Ctx resolve(CommandSourceStack source, String playerName) {
+    /**
+     * Resolves the plugin and target player asynchronously, completing with a ready-to-use {@link Ctx} or
+     * {@code null} after reporting the reason to the sender (plugin unavailable, or player not found). The
+     * name→UUID resolution runs off the command thread (see {@link PlayerResolver}).
+     */
+    private static CompletableFuture<Ctx> resolveAsync(CommandSourceStack source, String playerName) {
         CommandSender sender = source.getSender();
         EnhancedEchestPlugin plugin =
                 (EnhancedEchestPlugin) Bukkit.getPluginManager().getPlugin("EnhancedEchest");
         if (plugin == null || !plugin.isEnabled()) {
             sender.sendMessage(Component.text("[EnhancedEchest] Plugin is not available."));
-            return null;
+            return CompletableFuture.completedFuture(null);
         }
         LanguageManager lang = plugin.getLanguageManager();
-
-        UUID target = resolveUuid(playerName);
-        if (target == null) {
-            sender.sendMessage(lang.get("admin.player-not-found", "player", playerName));
-            return null;
-        }
-        return new Ctx(sender, plugin.getChestOpener(), plugin.getSpillService(),
-                plugin.getStorageGateway(), lang, target);
-    }
-
-    @SuppressWarnings("deprecation")
-    private static UUID resolveUuid(String name) {
-        Player online = Bukkit.getPlayerExact(name);
-        if (online != null) return online.getUniqueId();
-        OfflinePlayer offline = Bukkit.getOfflinePlayer(name);
-        return offline.hasPlayedBefore() ? offline.getUniqueId() : null;
+        return PlayerResolver.resolveAsync(plugin.getStorageGateway(), plugin.getDbExecutor(), playerName)
+                .thenApply(target -> {
+                    if (target == null) {
+                        sender.sendMessage(lang.get("admin.player-not-found", "player", playerName));
+                        return null;
+                    }
+                    return new Ctx(sender, plugin.getChestOpener(), plugin.getSpillService(),
+                            plugin.getStorageGateway(), lang, target);
+                });
     }
 }

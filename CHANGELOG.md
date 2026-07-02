@@ -2,6 +2,23 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.0.4 - 2026-07-02
+
+This release lets you set a player's base ender chest size by rank, makes `/ee view` reliable for offline players, and adds an automatic, versioned database upgrader.
+
+### Added
+
+- Added the **`enhancedechest.default_size.<size>`** permission to override a player's base (first) ender chest size by rank, independent of `enderchest.default-size`. For example, `enhancedechest.default_size.54` gives that player a 54-slot base chest.
+  - If a player holds several, the **largest** size wins.
+  - Gaining the permission resizes the base chest to it (growing keeps every item; shrinking moves the overflow into a recoverable temporary chest). Losing it shrinks the base chest back to `enderchest.default-size`, spilling any overflow — the same behavior as the additional-chest permission.
+  - While a base chest is sized this way it is **permission-managed**: `/ee resize` refuses to change it, just like a permission-granted chest (this holds for offline players too).
+  - Synced on the player's next chest open — no relog needed. It is a pure permission feature with no config switch.
+- The plugin now keeps each player's current in-game name in its own database (checked the first time they open their ender chest, written only when it has actually changed), so **`/ee view <player>`** (and `add` / `resize` / `delete` / `transfer`) resolve **offline** players reliably from the plugin's own data instead of depending on the server usercache or a Mojang lookup.
+
+### Changed
+
+- The database now upgrades itself **automatically and safely** across plugin versions: a new `schema_meta` table records the schema version, and only the newer migration steps are applied on startup (each guarded so a re-run never errors). Existing rows and contents are always preserved; no manual `ALTER TABLE` is needed. The `player_settings` table is renamed and merged into `players`, which now also carries the offline name index and the `applied_default_size` column (the permission-managed base-chest size baseline).
+
 ## 1.0.3 - 2026-06-29
 
 This release adds one-click chest sorting, lets you turn the chest customization buttons on or off server-wide, and gives admins the full chest menu while viewing another player.

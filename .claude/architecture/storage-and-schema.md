@@ -10,9 +10,15 @@ the shared `DbExecutor` async pool (see [concurrency-and-dupe-safety.md](concurr
 `AbstractSqlStorage` holds all DML as plain SQL valid across SQLite, MySQL/MariaDB and PostgreSQL. Only
 `CREATE TABLE` statements are dialect-specific, injected by each subclass (`SqliteStorage`,
 `MysqlStorage`, `PostgresStorage`) as a `String...` of DDL run in order by `init()` (currently
-`enderchests` + `player_settings`). New chest indexes are computed in Java (`MAX(chest_index)+1`), so no
+`enderchests` + `players`). New chest indexes are computed in Java (`MAX(chest_index)+1`), so no
 dialect-specific upsert is required. Connections come from a HikariCP pool (size 1 for SQLite,
 configurable otherwise). `StorageFactory` picks the backend from `config.type`.
+
+`init()` also calls `SchemaMigrator.migrate()` right after running the CREATE statements: a versioned,
+forward-only migrator (`schema_meta` table) that brings an existing (older) database up to the current
+schema — additive column steps guarded by a JDBC-metadata `columnExists` check, occasional table
+renames/merges guarded by `tableExists` (e.g. the 1.0.4 `player_settings` → `players` merge). A fresh
+install's CREATE statements already carry every column, so the migrator's steps no-op on it.
 
 **Rule:** all DML portable, only DDL per-dialect. Avoid `ON CONFLICT` / `ON DUPLICATE KEY`; do a portable
 `UPDATE`-then-`INSERT`-if-no-row upsert instead.
@@ -47,20 +53,32 @@ Primary resolution (`SQL_PRIMARY`) filters `kind <> 1` (everything **except** TE
 lowest-indexed non-temp chest. Both NORMAL and PERM chests are eligible to be opened by `/ec` and set as
 the main; only temp chests are excluded.
 
-## Schema: `player_settings`
+## Schema: `players`
 
-Per-player UI/behaviour preferences, **one row per player** (`player_uuid` PK), separate from
-`enderchests` because they are per-player, not per-chest. Wide table, one typed column per setting (not
-EAV/JSON) — fast, type-safe, DB-level defaults.
+Per-player state, **one row per player** (`player_uuid` PK), separate from `enderchests` because it is
+per-player, not per-chest. Wide table, one typed column per setting (not EAV/JSON) — fast, type-safe,
+DB-level defaults. Named `players` rather than `player_settings` because it also carries identity data
+(the name index), not just behavioural preferences — before 1.0.4 this was two tables (`player_settings`
++ `player_names`); the migrator merges them on upgrade (see above).
 
 | Column | Notes |
 |--------|-------|
 | `player_uuid` | PK |
+| `username` | nullable; the player's name as last recorded, backing offline `/ee view` name→UUID resolution. Column 2 on a fresh install; an upgraded database keeps it physically wherever the migrator's `ALTER TABLE ADD COLUMN` landed it (always the end — no portable "add after X"), which is harmless since every DML here addresses columns by name |
 | `edit_mode` | bool (0/1, default 0) — remembers whether `/eclist` opens in edit mode across sessions |
+| `applied_default_size` | the base-chest size dictated by `enhancedechest.default_size.<size>`, or `0` when not permission-managed — see [commands-and-permissions.md](commands-and-permissions.md#permission-granted-chests) |
 
 Mapped to the `PlayerSettings` record (loaded/saved **whole**, never null — an absent row reads as
-`PlayerSettings.defaults()`). `saveSettings` (whole object) and `setEditMode` (single targeted field, no
-preceding read) are both portable upserts.
+`PlayerSettings.defaults()`). `saveSettings` (whole object) and `setEditMode`/`setAppliedDefaultSize`
+(single targeted field, no preceding read) are all portable upserts — `saveSettings` deliberately excludes
+`username`, which is written only by the separate `upsertPlayerName`/`findUuidByName` pair, so a save built
+from a stale in-memory `PlayerSettings` can never clobber a name recorded since it was loaded.
+
+`upsertPlayerName` is called **lazily**, and not on join at all: `ChestOpener.reconcileForOpen` — the
+shared prelude for every self-open path (`/ec`, `/eclist`, right-click) — reuses the settings row it
+already loaded there, compares the loaded `username` against the player's current name, and only writes
+when they differ (a rename, or the first time that player ever opens an ender chest). A player who joins
+but never opens a chest costs no write at all.
 
 **To add a setting:** add a component to `PlayerSettings`, a column to all three DDLs, and a mapping in
 `loadSettings`/`saveSettings`.

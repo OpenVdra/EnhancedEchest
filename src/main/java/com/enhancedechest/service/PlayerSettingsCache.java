@@ -15,6 +15,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * on quit ({@link #evictSettings}) — so it is bounded by the online-player count. Writes go straight
  * to the DB (write-through), so the cache holds no dirty state and needs no shutdown flush. See the
  * leak-free invariant documented on {@link #preloadSettings}.
+ *
+ * <p>The name index is <b>not</b> touched here. It is written lazily by {@code ChestOpener}'s shared
+ * open prelude — the first time a player actually opens their ender chest (or the list/right-click
+ * equivalents) — reusing the settings row already loaded there, rather than unconditionally on join. See
+ * {@link #setUsernameAsync}.
  */
 public final class PlayerSettingsCache {
 
@@ -79,6 +84,35 @@ public final class PlayerSettingsCache {
     public CompletableFuture<Void> setEditModeAsync(UUID owner, boolean editMode) {
         settingsCache.computeIfPresent(owner, (k, s) -> s.withEditMode(editMode));
         return db.run(() -> storage.setEditMode(owner, editMode));
+    }
+
+    /**
+     * Persists the base-chest size baseline the default-size reconcile just applied, with a single targeted
+     * upsert (no preceding read), leaving edit-mode untouched. Write-through: the cached copy is updated in
+     * place first (if present) so the next reconcile sees the new baseline without a DB read (and so its
+     * fast path holds), then the DB is written. Uses {@code computeIfPresent} so it never inserts —
+     * preserving the leak-free invariant.
+     */
+    public CompletableFuture<Void> setAppliedDefaultSizeAsync(UUID owner, int size) {
+        settingsCache.computeIfPresent(owner, (k, s) -> s.withAppliedDefaultSize(size));
+        return db.run(() -> storage.setAppliedDefaultSize(owner, size));
+    }
+
+    /**
+     * Records the player's current in-game name (offline {@code /ee view} resolution), with a single
+     * targeted upsert (no preceding read). Called by {@code ChestOpener}'s open prelude only when the
+     * loaded {@code username} differs from the player's current name — a returning player whose name
+     * hasn't changed costs no write. Write-through: the cached copy is updated in place first (if
+     * present), then the DB is written. Uses {@code computeIfPresent} so it never inserts — preserving
+     * the leak-free invariant.
+     */
+    public CompletableFuture<Void> setUsernameAsync(UUID owner, String username) {
+        settingsCache.computeIfPresent(owner, (k, s) -> s.withUsername(username));
+        return db.run(() -> storage.upsertPlayerName(owner, username))
+                .exceptionally(e -> {
+                    logger.warn("Failed to record name for {}", owner, e.getCause() != null ? e.getCause() : e);
+                    return null;
+                });
     }
 
     /**

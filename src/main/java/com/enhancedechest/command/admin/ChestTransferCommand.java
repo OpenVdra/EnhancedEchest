@@ -3,21 +3,23 @@ package com.enhancedechest.command.admin;
 import com.enhancedechest.EnhancedEchestPlugin;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.service.ChestTransferService.ConflictPolicy;
+import com.enhancedechest.service.DbExecutor;
+import com.enhancedechest.service.StorageGateway;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.util.Locale;
-import java.util.UUID;
 
 /**
  * {@code /ee transfer <from> <to> <index|name|all> [override|temp]} — moves a player's ender chests onto
  * another account when someone switches accounts. The conflict flag and the target are parsed out of a
  * single greedy argument so the target may be {@code all}, a {@code #index} or a custom chest name (which
  * can contain spaces), with the optional {@code override}/{@code temp} flag as the last word.
+ *
+ * <p>Both players are resolved asynchronously via {@link PlayerResolver}, so offline accounts are found
+ * from the plugin's own name index even when the server usercache does not know them.
  */
 public final class ChestTransferCommand {
 
@@ -50,26 +52,26 @@ public final class ChestTransferCommand {
             return 0;
         }
 
-        UUID from = resolveUuid(fromName);
-        if (from == null) {
-            sender.sendMessage(lang.get("admin.player-not-found", "player", fromName));
-            return 0;
-        }
-        UUID to = resolveUuid(toName);
-        if (to == null) {
-            sender.sendMessage(lang.get("admin.player-not-found", "player", toName));
-            return 0;
-        }
+        final ConflictPolicy finalPolicy = policy;
+        final String finalTarget = target;
+        StorageGateway gateway = plugin.getStorageGateway();
+        DbExecutor db = plugin.getDbExecutor();
 
-        plugin.getChestTransferService().transfer(sender, fromName, from, toName, to, target, policy);
+        // Resolve both accounts off the command thread (offline lookup can hit the network), then transfer.
+        PlayerResolver.resolveAsync(gateway, db, fromName).thenAccept(from -> {
+            if (from == null) {
+                sender.sendMessage(lang.get("admin.player-not-found", "player", fromName));
+                return;
+            }
+            PlayerResolver.resolveAsync(gateway, db, toName).thenAccept(to -> {
+                if (to == null) {
+                    sender.sendMessage(lang.get("admin.player-not-found", "player", toName));
+                    return;
+                }
+                plugin.getChestTransferService()
+                        .transfer(sender, fromName, from, toName, to, finalTarget, finalPolicy);
+            });
+        });
         return 1;
-    }
-
-    @SuppressWarnings("deprecation")
-    private static UUID resolveUuid(String name) {
-        Player online = Bukkit.getPlayerExact(name);
-        if (online != null) return online.getUniqueId();
-        OfflinePlayer offline = Bukkit.getOfflinePlayer(name);
-        return offline.hasPlayedBefore() ? offline.getUniqueId() : null;
     }
 }

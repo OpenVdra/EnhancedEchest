@@ -48,6 +48,8 @@ admin:
   chest-not-found: '{prefix}&f{player} has no ender chest with index {index}.'
   # /ee resize on a permission-granted chest — those are managed by permissions, not admin commands.
   cannot-modify-perm: '{prefix}&fEnder chest {index} of {player} is granted by a permission and cannot be modified.'
+  # /ee resize on the base chest while its size is set by an enhancedechest.default_size.<size> permission.
+  cannot-modify-default-size: '{prefix}&fEnder chest {index} of {player} is sized by a permission and cannot be resized.'
   # /ee view <player> — the target owns no chests yet, so there is nothing to open.
   view-no-chests: '{prefix}&f{player} does not have any ender chests yet.'
   chest-added: '{prefix}&fAdded ender chest {index} with {size} slots to {player}.'

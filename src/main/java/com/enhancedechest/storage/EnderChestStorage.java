@@ -184,7 +184,12 @@ public interface EnderChestStorage {
      */
     PlayerSettings loadSettings(UUID owner);
 
-    /** Upserts the player's settings (whole object): updates the existing row, or inserts one if none exists. */
+    /**
+     * Upserts the player's {@code editMode}/{@code appliedDefaultSize} (whole-object save): updates the
+     * existing row, or inserts one if none exists. Does <b>not</b> touch {@code username} — that field is
+     * written only by {@link #upsertPlayerName}, so a save built from a stale in-memory copy never clobbers
+     * a name recorded since it was loaded.
+     */
     void saveSettings(UUID owner, PlayerSettings settings);
 
     /**
@@ -193,4 +198,39 @@ public interface EnderChestStorage {
      * never clobbers other settings. Use {@link #saveSettings} when persisting the whole object.
      */
     void setEditMode(UUID owner, boolean editMode);
+
+    /**
+     * Reads the persisted {@code applied_default_size} baseline — the base-chest size currently dictated
+     * by the player's {@code enhancedechest.default_size.<size>} permission, or {@code 0} when the base
+     * chest is not permission-managed. Returns {@code 0} for a player with no settings row. Used by
+     * {@code /ee resize} to decide (even for an offline owner) whether the base chest is off-limits.
+     */
+    int getAppliedDefaultSize(UUID owner);
+
+    /**
+     * Targeted single-field upsert of just the {@code applied_default_size} baseline (no preceding read),
+     * leaving every other setting untouched. Written by the default-size reconcile whenever the player's
+     * permission-derived base size changes. {@code 0} records "not permission-managed".
+     */
+    void setAppliedDefaultSize(UUID owner, int size);
+
+    // ---- player name index (offline /ee view resolution) ----
+    // username lives on the same players row as the settings above (merged table — one row per player,
+    // no separate name table) but is written through this targeted method, not saveSettings, so a stale
+    // in-memory PlayerSettings can never clobber a name recorded since it was loaded.
+
+    /**
+     * Records a player's current in-game name against their UUID, so name→UUID resolution works for
+     * offline players from the plugin's own data instead of relying on the server usercache or a Mojang
+     * lookup. Called only when the name actually changed (lazy — see
+     * {@code ChestOpener}'s open prelude, {@code PlayerSettingsCache.setUsernameAsync}), the first time
+     * the player opens their ender chest after a rename (or ever) — not on join.
+     */
+    void upsertPlayerName(UUID owner, String name);
+
+    /**
+     * Resolves a stored in-game name to its UUID, case-insensitively, or {@code null} if no player with
+     * that name has been recorded. Never blocks on the network — this reads only the plugin's own table.
+     */
+    @Nullable UUID findUuidByName(String name);
 }

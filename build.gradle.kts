@@ -10,7 +10,7 @@ configurations {
 }
 
 group = "com.enhancedechest"
-version = "1.0.3"
+version = "1.0.4"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -95,7 +95,7 @@ tasks.processResources {
 
 tasks.runServer {
     downloadPlugins {
-        // modrinth("luckperms", "v5.5.53-bukkit")
+         modrinth("luckperms", "v5.5.53-bukkit")
         // modrinth("axvaults", "2.15.0")
         modrinth("viaversion", "5.10.0")
     }

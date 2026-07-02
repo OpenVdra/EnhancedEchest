@@ -44,6 +44,13 @@ public final class PermissionChestService {
     private static final Pattern PERM_PATTERN =
             Pattern.compile("^enhancedechest\\.additional_amount\\.(\\d+)\\.slot\\.(\\d+)$");
 
+    /** Prefix of the base-chest size override node — a cheap {@link String#startsWith} prefilter. */
+    private static final String DEFAULT_SIZE_PREFIX = "enhancedechest.default_size.";
+
+    /** Matches {@code enhancedechest.default_size.<size>}; group 1 = size. Largest matching size wins. */
+    private static final Pattern DEFAULT_SIZE_PATTERN =
+            Pattern.compile("^enhancedechest\\.default_size\\.(\\d+)$");
+
     private final StorageGateway storageGateway;
     private final ChestSpillService spillService;
 
@@ -51,7 +58,10 @@ public final class PermissionChestService {
     // during a reload are visible to the async/entity threads that read them.
     /** Master switch: when false, reconcile is a no-op (existing PERM chests are left untouched). */
     private volatile boolean enabled;
-    /** Slot count of the base NORMAL chest bootstrapped if the player owns none. */
+    /**
+     * Config {@code enderchest.default-size}: the base NORMAL chest's size when the player has no
+     * {@code default_size} permission, and the size a revoked base chest shrinks back to.
+     */
     private volatile int defaultSize;
 
     // One reconcile per owner at a time: a second open while a reconcile is in flight skips reconcile
@@ -105,21 +115,74 @@ public final class PermissionChestService {
     }
 
     /**
-     * Reconciles the player's PERM chests against their permission-derived {@code desired} target, then
-     * completes with the up-to-date chest list. When nothing needs to change (base chest present and the
-     * PERM chests already match), returns the passed-in list with no DB writes (fast path).
+     * Resolves the player's base-chest size override from their {@code enhancedechest.default_size.<size>}
+     * permissions: the <b>largest</b> valid size they hold, or {@code 0} when they hold none (base stays at
+     * the config default, and shrinks back to it if a permission was revoked). Always active — the
+     * override is a pure permission feature with no config toggle.
      *
-     * <p>The diff keeps as many items in place as possible: existing PERM chests already at a desired
-     * size are kept untouched; surplus PERM chests are resized in place to fill a still-missing size
-     * (preserving their items, name and icon — only a shrink spills the overflow); any remaining missing
-     * sizes create fresh empty chests; and any true surplus is removed with its items spilled to temp.
+     * <p>Like {@link #resolveDesired}, this must run on the player's entity thread
+     * ({@code getEffectivePermissions}) and uses a cheap {@link String#startsWith} prefilter to skip the
+     * regex for the many nodes that are not size overrides.
+     */
+    public int resolveDefaultTarget(Player player) {
+        int max = 0;
+        for (PermissionAttachmentInfo info : player.getEffectivePermissions()) {
+            if (!info.getValue()) continue;
+            String node = info.getPermission();
+            if (!node.startsWith(DEFAULT_SIZE_PREFIX)) continue;
+            Matcher m = DEFAULT_SIZE_PATTERN.matcher(node);
+            if (!m.matches()) continue;
+            int size;
+            try {
+                size = Integer.parseInt(m.group(1));
+            } catch (NumberFormatException e) {
+                continue; // overflowed int in the permission node — ignore it
+            }
+            if (!PluginConfig.isValidSize(size)) continue;
+            if (size > max) max = size;
+        }
+        return max;
+    }
+
+    /**
+     * Reconciles both the player's PERM chests (against their permission-derived {@code desired} target)
+     * <b>and</b> the base NORMAL chest's size (against the {@code default_size} permission), then completes
+     * with the up-to-date chest list. When nothing needs to change, returns the passed-in list with no DB
+     * writes (fast path).
      *
-     * @param chests the player's current chests (already fetched by the caller)
+     * <p><b>PERM chests.</b> The diff keeps as many items in place as possible: existing PERM chests
+     * already at a desired size are kept untouched; surplus PERM chests are resized in place to fill a
+     * still-missing size (preserving their items, name and icon — only a shrink spills the overflow); any
+     * remaining missing sizes create fresh empty chests; and any true surplus is removed with its items
+     * spilled to temp.
+     *
+     * <p><b>Base chest size.</b> Driven by {@code defaultTarget} (from {@link #resolveDefaultTarget}) and
+     * the persisted {@code appliedDefault} baseline:
+     * <ul>
+     *   <li>{@code defaultTarget > 0} — the player holds a {@code default_size} permission: the base chest
+     *       is resized to it (grow, or shrink spilling the overflow to a temp chest);</li>
+     *   <li>{@code defaultTarget == 0} with {@code appliedDefault > 0} — the permission was just revoked:
+     *       the base chest shrinks back to the config default (spilling any overflow);</li>
+     *   <li>{@code defaultTarget == 0} with {@code appliedDefault == 0} — never permission-managed: the
+     *       base chest is left alone (its size is the admin/config domain).</li>
+     * </ul>
+     * A base chest bootstrapped here is created directly at the permission size when one applies, so a
+     * brand-new player with the permission never needs a follow-up resize. Persisting the new baseline is
+     * the caller's job (it equals {@code defaultTarget}); this method only moves items.
+     *
+     * @param defaultTarget  the base-chest size override (0 = no {@code default_size} permission held)
+     * @param appliedDefault the persisted {@code applied_default_size} baseline (last permission-set size)
+     * @param chests         the player's current chests (already fetched by the caller)
      */
     public CompletableFuture<List<ChestSummary>> reconcile(UUID owner, Map<Integer, Integer> desired,
+                                                           int defaultTarget, int appliedDefault,
                                                            List<ChestSummary> chests) {
-        // Disabled: never mutate. Existing PERM chests stay and behave as normal chests.
-        if (!enabled) return CompletableFuture.completedFuture(chests);
+        // PERM-chest reconcile disabled AND base-size override inert (no permission, no baseline): never
+        // mutate. The base-size override itself has no toggle — it is inert only when nothing applies.
+        boolean baseManaged = defaultTarget > 0 || (defaultTarget == 0 && appliedDefault > 0);
+        if (!enabled && !baseManaged) {
+            return CompletableFuture.completedFuture(chests);
+        }
 
         boolean hasNormal = chests.stream().anyMatch(c -> c.kind() == ChestKind.NORMAL);
         List<ChestSummary> existing = chests.stream()
@@ -129,9 +192,24 @@ public final class PermissionChestService {
         Map<Integer, Integer> existMulti = new HashMap<>();
         for (ChestSummary c : existing) existMulti.merge(c.size(), 1, Integer::sum);
 
+        // The base chest is the lowest-indexed NORMAL chest — the one the default_size permission governs.
+        ChestSummary base = chests.stream()
+                .filter(c -> c.kind() == ChestKind.NORMAL)
+                .min(Comparator.comparingInt(ChestSummary::index))
+                .orElse(null);
+        // Size a freshly bootstrapped base chest at the permission size when one applies (else config default).
+        int bootstrapSize = defaultTarget > 0 ? defaultTarget : defaultSize;
+        // Size an existing base chest should be moved to (>0), or -1 when it must be left alone.
+        int baseTarget = defaultTarget > 0 ? defaultTarget
+                : (defaultTarget == 0 && appliedDefault > 0 ? defaultSize : -1);
+        boolean baseResizeNeeded = base != null && baseTarget > 0 && base.size() != baseTarget;
+
         boolean needsBase = !hasNormal;
-        // Fast path: base present and PERM chests already match — no writes, no re-list.
-        if (!needsBase && existMulti.equals(desired)) {
+        // The PERM diff only runs when that feature is enabled; when it is off we still may touch the base.
+        boolean permChanged = enabled && (needsBase || !existMulti.equals(desired));
+
+        // Fast path: nothing to do for the base or the PERM chests — no writes, no re-list.
+        if (!needsBase && !baseResizeNeeded && !permChanged) {
             return CompletableFuture.completedFuture(chests);
         }
 
@@ -141,11 +219,31 @@ public final class PermissionChestService {
             return CompletableFuture.completedFuture(chests);
         }
 
+        final int baseIndex = base != null ? base.index() : -1;
         try {
-            // Bootstrap the inviolable base NORMAL chest first, if the player somehow has none.
+            // Bootstrap the inviolable base NORMAL chest first, if the player somehow has none. It is
+            // created directly at the permission size when one applies, so no follow-up resize is needed.
             CompletableFuture<Void> chain = needsBase
-                    ? storageGateway.createChestAsync(owner, defaultSize, null).thenApply(created -> null)
+                    ? storageGateway.createChestAsync(owner, bootstrapSize, null).thenApply(created -> null)
                     : CompletableFuture.completedFuture(null);
+
+            // Grow/shrink the existing base chest to its permission-derived size (shrink spills to a temp
+            // chest, exactly like a PERM-chest shrink). Runs before the PERM diff; order is irrelevant since
+            // each op serializes per (owner, index) in ChestSpillService.
+            if (baseResizeNeeded) {
+                chain = chain.thenCompose(v -> spillService.resizeOrSpill(owner, baseIndex, baseTarget));
+            }
+
+            // The PERM-chest diff only applies when that feature is enabled.
+            if (!enabled) {
+                chain.thenCompose(v -> storageGateway.listChestsAsync(owner))
+                        .whenComplete((list, ex) -> {
+                            inFlight.remove(owner, result);
+                            if (ex != null) result.completeExceptionally(ex);
+                            else result.complete(list);
+                        });
+                return result;
+            }
 
             // 1) Keep every existing PERM chest already at a still-desired size (untouched, zero risk).
             Map<Integer, Integer> remaining = new HashMap<>(desired);
