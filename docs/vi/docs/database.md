@@ -78,9 +78,7 @@ Không bao giờ cần chuyển dữ liệu thủ công hay `ALTER TABLE`. Như 
 
 ### Tra Cứu Người Chơi Ngoại Tuyến
 
-Các lệnh quản trị nhận tên người chơi — `/ee view`, `/ee add`, `/ee resize`, `/ee delete`, `/ee transfer` — tra tên đó ra UUID từ chỉ mục tên trong bảng `players`. Chỉ mục này được cập nhật vào lần đầu tiên người chơi mở rương Ender của họ (không phải lúc đăng nhập), và chỉ ghi khi tên của họ thực sự thay đổi so với lần ghi trước — người chơi quay lại với tên không đổi thì không tốn thêm lần ghi nào. Điều này nghĩa là `/ee view <name>` hoạt động với người chơi **ngoại tuyến** đã mở rương Ender ít nhất một lần kể từ khi bạn cài phiên bản này, không phụ thuộc vào usercache của server hay tra cứu Mojang. Một người chơi mới chỉ đăng nhập mà chưa từng mở rương Ender — hoặc lần cuối họ làm vậy là ở một phiên bản cũ hơn, trước khi có tính năng chỉ mục tên — sẽ được tra bằng usercache của server ở lần đầu, và được lập chỉ mục vào lần tiếp theo họ mở rương.
-
-Tính năng gợi ý tên (tab-completion) của các lệnh trên cũng tra theo chỉ mục này, cùng với usercache riêng của server — nên một người chơi mà server chỉ biết qua bảng này (ví dụ được nhập thẳng vào cơ sở dữ liệu thay vì thực sự từng vào server) vẫn hiện ra khi gợi ý, và vẫn tra được đúng, dù server chưa từng thấy họ.
+`/ee view`, `/ee add`, `/ee resize`, `/ee delete` và `/ee transfer` đều tìm được người chơi qua tên dù họ đang ngoại tuyến, kể cả khi bạn mới gõ tên và đang chờ gợi ý. Tính năng này dùng dữ liệu tên người chơi riêng của plugin, được cập nhật tự động ngay lần đầu tiên mỗi người chơi mở rương Ender của họ. Một người chơi mới sẽ được tìm theo cách này sau lần đăng nhập và mở rương đầu tiên; trước đó, plugin dùng danh sách người chơi có sẵn của server.
 
 ## Chia Sẻ Dữ Liệu Giữa Các Máy Chủ
 

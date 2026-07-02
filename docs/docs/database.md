@@ -78,9 +78,7 @@ No manual migration or `ALTER TABLE` is ever required. As always, keep a backup 
 
 ### Offline player lookups
 
-Admin commands that take a player name — `/ee view`, `/ee add`, `/ee resize`, `/ee delete`, `/ee transfer` — resolve that name to a UUID from the `players` table's name index. That index is kept up to date the first time a player opens their ender chest (not on login), and only written to when their name has actually changed since it was last recorded — a returning player with an unchanged name costs no extra write. This means `/ee view <name>` works for **offline** players who have opened their ender chest at least once since you installed this version, without depending on the server usercache or a Mojang lookup. A player who has only joined but never opened an ender chest yet — or who last did so on an older version, before name indexing — is resolved by the server's usercache the first time, and indexed the next time they open a chest.
-
-Tab-completion for these same commands draws from this index too, alongside the server's own usercache — so a player known only through this table (for example, one imported straight into the database rather than having actually joined this server) still shows up as a suggestion, and still resolves correctly, even though the server itself has never seen them.
+`/ee view`, `/ee add`, `/ee resize`, `/ee delete`, and `/ee transfer` can find a player by name while they are offline, including while you are still typing the name for tab completion. This uses the plugin's own record of player names, kept up to date automatically the first time each player opens their ender chest. A brand new player is found this way after their first login and chest open; before that, the server's own player list is used instead.
 
 ## Sharing Data Across Servers
 
