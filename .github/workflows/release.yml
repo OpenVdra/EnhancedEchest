@@ -158,7 +158,7 @@ jobs:
             }')
           curl -sS --fail-with-body -X POST https://api.modrinth.com/v2/version \
             -H "Authorization: $MODRINTH_TOKEN" \
-            -F "data=$DATA" \
+            --form-string "data=$DATA" \
             -F "file=@$JAR;type=application/java-archive"
 
       - name: Publish to Hangar
