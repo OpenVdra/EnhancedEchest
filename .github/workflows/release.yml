@@ -178,8 +178,8 @@ jobs:
             { "PAPER": ["1.21.11", "26.1", "26.1.1", "26.1.2", "26.2"] }
 
       # Build the Discord embed body: the changelog followed by a download-links
-      # section. Modrinth isn't listed yet because the project page isn't public —
-      # add it here once it is. The GitHub link is the resolved release URL.
+      # section and a documentation link. The GitHub link is the resolved release URL;
+      # Modrinth and the docs site URL come from the same badges linked in README.md.
       - name: Compose Discord message
         id: discord
         if: ${{ !cancelled() && steps.meta.outcome == 'success' }}
@@ -187,14 +187,19 @@ jobs:
           CHANGELOG: ${{ steps.changelog.outputs.body }}
           RELEASE_URL: ${{ steps.release.outputs.url }}
         run: |
+          MODRINTH="https://modrinth.com/plugin/enhancedechest"
           SPIGOT="https://www.spigotmc.org/resources/enhancedechest-double-echest-plugin-%E2%9C%A8-26-1-2-26-2-%EF%B8%8F.136442/"
           HANGAR="https://hangar.papermc.io/Nighter/EnhancedEchest"
+          DOCS="https://openvdra.github.io/EnhancedEchest/"
           {
             echo "description<<__DISCORD_EOF__"
             echo "$CHANGELOG"
             echo ""
             echo "**📥 Download**"
-            echo "[Hangar]($HANGAR) · [Spigot]($SPIGOT) · [GitHub Release]($RELEASE_URL)"
+            echo "[Modrinth]($MODRINTH) · [Hangar]($HANGAR) · [Spigot]($SPIGOT) · [GitHub Release]($RELEASE_URL)"
+            echo ""
+            echo "**📖 Documentation**"
+            echo "[Docs]($DOCS)"
             echo "__DISCORD_EOF__"
           } >> "$GITHUB_OUTPUT"
 

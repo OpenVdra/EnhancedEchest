@@ -13,7 +13,8 @@ This release lets you set a player's base ender chest size by rank, makes `/ee v
   - Gaining the permission resizes the base chest to it (growing keeps every item; shrinking moves the overflow into a recoverable temporary chest). Losing it shrinks the base chest back to `enderchest.default-size`, spilling any overflow — the same behavior as the additional-chest permission.
   - While a base chest is sized this way it is **permission-managed**: `/ee resize` refuses to change it, just like a permission-granted chest (this holds for offline players too).
   - Synced on the player's next chest open — no relog needed. It is a pure permission feature with no config switch.
-- The plugin now keeps each player's current in-game name in its own database (checked the first time they open their ender chest, written only when it has actually changed), so **`/ee view <player>`** (and `add` / `resize` / `delete` / `transfer`) resolve **offline** players reliably from the plugin's own data instead of depending on the server usercache or a Mojang lookup.
+  - The plugin now keeps each player's current in-game name in its own database (checked the first time they open their ender chest, written only when it has actually changed), so **`/ee view <player>`** (and `add` / `resize` / `delete` / `transfer`) resolve **offline** players reliably from the plugin's own data instead of depending on the server usercache or a Mojang lookup.
+  - This name index is also kept in memory for instant lookups, so tab-completion for these same commands suggests offline players from the plugin's own data too — not just names the server's own usercache happens to know — with no extra database query as you type.
 
 ### Changed
 

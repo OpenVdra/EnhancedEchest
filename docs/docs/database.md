@@ -80,6 +80,8 @@ No manual migration or `ALTER TABLE` is ever required. As always, keep a backup 
 
 Admin commands that take a player name — `/ee view`, `/ee add`, `/ee resize`, `/ee delete`, `/ee transfer` — resolve that name to a UUID from the `players` table's name index. That index is kept up to date the first time a player opens their ender chest (not on login), and only written to when their name has actually changed since it was last recorded — a returning player with an unchanged name costs no extra write. This means `/ee view <name>` works for **offline** players who have opened their ender chest at least once since you installed this version, without depending on the server usercache or a Mojang lookup. A player who has only joined but never opened an ender chest yet — or who last did so on an older version, before name indexing — is resolved by the server's usercache the first time, and indexed the next time they open a chest.
 
+Tab-completion for these same commands draws from this index too, alongside the server's own usercache — so a player known only through this table (for example, one imported straight into the database rather than having actually joined this server) still shows up as a suggestion, and still resolves correctly, even though the server itself has never seen them.
+
 ## Sharing Data Across Servers
 
 Pointing several servers at the **same** MySQL/MariaDB/PostgreSQL database lets them share ender chest storage. Players see the same contents regardless of which server they log in to, as long as they are only on one server at a time.
