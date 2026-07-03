@@ -10,7 +10,7 @@ configurations {
 }
 
 group = "com.enhancedechest"
-version = "1.0.4"
+version = "1.0.5"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
