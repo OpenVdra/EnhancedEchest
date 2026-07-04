@@ -30,6 +30,7 @@ migrate:
   player-offline: '{prefix}&f{player} không trực tuyến.'
   success: '{prefix}&fĐã chuyển dữ liệu cho {player} thành công.'
   already-done: '{prefix}&f{player} đã được chuyển dữ liệu từ trước.'
+  failed: '{prefix}&fChuyển dữ liệu cho {player} thất bại. Xem console để biết chi tiết.'
   # Nhập từ plugin kho khác — {source} là tên plugin (AxVaults, PlayerVaultsX).
   no-source: '{prefix}&fKhông tìm thấy dữ liệu {source} để nhập.'
   started: '{prefix}&fĐang nhập kho từ {source}… tiến trình chạy nền.'

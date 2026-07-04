@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -140,10 +141,17 @@ public final class ChestOpener {
                         boolean hasTemp = chests.stream().anyMatch(c -> c.kind() == ChestKind.TEMP);
                         // PERM chests behave exactly like NORMAL ones for routing — count both as "real".
                         long normalCount = chests.stream().filter(c -> c.kind() != ChestKind.TEMP).count();
-                        // 0 or 1 normal chest and nothing spilled: open it directly (bootstrapping
-                        // chest #1 if the player owns none).
+                        // 0 or 1 normal chest and nothing spilled: open it directly. The index comes
+                        // straight from the list already in hand (with one non-TEMP chest there is
+                        // nothing to disambiguate — same answer getPrimaryIndex would give, minus the
+                        // extra query on every open). Only a player with no chests at all still goes
+                        // to the DB, to bootstrap chest #1.
                         if (!hasTemp && normalCount <= 1) {
-                            openPrimaryChest(player, uuid, sourceBlock);
+                            chests.stream().filter(c -> c.kind() != ChestKind.TEMP)
+                                    .map(ChestSummary::index).findFirst()
+                                    .ifPresentOrElse(
+                                            index -> sessions.open(player, uuid, index, sourceBlock),
+                                            () -> openPrimaryChest(player, uuid, sourceBlock));
                             return;
                         }
                         // 2+ chests: only an explicitly-flagged main, set by a player who may use it,
@@ -168,7 +176,11 @@ public final class ChestOpener {
         });
     }
 
-    /** Loads and opens the player's primary chest inventory directly (creating chest #1 if none exist). */
+    /**
+     * Loads and opens the player's primary chest inventory directly (creating chest #1 if none exist).
+     * Only reached when the already-fetched chest list was empty — a player with an existing chest is
+     * routed straight to it by {@link #open} without this extra getPrimaryIndex round-trip.
+     */
     private void openPrimaryChest(Player player, UUID uuid, @Nullable Location sourceBlock) {
         db.supply(() -> resolvePrimaryIndex(uuid))
                 .thenAccept(index -> sessions.open(player, uuid, index, sourceBlock))
@@ -283,7 +295,7 @@ public final class ChestOpener {
         UUID uuid = player.getUniqueId();
         boolean canSetMain = canSetMain(player);
         // Reconcile permission-granted chests before building the list, so /eclist reflects the current
-        // grants. resolveDesired must read permissions on the entity thread.
+        // grants. resolveTargets must read permissions on the entity thread.
         foliaLib.getScheduler().runAtEntity(player, outerTask -> {
             reconcileForOpen(player, uuid)
                     .thenAccept(chests ->
@@ -308,14 +320,15 @@ public final class ChestOpener {
      * right-click). Also owns the lazy name-index write (see {@link #recordNameIfChanged}): the first time
      * a player opens their ender chest after a rename (or ever), not on join.
      *
-     * <p>Must be called on the player's entity thread: {@link PermissionChestService#resolveDesired} and
-     * {@link PermissionChestService#resolveDefaultTarget} read the player's effective permissions. Settings
+     * <p>Must be called on the player's entity thread: {@link PermissionChestService#resolveTargets}
+     * reads the player's effective permissions (both targets in one pass over the snapshot). Settings
      * are served from the write-through cache (warm for any online player), so the common "nothing changed"
      * case adds no DB query beyond the one chest list.
      */
-    private java.util.concurrent.CompletableFuture<List<ChestSummary>> reconcileForOpen(Player player, UUID uuid) {
-        java.util.Map<Integer, Integer> permTarget = permService.resolveDesired(player);
-        int defaultTarget = permService.resolveDefaultTarget(player);
+    private CompletableFuture<List<ChestSummary>> reconcileForOpen(Player player, UUID uuid) {
+        PermissionChestService.PermTargets targets = permService.resolveTargets(player);
+        java.util.Map<Integer, Integer> permTarget = targets.desired();
+        int defaultTarget = targets.defaultTarget();
         return settings.loadSettingsAsync(uuid).thenCompose(s -> {
             int applied = s.appliedDefaultSize();
             recordNameIfChanged(uuid, player.getName(), s.username());

@@ -88,7 +88,11 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
 
         // Service layer, wired bottom-up: the shared async pool, then the storage/settings wrappers
         // over it, then the dupe-safe session registry, then the item-moving and open-routing layers.
-        dbExecutor     = new DbExecutor();
+        // The pool cap is sized to the backend: threads beyond the JDBC connection count only block
+        // inside Hikari, so SQLite (1 connection) gets a small handful and the remote backends get
+        // roughly twice their connection pool (headroom for encode/decode work around the DB call).
+        boolean sqliteBackend = pluginConfig.getDatabaseType().equalsIgnoreCase("sqlite");
+        dbExecutor     = new DbExecutor(sqliteBackend ? 4 : Math.max(8, pluginConfig.getDbPoolSize() * 2));
         storageGateway = new StorageGateway(storage, dbExecutor);
         playerNameIndex = new PlayerNameIndex(storageGateway, getSLF4JLogger());
         playerNameIndex.loadAll();
@@ -107,7 +111,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 dbExecutor, languageManager, foliaLib, getSLF4JLogger(), pluginConfig.getDefaultSize(),
                 permissionChestService, spillService, pluginConfig, databaseImportService);
 
-        migrationService  = new MigrationService(storage, codec, getSLF4JLogger());
+        migrationService  = new MigrationService(storage, codec, getSLF4JLogger(),
+                sessionManager, foliaLib, pluginConfig.getTempExpiryMillis());
         axVaultsMigrationService = new AxVaultsMigrationService(storage, codec, getSLF4JLogger(),
                 getDataFolder().getParentFile().toPath());
         playerVaultsXMigrationService = new PlayerVaultsXMigrationService(storage, codec, getSLF4JLogger(),
@@ -130,7 +135,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         pm.registerEvents(new VanillaEnderChestListener(chestOpener), this);
         pm.registerEvents(new EnderChestGuiListener(sessionManager, foliaLib, languageManager, pluginConfig), this);
         pm.registerEvents(new PlayerQuitListener(sessionManager, foliaLib), this);
-        pm.registerEvents(new JoinMigrationListener(pluginConfig, migrationService), this);
+        pm.registerEvents(new JoinMigrationListener(pluginConfig, migrationService, storage,
+                dbExecutor, getSLF4JLogger()), this);
         pm.registerEvents(new PlayerSettingsListener(settingsCache, chestOpener), this);
 
         // Preload settings for players already online (a /reload or hot-load fires no join event for
@@ -193,6 +199,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         chestOpener.setDefaultSize(pluginConfig.getDefaultSize());
         spillService.setTempExpiry(pluginConfig.getTempExpiryMillis());
         chestTransferService.setTempExpiry(pluginConfig.getTempExpiryMillis());
+        migrationService.setTempExpiry(pluginConfig.getTempExpiryMillis());
         permissionChestService.setConfig(pluginConfig.isPermissionChestsEnabled(),
                 pluginConfig.getDefaultSize());
         expirySweeper.reschedule(pluginConfig.getExpiryCheckIntervalMillis());

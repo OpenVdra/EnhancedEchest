@@ -23,6 +23,12 @@ database:
   sqlite-file: enderchests.db
 ```
 
+::: info Các file phụ cạnh cơ sở dữ liệu
+SQLite chạy ở chế độ write-ahead logging (WAL) để có hiệu năng tốt hơn khi đông người, nên bạn có thể thấy thêm `enderchests.db-wal` và `enderchests.db-shm` cạnh file cơ sở dữ liệu. Đó là file của SQLite — cứ để nguyên, và đừng bao giờ tự copy file `.db` bằng tay khi máy chủ đang chạy (hãy dùng [sao lưu tự động](/vi/docs/configuration) tích hợp sẵn).
+:::
+
+Với máy chủ đông người — khoảng 100+ người chơi cùng lúc — hoặc nhiều máy chủ dùng chung một cơ sở dữ liệu, MySQL/MariaDB là lựa chọn tốt hơn.
+
 ## <img src="https://skillicons.dev/icons?i=mysql" width="28" height="28" alt="MySQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#242938;border-radius:8px;vertical-align:middle;margin:0 6px 0 0;box-sizing:border-box"><img src="https://cdn.simpleicons.org/mariadb/ffffff" width="20" height="20" alt="MariaDB" style="display:block" /></span> MySQL / MariaDB
 
 Trỏ plugin tới một cơ sở dữ liệu MySQL hoặc MariaDB có sẵn:

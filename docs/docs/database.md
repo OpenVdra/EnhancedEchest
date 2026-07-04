@@ -23,6 +23,12 @@ database:
   sqlite-file: enderchests.db
 ```
 
+::: info Extra files next to the database
+SQLite runs in write-ahead-logging (WAL) mode for better performance under load, so you may also see `enderchests.db-wal` and `enderchests.db-shm` next to the database file. They belong to SQLite — leave them alone, and never copy the `.db` file by hand while the server is running (use the built-in [auto-backup](/docs/configuration) instead).
+:::
+
+For busy servers — roughly 100+ concurrent players — or several servers sharing one database, MySQL/MariaDB is the better choice.
+
 ## <img src="https://skillicons.dev/icons?i=mysql" width="28" height="28" alt="MySQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#242938;border-radius:8px;vertical-align:middle;margin:0 6px 0 0;box-sizing:border-box"><img src="https://cdn.simpleicons.org/mariadb/ffffff" width="20" height="20" alt="MariaDB" style="display:block" /></span> MySQL / MariaDB
 
 Point the plugin at an existing MySQL or MariaDB database:

@@ -45,7 +45,9 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   pending-save-wait on reopen. All open paths must funnel through `ChestSessionManager.open`; session
   bookkeeping is single-threaded via `onGlobal`. The whole dupe-safety core (the `sessions` registry,
   `runExclusive`, `forceCloseAll`) lives in the one closed class `ChestSessionManager` — keep it there.
-  Encoding happens sync; only the DB write is async. Full detail:
+  Encoding on save happens sync on the global thread (load-bearing — don't move it off-thread); the DB
+  read **and decode** on open both run on the async executor, the global thread only builds the
+  inventory. Full detail:
   [architecture/concurrency-and-dupe-safety.md](architecture/concurrency-and-dupe-safety.md).
 - **Commands** are registered with Paper Brigadier in `EnhancedEchestBootstrap` (LifecycleEvents.COMMANDS),
   not in `plugin.yml`. Permissions default to `op`.

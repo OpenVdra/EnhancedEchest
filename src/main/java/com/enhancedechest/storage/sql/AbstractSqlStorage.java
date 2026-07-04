@@ -127,6 +127,13 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
     private static final String SQL_SET_MIGRATED =
             "UPDATE enderchests SET migrated = ? WHERE player_uuid = ? AND chest_index = 1";
 
+    // Vanilla-migration commit: contents + migrated flag land in one UPDATE (size never changes),
+    // and any overflow temp chest is inserted in the same transaction, so there is no observable
+    // "written but unflagged" state (see completeMigration).
+    private static final String SQL_COMPLETE_MIGRATION =
+            "UPDATE enderchests SET container_data = ?, migrated = 1, last_updated = ? " +
+            "WHERE player_uuid = ? AND chest_index = 1";
+
     // Per-player row (one row per player: settings + the name index). DML is portable; the CREATE is
     // dialect-specific. Save is an UPDATE-else-INSERT upsert (avoids the per-dialect ON CONFLICT / ON
     // DUPLICATE split). Each targeted upsert lists only the column(s) it writes, so the columns it omits
@@ -761,6 +768,37 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to update migrated flag for " + owner, e);
+        }
+    }
+
+    @Override
+    public void completeMigration(UUID owner, byte[] containerData,
+                                  @Nullable byte[] overflow, int tempSize, long tempExpiresAt) {
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(SQL_COMPLETE_MIGRATION)) {
+                    ps.setBytes(1, containerData);
+                    ps.setLong(2, System.currentTimeMillis());
+                    ps.setString(3, owner.toString());
+                    ps.executeUpdate();
+                }
+                // Vanilla items that did not fit spill into a fresh temp chest, in the SAME
+                // transaction as the flag write — a crash can never leave a flagged row without its
+                // overflow (or an overflow row without the flag).
+                if (overflow != null) {
+                    int tempIndex = queryInt(conn, SQL_MAX_INDEX, owner.toString()) + 1;
+                    insertTempChest(conn, owner, tempIndex, tempSize, overflow, tempExpiresAt);
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to complete migration for " + owner, e);
         }
     }
 

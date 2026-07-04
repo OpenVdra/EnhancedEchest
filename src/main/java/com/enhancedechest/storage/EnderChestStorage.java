@@ -211,6 +211,21 @@ public interface EnderChestStorage {
     void setMigrated(UUID owner, boolean migrated);
 
     /**
+     * Commits a vanilla migration in one transaction: writes chest #1's contents <b>and</b> sets its
+     * migrated flag (one single-row UPDATE — chest #1's size is never changed), plus, when
+     * {@code overflow} is non-null, inserts a temp chest at the next free index carrying the vanilla
+     * items that did not fit. Used by the vanilla migration so no crash or concurrent runner can ever
+     * observe "contents written but not yet flagged" — the migration merge is not idempotent, so a
+     * re-run against an unflagged row would duplicate items. No-op on chest #1 if it does not exist.
+     *
+     * @param overflow      encoded bytes of the vanilla items that did not fit, or null when all fit
+     * @param tempSize      slot count of the temp chest (ignored when {@code overflow} is null)
+     * @param tempExpiresAt epoch-ms expiry of the temp chest (ignored when {@code overflow} is null)
+     */
+    void completeMigration(UUID owner, byte[] containerData,
+                           @Nullable byte[] overflow, int tempSize, long tempExpiresAt);
+
+    /**
      * Loads the player's settings, or {@link PlayerSettings#defaults()} if they have no row yet.
      * Never returns null — an absent row is indistinguishable from an all-defaults one.
      */

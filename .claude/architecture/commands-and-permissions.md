@@ -34,9 +34,13 @@ so it has no `op` default. Gated by `permission-chests.enabled` in `config.yml` 
 
 `PermissionChestService` (in `service/`) owns the logic:
 
-- **`resolveDesired(player)`** runs on the entity thread (it reads `getEffectivePermissions()`), regex-matches
-  every node, and returns `Map<size, count>`. All matching nodes **stack** (summed per size); invalid sizes
-  (not a 9-multiple, >54) or `count < 1` are ignored. Empty when the feature is disabled.
+- **`resolveTargets(player)`** runs on the entity thread (it reads `getEffectivePermissions()`) and resolves
+  **both** permission-derived targets in a single pass over the (potentially hundreds-of-nodes LuckPerms)
+  snapshot: the PERM-chest target as `Map<size, count>` — all matching `additional_amount` nodes **stack**
+  (summed per size); invalid sizes (not a 9-multiple, >54) or `count < 1` are ignored; empty when the
+  feature is disabled — and the base-chest `default_size` override (largest valid size held, `0` for none).
+  Returns a `PermTargets(desired, defaultTarget)` record. Keep it one pass: this sits on the per-open hot
+  path, and every `getEffectivePermissions()` call builds a fresh snapshot.
 - **`reconcile(owner, desired, chests)`** diffs that target against the player's current PERM chests and
   completes with the up-to-date list. **Fast path:** base chest present and the PERM multiset already
   matches → no DB writes, returns the passed-in list. Otherwise it bootstraps the inviolable base NORMAL

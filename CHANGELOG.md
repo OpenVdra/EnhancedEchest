@@ -2,18 +2,30 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
-## 1.0.6 - 2026-07-03
+## 1.0.6 - 2026-07-04
 
-This release adds a built-in tool to move all your data from one database backend to another, with no external tools or manual SQL.
+This release adds a built-in tool to move all your data from one database backend to another, plus a set of performance improvements aimed at servers with many players online.
 
 ### Added
 
-- Added `/ee import` to copy every player's chests from an old database backend into the one your server is currently using — for example when moving from SQLite to MySQL, or between MySQL and PostgreSQL.
+- Added `/ee import` to copy every player's chests from an old database backend into the one your server is currently using, for example when moving from SQLite to MySQL, or between MySQL and PostgreSQL.
   - Point `config.yml` at the new (empty) backend, restart, then run `/ee import` and fill in the old database's connection details in the dialog.
   - The copy is byte-for-byte, so item contents, sizes, names, icons, and settings all carry over exactly, and it stays fast even for large databases.
   - Safety checks before it runs: no other players may be online, the source cannot be the database you are already on, and the destination must be empty.
-  - Everything is copied in a single transaction, so a failure part-way leaves the destination untouched — just fix the problem and run it again.
+  - Everything is copied in a single transaction, so a failure part-way leaves the destination untouched: just fix the problem and run it again.
   - Gated by the new `enhancedechest.admin.import` permission.
+
+### Fixed
+
+- Fixed a rare case where migrating a player's vanilla ender chest (on join with `migration.enabled`, or via `/ee migrate vanilla`) while that player had their ender chest open could lose the migrated items. An ender chest opened during a migration now simply waits for it and then shows the migrated items.
+- Fixed vanilla migration replacing whatever was already stored in chest #1: it now merges the vanilla items into free slots, anything that does not fit is moved to a recoverable temporary chest (the chest is never resized), and running the migration twice can no longer duplicate or drop anything.
+
+### Improved
+
+- Improved join performance when `migration.enabled` is on: the already-migrated check no longer runs on the main server thread, so mass reconnects after a restart no longer cause lag.
+- Improved chest opening on busy servers: a chest's contents are now read and prepared fully in the background with fewer database queries, so opening chests adds less load to the server tick.
+- Improved SQLite write performance by switching the database to write-ahead logging. You may see new `enderchests.db-wal` and `enderchests.db-shm` files next to the database file; they belong to SQLite and should be left in place.
+- Improved SQLite reliability during automatic backups: a save that arrives while a backup is being written now waits for it to finish instead of failing.
 
 ## 1.0.5 - 2026-07-03
 

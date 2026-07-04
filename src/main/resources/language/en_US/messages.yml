@@ -30,6 +30,7 @@ migrate:
   player-offline: '{prefix}&f{player} is not online.'
   success: '{prefix}&fMigrated {player} successfully.'
   already-done: '{prefix}&f{player} was already migrated.'
+  failed: '{prefix}&fMigration failed for {player}. Check the console for details.'
   # Importing from another vault plugin — {source} is the plugin name (AxVaults, PlayerVaultsX).
   no-source: '{prefix}&fNo {source} data found to import.'
   started: '{prefix}&fImporting vaults from {source}… this runs in the background.'

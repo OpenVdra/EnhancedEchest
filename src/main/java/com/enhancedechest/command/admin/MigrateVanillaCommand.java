@@ -8,12 +8,19 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * {@code /enhancedechest migrate vanilla [all|<player>]} — migrates online players' vanilla
  * ender chests into their EnhancedEchest chest #1. For importing from the AxVaults plugin instead,
  * see {@link MigrateAxVaultsCommand}.
+ *
+ * <p>{@link MigrationService#migrateOnline} is asynchronous (its DB phase runs exclusively per chest,
+ * so it cannot clobber a chest a player has open), so both commands aggregate futures and report the
+ * result back on a scheduler tick once every migration has settled.
  */
 public final class MigrateVanillaCommand {
 
@@ -32,16 +39,31 @@ public final class MigrateVanillaCommand {
             return 0;
         }
 
-        int migrated = 0;
-        int skipped = 0;
+        List<CompletableFuture<Boolean>> futures = new ArrayList<>(online.size());
         for (Player player : online) {
-            boolean ran = service.migrateOnline(player);
-            if (ran) migrated++; else skipped++;
+            futures.add(service.migrateOnline(player));
         }
-
-        source.getSender().sendMessage(lang.get("migrate.complete",
-                "migrated", String.valueOf(migrated),
-                "skipped", String.valueOf(skipped)));
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .whenComplete((v, err) -> {
+                    int migrated = 0;
+                    int skipped = 0;
+                    for (CompletableFuture<Boolean> f : futures) {
+                        boolean ran;
+                        try {
+                            ran = f.join();
+                        } catch (Exception e) {
+                            plugin.getSLF4JLogger().error("Vanilla migration failed for one player", e);
+                            ran = false;
+                        }
+                        if (ran) migrated++; else skipped++;
+                    }
+                    int migratedCount = migrated;
+                    int skippedCount = skipped;
+                    plugin.getFoliaLib().getScheduler().runNextTick(t ->
+                            source.getSender().sendMessage(lang.get("migrate.complete",
+                                    "migrated", String.valueOf(migratedCount),
+                                    "skipped", String.valueOf(skippedCount))));
+                });
         return 1;
     }
 
@@ -57,10 +79,18 @@ public final class MigrateVanillaCommand {
             return 0;
         }
 
-        boolean ran = plugin.getMigrationService().migrateOnline(target);
-        source.getSender().sendMessage(ran
-                ? lang.get("migrate.success", "player", target.getName())
-                : lang.get("migrate.already-done", "player", target.getName()));
+        plugin.getMigrationService().migrateOnline(target).whenComplete((ran, err) ->
+                plugin.getFoliaLib().getScheduler().runNextTick(t -> {
+                    if (err != null) {
+                        plugin.getSLF4JLogger().error("Vanilla migration failed for {}", target.getName(),
+                                err.getCause() != null ? err.getCause() : err);
+                        source.getSender().sendMessage(lang.get("migrate.failed", "player", target.getName()));
+                        return;
+                    }
+                    source.getSender().sendMessage(ran
+                            ? lang.get("migrate.success", "player", target.getName())
+                            : lang.get("migrate.already-done", "player", target.getName()));
+                }));
         return 1;
     }
 

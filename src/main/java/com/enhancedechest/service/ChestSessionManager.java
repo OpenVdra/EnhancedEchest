@@ -14,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -47,8 +49,12 @@ import java.util.function.Supplier;
  *
  * <p>All session bookkeeping (the {@link #sessions} map, viewer sets, attach/detach/persist decisions)
  * runs on a single thread via {@link #onGlobal}: the main thread on Paper, the global region thread on
- * Folia. This removes registry-level races on both. The actual DB read/write stays async; encoding is
- * synchronous and only ever happens once all viewers have closed (no concurrent edit during encode).
+ * Folia. This removes registry-level races on both. The DB read <i>and</i> the byte→ItemStack decode both
+ * happen on the async executor (the stored bytes are immutable and the decoded stacks are handed to the
+ * global thread through the future's happens-before edge, untouched by any other thread) — only the cheap
+ * inventory build runs on the global thread. Encoding on save stays synchronous on the global thread and
+ * only ever happens once all viewers have closed (no concurrent edit during encode) — that half of the
+ * contract is load-bearing; do not move it off-thread.
  *
  * <p>Dupe-safety contract (preserved, now per shared session):
  * <ul>
@@ -71,6 +77,13 @@ public final class ChestSessionManager {
 
     /** A queued open waiting for its session's first DB load to finish. */
     private record Pending(Player player, @Nullable Location sourceBlock) {}
+
+    /**
+     * A chest row loaded and decoded on the async executor: the row itself plus its decoded contents
+     * ({@code null} when the row holds no stored bytes — a brand-new or cleared chest). The stacks are
+     * created on the DB thread and handed to the global thread exactly once, so no cross-thread sharing.
+     */
+    private record LoadedChest(EnderChestData data, ItemStack @Nullable [] contents) {}
 
     /**
      * A live shared chest inventory and its current viewers. All fields are read and written only on the
@@ -163,13 +176,36 @@ public final class ChestSessionManager {
             return;
         }
 
-        // No live session: create one and load fresh after any in-flight save for this key.
+        // No live session: create one and load fresh after any in-flight save for this key. The decode
+        // (bytes → ItemStacks) also runs on the DB executor, so the global thread only builds the
+        // inventory — the expensive NBT deserialization never lands on a tick thread.
         Session created = new Session(owner, index);
         created.waiting.add(new Pending(player, sourceBlock));
         sessions.put(key, created);
         waitPending(owner, index)
-                .thenCompose(v -> db.supply(() -> storage.loadChest(owner, index)))
-                .whenComplete((data, err) -> onGlobal(() -> finishCreate(key, created, data, err)));
+                .thenCompose(v -> db.supply(() -> loadAndDecode(owner, index)))
+                .whenComplete((loaded, err) -> onGlobal(() -> finishCreate(key, created, loaded, err)));
+    }
+
+    /**
+     * Async-executor side of a first open: loads the row and decodes its stored bytes into ItemStacks.
+     * Returns null when the chest does not exist. A codec failure aborts the open (thrown, so the row
+     * is never overwritten with an empty chest) after logging the specific cause.
+     */
+    private @Nullable LoadedChest loadAndDecode(UUID owner, int index) {
+        EnderChestData data = storage.loadChest(owner, index);
+        if (data == null) return null;
+        ItemStack[] contents = null;
+        if (data.containerData() != null && data.containerData().length > 0) {
+            try {
+                contents = codec.decode(data.containerData(), data.size());
+            } catch (CodecException e) {
+                logger.error("Codec failure for {} chest {} — aborting open to protect stored data",
+                        owner, index, e);
+                throw new CompletionException(e);
+            }
+        }
+        return new LoadedChest(data, contents);
     }
 
     /** True if a viewer (or a queued opener) other than {@code self} already holds this session. */
@@ -185,13 +221,13 @@ public final class ChestSessionManager {
 
     /** Global-thread completion of a first load: build the shared inventory and flush the waiting queue. */
     private void finishCreate(SaveKey key, Session created,
-                              @Nullable EnderChestData data, @Nullable Throwable err) {
+                              @Nullable LoadedChest loaded, @Nullable Throwable err) {
         List<Pending> waiters = new ArrayList<>(created.waiting);
         created.waiting.clear();
 
         // A force-close (admin resize/delete) may have superseded this session while the load was in flight.
         boolean stale = sessions.get(key) != created || created.closing;
-        if (stale || err != null || data == null) {
+        if (stale || err != null || loaded == null) {
             sessions.remove(key, created);
             for (Pending p : waiters) {
                 if (err != null) reportOpenFailure(p.player(), err);
@@ -200,38 +236,26 @@ public final class ChestSessionManager {
             return;
         }
 
-        Inventory inv = buildSharedInventory(data);
-        if (inv == null) {
-            sessions.remove(key, created);
-            // The codec failure is already logged in buildSharedInventory; tell viewers the generic load error.
-            for (Pending p : waiters) notifyOnPlayer(p.player(), "chest.load-failed");
-            return;
-        }
-        created.kind  = data.kind();
-        created.inv   = inv;
+        created.kind  = loaded.data().kind();
+        created.inv   = buildSharedInventory(loaded);
         created.ready = true;
         for (Pending p : waiters) addViewerAndOpen(p.player(), created, p.sourceBlock());
     }
 
     /**
-     * Builds the shared {@link Inventory} for a chest, decoding its stored contents. The holder carries
-     * no source block (block animation is tracked per-viewer in the session). Returns null if the stored
-     * bytes fail to decode, so the caller can abort the open rather than risk corrupting the data.
+     * Builds the shared {@link Inventory} for an already-decoded chest — just the Bukkit inventory
+     * creation and an array copy, cheap enough for the global thread (the NBT decode already happened
+     * on the async executor in {@link #loadAndDecode}). The holder carries no source block (block
+     * animation is tracked per-viewer in the session).
      */
-    private @Nullable Inventory buildSharedInventory(EnderChestData data) {
+    private Inventory buildSharedInventory(LoadedChest loaded) {
+        EnderChestData data = loaded.data();
         int size = data.size();
         Component title = lang.getChestLabel(data.index(), data.customName(), data.kind());
         Inventory inv = Bukkit.createInventory(
                 new EnderChestHolder(data.owner(), data.index(), size, data.kind(), null), size, title);
-
-        if (data.containerData() != null && data.containerData().length > 0) {
-            try {
-                inv.setContents(codec.decode(data.containerData(), size));
-            } catch (CodecException e) {
-                logger.error("Codec failure for {} chest {} — aborting open to protect stored data",
-                        data.owner(), data.index(), e);
-                return null;
-            }
+        if (loaded.contents() != null) {
+            inv.setContents(loaded.contents());
         }
         return inv;
     }

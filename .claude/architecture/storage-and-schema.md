@@ -14,6 +14,12 @@ the shared `DbExecutor` async pool (see [concurrency-and-dupe-safety.md](concurr
 dialect-specific upsert is required. Connections come from a HikariCP pool (size 1 for SQLite,
 configurable otherwise). `StorageFactory` picks the backend from `config.type`.
 
+SQLite runs in **WAL mode** with `synchronous=NORMAL` (set as driver properties in
+`SqliteStorage.buildConfig`, applied as PRAGMAs per connection; `journal_mode` also persists in the DB
+file): readers aren't blocked by the writer and commits become WAL appends. Its `connectionTimeout` is a
+deliberate **30s** — the backup's `VACUUM INTO` holds the single connection for the whole snapshot, and a
+save that lands mid-backup must ride that out and then succeed rather than time out unwritten.
+
 `init()` also calls `SchemaMigrator.migrate()` right after running the CREATE statements: a versioned,
 forward-only migrator (`schema_meta` table) that brings an existing (older) database up to the current
 schema — additive column steps guarded by a JDBC-metadata `columnExists` check, occasional table
@@ -101,8 +107,10 @@ fires no join event for them).
 
 Converts `ItemStack[] ⇄ byte[]`, parameterized by chest size on decode. `MAX_SIZE` is 54, `SLOT_STEP` is
 9. Decode failures throw `CodecException`, which the service surfaces to the player (`chest.codec-failed`)
-and refuses to open rather than risk clobbering stored data. Encoding is always synchronous; only the DB
-write is async.
+and refuses to open rather than risk clobbering stored data. Encoding on save is always synchronous on
+the global thread (load-bearing for dupe-safety); decoding on open runs on the async DB executor alongside
+the row load, so the NBT work never lands on a tick thread (see
+[concurrency-and-dupe-safety.md](concurrency-and-dupe-safety.md)).
 
 Stored bytes are `[1-byte version tag] + [body]`. The tag lets the format evolve without orphaning DB rows:
 

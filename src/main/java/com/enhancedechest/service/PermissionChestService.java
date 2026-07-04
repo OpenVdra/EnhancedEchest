@@ -84,64 +84,56 @@ public final class PermissionChestService {
     }
 
     /**
-     * Computes the player's permission-derived target as {@code size → count}, summing every matching
-     * permission. Must be called on the player's entity thread ({@code getEffectivePermissions}).
-     * Returns an empty map when the feature is disabled.
+     * Both permission-derived targets, resolved together: the PERM-chest target as {@code size → count}
+     * (empty when the feature is disabled) and the base-chest size override (the largest valid
+     * {@code default_size} permission held, or {@code 0} for none — always active, no config toggle).
      */
-    public Map<Integer, Integer> resolveDesired(Player player) {
-        if (!enabled) return Map.of();
-        Map<Integer, Integer> desired = new HashMap<>();
-        for (PermissionAttachmentInfo info : player.getEffectivePermissions()) {
-            if (!info.getValue()) continue;
-            // This runs on the region/main thread over the player's full effective-permission set (often
-            // hundreds of nodes with LuckPerms). A cheap startsWith prefilter skips the regex Matcher
-            // allocation for the ~all of them that aren't grant nodes.
-            String node = info.getPermission();
-            if (!node.startsWith(PERM_PREFIX)) continue;
-            Matcher m = PERM_PATTERN.matcher(node);
-            if (!m.matches()) continue;
-            int count;
-            int size;
-            try {
-                count = Integer.parseInt(m.group(1));
-                size  = Integer.parseInt(m.group(2));
-            } catch (NumberFormatException e) {
-                continue; // overflowed int in the permission node — ignore it
-            }
-            if (count < 1 || !PluginConfig.isValidSize(size)) continue;
-            desired.merge(size, count, Integer::sum);
-        }
-        return desired;
-    }
+    public record PermTargets(Map<Integer, Integer> desired, int defaultTarget) {}
 
     /**
-     * Resolves the player's base-chest size override from their {@code enhancedechest.default_size.<size>}
-     * permissions: the <b>largest</b> valid size they hold, or {@code 0} when they hold none (base stays at
-     * the config default, and shrinks back to it if a permission was revoked). Always active — the
-     * override is a pure permission feature with no config toggle.
-     *
-     * <p>Like {@link #resolveDesired}, this must run on the player's entity thread
-     * ({@code getEffectivePermissions}) and uses a cheap {@link String#startsWith} prefilter to skip the
-     * regex for the many nodes that are not size overrides.
+     * Resolves both permission-derived targets in a <b>single</b> pass over the player's effective
+     * permissions. This runs on the region/main thread per open, and with LuckPerms the effective set
+     * is often hundreds of nodes with each {@code getEffectivePermissions()} call building a fresh
+     * snapshot — so it is scanned exactly once, and a cheap {@link String#startsWith} prefilter skips
+     * the regex Matcher allocation for the ~all nodes that are neither grant nor size-override nodes.
+     * Must be called on the player's entity thread ({@code getEffectivePermissions}).
      */
-    public int resolveDefaultTarget(Player player) {
-        int max = 0;
+    public PermTargets resolveTargets(Player player) {
+        // Snapshot the volatile toggle once so a /ee reload flipping it mid-scan can't yield a
+        // partially-built target map (which the reconcile diff would treat as real revocations).
+        final boolean permEnabled = enabled;
+        Map<Integer, Integer> desired = new HashMap<>();
+        int maxDefault = 0;
         for (PermissionAttachmentInfo info : player.getEffectivePermissions()) {
             if (!info.getValue()) continue;
             String node = info.getPermission();
-            if (!node.startsWith(DEFAULT_SIZE_PREFIX)) continue;
-            Matcher m = DEFAULT_SIZE_PATTERN.matcher(node);
-            if (!m.matches()) continue;
-            int size;
-            try {
-                size = Integer.parseInt(m.group(1));
-            } catch (NumberFormatException e) {
-                continue; // overflowed int in the permission node — ignore it
+            if (permEnabled && node.startsWith(PERM_PREFIX)) {
+                Matcher m = PERM_PATTERN.matcher(node);
+                if (!m.matches()) continue;
+                int count;
+                int size;
+                try {
+                    count = Integer.parseInt(m.group(1));
+                    size  = Integer.parseInt(m.group(2));
+                } catch (NumberFormatException e) {
+                    continue; // overflowed int in the permission node — ignore it
+                }
+                if (count < 1 || !PluginConfig.isValidSize(size)) continue;
+                desired.merge(size, count, Integer::sum);
+            } else if (node.startsWith(DEFAULT_SIZE_PREFIX)) {
+                Matcher m = DEFAULT_SIZE_PATTERN.matcher(node);
+                if (!m.matches()) continue;
+                int size;
+                try {
+                    size = Integer.parseInt(m.group(1));
+                } catch (NumberFormatException e) {
+                    continue; // overflowed int in the permission node — ignore it
+                }
+                if (!PluginConfig.isValidSize(size)) continue;
+                if (size > maxDefault) maxDefault = size;
             }
-            if (!PluginConfig.isValidSize(size)) continue;
-            if (size > max) max = size;
         }
-        return max;
+        return new PermTargets(desired, maxDefault);
     }
 
     /**
@@ -156,7 +148,7 @@ public final class PermissionChestService {
      * remaining missing sizes create fresh empty chests; and any true surplus is removed with its items
      * spilled to temp.
      *
-     * <p><b>Base chest size.</b> Driven by {@code defaultTarget} (from {@link #resolveDefaultTarget}) and
+     * <p><b>Base chest size.</b> Driven by {@code defaultTarget} (from {@link #resolveTargets}) and
      * the persisted {@code appliedDefault} baseline:
      * <ul>
      *   <li>{@code defaultTarget > 0} — the player holds a {@code default_size} permission: the base chest

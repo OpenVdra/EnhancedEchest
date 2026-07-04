@@ -15,15 +15,20 @@ import java.util.function.Supplier;
  * / {@link #run}. The pool is closed once, last, on plugin disable (after sessions have flushed their
  * pending saves) — see {@link #shutdown()}.
  *
- * <p>Bounded at {@link #MAX_THREADS}, growing from 0 on demand and idling out after 60s of inactivity —
- * the same shape as a cached pool up to that cap, but never beyond it. A handful of paths dispatch one
- * task per online player at once (join preload, the {@code onEnable} hot-load loop, {@code /ee reload}'s
- * permission re-sync), so an unbounded {@code newCachedThreadPool} would spawn one OS thread per online
- * player on a large server's restart/reload, each briefly queued behind the single SQLite connection —
- * real memory pressure (~1MB stack apiece) for no throughput benefit once concurrency exceeds what the
- * DB side can actually use. Beyond the cap, work queues (unboundedly) rather than spawning further
- * threads or rejecting — every DB call must still eventually run, just serialized behind the cap under a
- * burst.
+ * <p>Bounded at the caller-chosen {@code maxThreads}, growing from 0 on demand and idling out after 60s
+ * of inactivity — the same shape as a cached pool up to that cap, but never beyond it. A handful of paths
+ * dispatch one task per online player at once (join preload, the {@code onEnable} hot-load loop,
+ * {@code /ee reload}'s permission re-sync), so an unbounded {@code newCachedThreadPool} would spawn one
+ * OS thread per online player on a large server's restart/reload, each briefly queued behind the DB
+ * connection pool — real memory pressure (~1MB stack apiece) for no throughput benefit once concurrency
+ * exceeds what the DB side can actually use. Beyond the cap, work queues (unboundedly) rather than
+ * spawning further threads or rejecting — every DB call must still eventually run, just serialized behind
+ * the cap under a burst.
+ *
+ * <p>The cap is sized by the plugin to the storage backend, since threads beyond the JDBC pool's
+ * connection count only ever block inside Hikari: a small handful for SQLite's single connection, about
+ * twice {@code database.pool-size} for MySQL/PostgreSQL (some headroom for tasks doing non-JDBC work —
+ * encode, decode, future plumbing — around their DB call).
  *
  * <p>Implementation note: {@code corePoolSize} is set equal to {@code maximumPoolSize} with
  * {@link ThreadPoolExecutor#allowCoreThreadTimeOut} enabled, <b>not</b> {@code core=0} with an unbounded
@@ -34,19 +39,19 @@ import java.util.function.Supplier;
  */
 public final class DbExecutor {
 
+    private final ExecutorService executor;
+
     /**
-     * Generous ceiling for concurrent DB-executor threads: comfortably above SQLite's single-connection
-     * pool and any realistic {@code database.pool-size} for MySQL/PostgreSQL (default 10), while still
-     * capping the worst case (every online player's DB work landing in the same tick) to a bounded
-     * number of OS threads instead of one per player.
+     * @param maxThreads ceiling for concurrent DB-executor threads; see the class doc for how the
+     *                   plugin sizes this per storage backend
      */
-    private static final int MAX_THREADS = 64;
+    public DbExecutor(int maxThreads) {
+        this.executor = buildExecutor(maxThreads);
+    }
 
-    private final ExecutorService executor = buildExecutor();
-
-    private static ExecutorService buildExecutor() {
+    private static ExecutorService buildExecutor(int maxThreads) {
         ThreadPoolExecutor pool = new ThreadPoolExecutor(
-                MAX_THREADS, MAX_THREADS, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), r -> {
+                maxThreads, maxThreads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), r -> {
             Thread t = new Thread(r, "EnhancedEchest-db");
             t.setDaemon(true);
             return t;

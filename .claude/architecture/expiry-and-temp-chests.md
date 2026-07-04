@@ -42,7 +42,10 @@ expiry — goes through `ChestSpillService` (which delegates the force-close + e
    The temp index is `MAX(chest_index)+1` computed inside that same transaction, so items never exist in
    two rows visible to any outside reader.
 
-Encoding stays synchronous (`ContainerCodec`); only the DB write runs on the async executor.
+The spill ops themselves run entirely on the DB executor inside `runExclusive` — decode, split,
+re-encode and the transaction. The session save-side encode that precedes them (step 1's `forceCloseAll`
+persist) stays synchronous on the global thread, per the dupe-safety contract
+([concurrency-and-dupe-safety.md](concurrency-and-dupe-safety.md)).
 
 ## `DurationFormat` (`util/`)
 

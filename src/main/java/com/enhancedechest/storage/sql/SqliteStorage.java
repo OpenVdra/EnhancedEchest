@@ -77,9 +77,21 @@ public final class SqliteStorage extends AbstractSqlStorage {
         config.setMaximumPoolSize(1);
         config.setMinimumIdle(1);
 
+        // WAL keeps readers un-blocked by the writer and turns most commits into sequential WAL
+        // appends; synchronous=NORMAL is the recommended pairing (fsync on checkpoint, not on every
+        // commit — a power cut can lose the last moments of play, never corrupt the DB). Both are
+        // passed as driver properties, which the (Paper-bundled) Xerial driver applies as PRAGMAs on
+        // each new connection. journal_mode is also persistent in the DB file itself.
+        config.addDataSourceProperty("journal_mode", "WAL");
+        config.addDataSourceProperty("synchronous", "NORMAL");
+
         config.setConnectionTestQuery("SELECT 1");
         config.setPoolName("EnhancedEchest-SQLite");
-        config.setConnectionTimeout(5_000);
+        // Generous: the backup's VACUUM INTO holds the single connection for the whole snapshot, and
+        // on a big database that can exceed several seconds. Waiters should ride it out and then
+        // succeed — with a short timeout an open/save landing mid-backup fails instead, which for a
+        // save means an unwritten chest. 30s comfortably covers a large vacuum without masking a hang.
+        config.setConnectionTimeout(30_000);
         config.setIdleTimeout(0);
         config.setMaxLifetime(0);
 

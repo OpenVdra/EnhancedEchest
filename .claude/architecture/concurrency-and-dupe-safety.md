@@ -24,8 +24,9 @@ on the entity thread it computes the player's permission target, then `listChest
 so the chest list it routes on is already in sync (common case: nothing changed → no extra query). Then it
 decides what to show:
 
-- **0 or 1 real chest, no temp chest** → open it directly (bootstrapping chest #1 via `createChest`
-  if the player owns none).
+- **0 or 1 real chest, no temp chest** → open it directly. The index comes straight from the list
+  already in hand (no `getPrimaryIndex` query — with one non-TEMP chest the answer is the same);
+  only a player with **no** chests at all still goes to the DB, to bootstrap chest #1 via `createChest`.
 - **2+ chests, an explicit main flagged *and* caller has `enhancedechest.command.open`** → open the
   flagged main directly.
 - **2+ chests otherwise** (no main chosen, or no permission), or **any TEMP chest present** → show the
@@ -51,8 +52,11 @@ primary-resolution details.
 
 **Every session mutation runs on a single bookkeeping thread** via `onGlobal(Runnable)` — the main
 thread on Paper, the global region thread on Folia (`foliaLib.getScheduler().isGlobalTickThread()` /
-`runNextTick`). This removes registry-level races on both platforms. The DB read/write stays async; the
-synchronous *encode* only ever happens once **all** viewers have closed, so it never races a live edit.
+`runNextTick`). This removes registry-level races on both platforms. The DB read **and the byte→ItemStack
+decode** both run on the async executor (the stored bytes are immutable, and the decoded stacks reach the
+global thread through the future's happens-before edge, untouched by any other thread) — the global thread
+only builds the `Inventory`. The synchronous *encode* on save is the load-bearing half: it only ever
+happens once **all** viewers have closed, so it never races a live edit. **Do not move encode off-thread.**
 
 ### Opening — `ChestSessionManager.open` is the single funnel
 
@@ -69,10 +73,13 @@ re-introduces duping.
      deny with `chest.in-use` (single-viewer rule, below). If `ready`, `addViewerAndOpen`; else queue in
      `waiting`.
    - **No session** → create one, put it in the map, then `waitPending(owner,index)` → async
-     `storage.loadChest` → `finishCreate` on the global thread.
-3. `finishCreate` builds the shared `Inventory` (`buildSharedInventory`, decoding the bytes; aborts on
-   `CodecException`), marks the session `ready`, and flushes the `waiting` queue via `addViewerAndOpen`.
-   If a force-close superseded the session mid-load, waiters get `chest.not-found`.
+     `loadAndDecode` (row load **and** `CodecException`-guarded decode, both on the DB executor) →
+     `finishCreate` on the global thread.
+3. `finishCreate` builds the shared `Inventory` (`buildSharedInventory` — just `createInventory` +
+   `setContents` of the already-decoded stacks), marks the session `ready`, and flushes the `waiting`
+   queue via `addViewerAndOpen`. A codec failure arrived as the future's error and aborts the open
+   (`chest.load-failed`, row untouched). If a force-close superseded the session mid-load, waiters get
+   `chest.not-found`.
 4. `addViewerAndOpen` registers the viewer on the global thread, then `player.openInventory(inv)` on the
    player's entity thread (and plays the open lid animation if a source block was supplied).
 
@@ -128,7 +135,9 @@ full item-moving transaction model.
 
 - Storage methods are **synchronous** and thread-agnostic (see `EnderChestStorage` Javadoc).
 - The `com.enhancedechest.service` layer is the **only** dispatcher onto the async pool, and it goes
-  through the shared `DbExecutor` (daemon cached pool `EnhancedEchest-db`).
+  through the shared `DbExecutor` (daemon pool `EnhancedEchest-db`, capped per backend by the plugin:
+  4 threads on SQLite's single connection, ~2× `database.pool-size` on MySQL/PostgreSQL — threads past
+  the JDBC pool only block inside Hikari).
 - Session bookkeeping is single-threaded via `onGlobal`.
 - Anything touching a player/inventory/block runs on the right region thread via FoliaLib.
 - On shutdown, `ChestSessionManager.shutdown()` runs `persistOpenSessions()` (saves every still-open
