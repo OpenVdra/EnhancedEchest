@@ -31,6 +31,7 @@ import com.enhancedechest.update.UpdateChecker;
 import com.enhancedechest.update.UpdateNotifyListener;
 import com.enhancedechest.util.DurationFormat;
 import com.tcoded.folialib.FoliaLib;
+import dev.faststats.bukkit.BukkitContext;
 import lombok.Getter;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
@@ -38,6 +39,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.io.InputStream;
+import java.util.Properties;
 
 @Getter
 public final class EnhancedEchestPlugin extends JavaPlugin {
@@ -64,6 +67,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     private UpdateChecker updateChecker;
     private FoliaLib foliaLib;
     private Metrics metrics;
+    private BukkitContext fastStats;
 
     @Override
     public void onEnable() {
@@ -150,6 +154,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         updateChecker.checkAsync(foliaLib);
 
         initMetrics();
+        initFastStats();
 
         printStartupBanner(getSLF4JLogger());
     }
@@ -158,6 +163,9 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     public void onDisable() {
         if (metrics != null) {
             metrics.shutdown();
+        }
+        if (fastStats != null) {
+            fastStats.shutdown();
         }
         if (expirySweeper != null) {
             expirySweeper.stop();
@@ -233,6 +241,42 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 () -> pluginConfig.getDatabaseType().toUpperCase()));
         metrics.addCustomChart(new SimplePie("language",
                 () -> pluginConfig.getLocale()));
+    }
+
+    /**
+     * Registers the plugin with FastStats. The project token is baked into {@code faststats.properties}
+     * at build time (from the {@code FASTSTATS_TOKEN} env var or a gitignored {@code secrets.properties}),
+     * so it never lives in source. If no token was provided at build time the value is empty and
+     * FastStats is silently skipped.
+     */
+    private void initFastStats() {
+        String token = readFastStatsToken();
+        if (token.isEmpty() || token.startsWith("${")) {
+            return;
+        }
+        try {
+            fastStats = new BukkitContext.Factory(this, token)
+                    .metrics(dev.faststats.Metrics.Factory::create)
+                    .create();
+            fastStats.ready();
+        } catch (Exception e) {
+            getSLF4JLogger().warn("Failed to initialize FastStats metrics", e);
+            fastStats = null;
+        }
+    }
+
+    /** Reads the build-time FastStats token from the bundled {@code faststats.properties}. */
+    private String readFastStatsToken() {
+        try (InputStream in = getResource("faststats.properties")) {
+            if (in == null) {
+                return "";
+            }
+            Properties props = new Properties();
+            props.load(in);
+            return props.getProperty("token", "").trim();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private void migrateConfigFile() {

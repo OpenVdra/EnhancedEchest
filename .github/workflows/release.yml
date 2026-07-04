@@ -38,6 +38,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build shadow jar
+        # FASTSTATS_TOKEN is a repo/organization Actions secret; build.gradle.kts reads it and
+        # bakes it into the released jar. It is never stored in source, so the public repo stays clean.
+        env:
+          FASTSTATS_TOKEN: ${{ secrets.FASTSTATS_TOKEN }}
         run: |
           chmod +x gradlew
           ./gradlew shadowJar --no-daemon

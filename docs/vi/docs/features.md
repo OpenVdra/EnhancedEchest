@@ -69,13 +69,13 @@ Với nhiều rương, người chơi có thể chọn một rương làm <stron
 </FeatureCard>
 
 <FeatureCard icon="Palette" title="Tùy Chỉnh Từng Rương">
-Người chơi cá nhân hóa rương ngay từ menu trong game, không cần lệnh. Mở màn hình quản lý của một rương để:
+Người chơi cá nhân hóa rương ngay từ menu trong game, không cần lệnh:
 
-- <strong>Đổi tên</strong>: rương đã đặt tên sẽ hiển thị tên đó làm tiêu đề kho đồ. Khi bật <code>enderchest.features.rename-colors</code> (mặc định), người chơi có thể tô màu tên bằng mã <code>&amp;</code>, hex <code>&amp;#RRGGBB</code>, và các thẻ <a href="https://docs.advntr.dev/minimessage/format.html" target="_blank">MiniMessage</a> trang trí (<code>&lt;gradient&gt;</code>, <code>&lt;rainbow&gt;</code>, …). Các thẻ tương tác như <code>&lt;click&gt;</code> và <code>&lt;hover&gt;</code> luôn bị loại bỏ, nên tên không bao giờ chạy được lệnh. Bạn cũng có thể cấm một số từ nhất định bằng <code>enderchest.features.rename-blacklist</code>
-- <strong>Chọn biểu tượng</strong>: chọn bất kỳ vật phẩm nào đại diện cho rương trong danh sách, với bộ chọn có tìm kiếm, hoặc đặt lại về biểu tượng rương Ender mặc định
-- <strong>Sắp xếp</strong>: dọn rương chỉ với một cú bấm. Các vật phẩm giống nhau được gộp thành cụm đầy và sắp xếp lại theo loại vật phẩm (tắt theo mặc định; bật ở <code>enderchest.features.sort</code>)
+- <strong>Đổi tên</strong>: đặt tên hiển thị cho rương, có thể tô màu bằng mã <code>&amp;</code>, hex, hoặc <a href="https://docs.advntr.dev/minimessage/format.html" target="_blank">MiniMessage</a>
+- <strong>Chọn biểu tượng</strong>: chọn bất kỳ vật phẩm nào đại diện cho rương trong danh sách, hoặc đặt lại mặc định
+- <strong>Sắp xếp</strong>: gộp cụm và sắp xếp lại theo loại vật phẩm chỉ với một cú bấm (tắt theo mặc định)
 
-Từng tính năng trên có thể bật/tắt cho toàn máy chủ ở <code>enderchest.features</code> trong <code>config.yml</code>. Các công tắc này là toàn cục (áp dụng cho mọi người chơi), xem trang <a href="/vi/docs/configuration">Cấu hình</a>.
+Mỗi mục là một công tắc toàn máy chủ ở <code>enderchest.features</code>. Có thể tắt tô màu tên và cấm một số từ nhất định, xem trang <a href="/vi/docs/configuration">Cấu hình</a>.
 
 </FeatureCard>
 

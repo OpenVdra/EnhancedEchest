@@ -69,13 +69,13 @@ With several chests, a player can pick one as their <strong>main</strong>, the o
 </FeatureCard>
 
 <FeatureCard icon="Palette" title="Customize Each Chest">
-Players personalize their chests straight from the in-game menu, no commands needed. Open a chest's management screen to:
+Players personalize their chests straight from the in-game menu, no commands needed:
 
-- <strong>Rename it</strong>: a named chest shows that name as its inventory title. With <code>enderchest.features.rename-colors</code> on (the default), players can colour names with <code>&amp;</code> codes, <code>&amp;#RRGGBB</code> hex, and cosmetic <a href="https://docs.advntr.dev/minimessage/format.html" target="_blank">MiniMessage</a> tags (<code>&lt;gradient&gt;</code>, <code>&lt;rainbow&gt;</code>, …). Interactive tags such as <code>&lt;click&gt;</code> and <code>&lt;hover&gt;</code> are always stripped, so a name can never run a command. You can also ban specific words with <code>enderchest.features.rename-blacklist</code>
-- <strong>Choose an icon</strong>: pick any item to represent the chest in the list, with a searchable item picker, or reset to the default ender-chest icon
-- <strong>Sort it</strong>: tidy the chest in one click. Identical items are merged into full stacks and everything is reordered by item type (off by default; enable it under <code>enderchest.features.sort</code>)
+- <strong>Rename</strong>: give the chest a display name, optionally coloured with <code>&amp;</code>, hex, or <a href="https://docs.advntr.dev/minimessage/format.html" target="_blank">MiniMessage</a> codes
+- <strong>Choose an icon</strong>: pick any item to represent it in the list, or reset to the default
+- <strong>Sort</strong>: merge stacks and reorder by item type in one click (off by default)
 
-Each of these can be turned on or off server-wide under <code>enderchest.features</code> in <code>config.yml</code>. The toggles are global (they apply to every player), see the <a href="/docs/configuration">Configuration</a> page.
+Each is a server-wide toggle under <code>enderchest.features</code>. Name colours can be turned off and specific words blacklisted, see the <a href="/docs/configuration">Configuration</a> page.
 
 </FeatureCard>
 

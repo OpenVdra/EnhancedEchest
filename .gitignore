@@ -39,3 +39,6 @@ run/
 
 # Local-only notes
 local-docs/
+
+# Secrets injected at build time
+secrets.properties

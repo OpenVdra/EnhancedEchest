@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     java
     id("com.gradleup.shadow") version "9.4.3"
@@ -25,7 +27,26 @@ repositories {
         name = "tcoded-releases"
         url = uri("https://repo.tcoded.com/releases")
     }
+
+    // FastStats metrics SDK
+    maven {
+        name = "faststatsReleases"
+        url = uri("https://repo.faststats.dev/releases")
+    }
 }
+
+// FastStats project token — kept OUT of source control. Resolved at build time from, in order:
+//   1) FASTSTATS_TOKEN environment variable
+//   2) faststatsToken in a gitignored secrets.properties at the repo root
+//   3) faststatsToken Gradle property (e.g. ~/.gradle/gradle.properties)
+// If none is set the token bakes in empty and the plugin simply skips FastStats at runtime.
+val faststatsToken: String = System.getenv("FASTSTATS_TOKEN")
+    ?: rootProject.file("secrets.properties").takeIf { it.exists() }?.let { f ->
+        Properties().apply { f.inputStream().use { load(it) } }
+            .getProperty("faststatsToken", "")
+    }
+    ?: (project.findProperty("faststatsToken") as String?)
+    ?: ""
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
@@ -36,6 +57,7 @@ dependencies {
     shade("org.postgresql:postgresql:42.7.12")
     shade("com.tcoded:FoliaLib:0.5.2")
     shade("org.bstats:bstats-bukkit:3.2.1")
+    shade("dev.faststats.metrics:bukkit:0.27.1")
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
@@ -75,6 +97,7 @@ tasks.shadowJar {
     relocate("com.ongres",       "com.enhancedechest.libs.ongres")
     relocate("com.tcoded.folialib", "com.enhancedechest.libs.folialib")
     relocate("org.bstats",          "com.enhancedechest.libs.bstats")
+    relocate("dev.faststats",       "com.enhancedechest.libs.faststats")
 
     mergeServiceFiles()
     // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
@@ -90,6 +113,11 @@ tasks.processResources {
     filteringCharset = "UTF-8"
     filesMatching(listOf("plugin.yml", "paper-plugin.yml")) {
         expand(props)
+    }
+    // Bake the FastStats token into faststats.properties at build time so it never lives in source.
+    inputs.property("faststatsToken", faststatsToken)
+    filesMatching("faststats.properties") {
+        expand("faststatsToken" to faststatsToken)
     }
 }
 
