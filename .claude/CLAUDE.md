@@ -56,6 +56,15 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   clickable update link stays MiniMessage. Keys live in `language/<locale>/{messages,gui}.yml`.
 - **Config / language migrations:** `ConfigMigrations` + `YamlMigrator` rename keys on load so existing
   installs upgrade cleanly. Add a rename rule there rather than silently changing a key name.
+- **Telemetry (FastStats):** `com.enhancedechest.telemetry.Telemetry` is the only telemetry type the rest
+  of the plugin may depend on — handled-error reports via `telemetry.error(e, "site-label")` (rate-limited
+  per (site, exception class), always **alongside** the log line, never instead). Everything
+  `dev.faststats` stays inside `FastStatsTelemetry`; when no token is baked into `faststats.properties` at
+  build time the facade resolves to `Telemetry.NOOP`, so call sites never null-check or branch. Custom
+  metrics are deliberately just `storage_type` + `language` (matching bStats; the data source ids must
+  exist in the FastStats project dashboard) — action counters were tried and removed on request, don't
+  reintroduce without asking. Metric suppliers run on SDK threads: keep them pure and thread-safe
+  (immutable/volatile `PluginConfig` reads only, never platform/DB state).
 - **Open routing & the "main" chest** (`ChestOpener.open`): `/ec` and right-click decide between
   opening a chest directly vs. showing the `/eclist` management dialog —
   - **0–1 chest** → open it directly (bootstrapping chest #1 if none).

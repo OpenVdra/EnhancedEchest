@@ -8,6 +8,7 @@ import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.serialization.CodecException;
 import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.storage.EnderChestStorage;
+import com.enhancedechest.telemetry.Telemetry;
 import com.tcoded.folialib.FoliaLib;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -112,6 +113,7 @@ public final class ChestSessionManager {
     private final Logger logger;
     private final FoliaLib foliaLib;
     private final DbExecutor db;
+    private final Telemetry telemetry;
 
     private final ConcurrentHashMap<SaveKey, CompletableFuture<Void>> pendingSaves =
             new ConcurrentHashMap<>();
@@ -121,13 +123,14 @@ public final class ChestSessionManager {
 
     public ChestSessionManager(LanguageManager lang, ContainerCodec codec,
                                EnderChestStorage storage, Logger logger, FoliaLib foliaLib,
-                               DbExecutor db) {
-        this.lang     = lang;
-        this.codec    = codec;
-        this.storage  = storage;
-        this.logger   = logger;
-        this.foliaLib = foliaLib;
-        this.db       = db;
+                               DbExecutor db, Telemetry telemetry) {
+        this.lang      = lang;
+        this.codec     = codec;
+        this.storage   = storage;
+        this.logger    = logger;
+        this.foliaLib  = foliaLib;
+        this.db        = db;
+        this.telemetry = telemetry;
     }
 
     /**
@@ -202,6 +205,7 @@ public final class ChestSessionManager {
             } catch (CodecException e) {
                 logger.error("Codec failure for {} chest {} — aborting open to protect stored data",
                         owner, index, e);
+                telemetry.error(e, "chest.load-decode");
                 throw new CompletionException(e);
             }
         }
@@ -376,6 +380,7 @@ public final class ChestSessionManager {
         } catch (Exception e) {
             logger.error("Codec encode failure for {} chest {} — data NOT saved to prevent corruption",
                     owner, index, e);
+            telemetry.error(e, "chest.save-encode");
             return;
         }
 
@@ -385,6 +390,7 @@ public final class ChestSessionManager {
                 storage.saveChest(owner, index, encoded);
             } catch (Exception e) {
                 logger.error("DB save failure for {} chest {}", owner, index, e);
+                telemetry.error(e, "chest.save-db");
             }
         });
 

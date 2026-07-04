@@ -8,6 +8,7 @@ import com.enhancedechest.serialization.CodecException;
 import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.service.ChestSessionManager.ChestRef;
 import com.enhancedechest.storage.EnderChestStorage;
+import com.enhancedechest.telemetry.Telemetry;
 import com.tcoded.folialib.FoliaLib;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
@@ -52,6 +53,7 @@ public final class ChestTransferService {
     private final FoliaLib foliaLib;
     private final DbExecutor db;
     private final Logger logger;
+    private final Telemetry telemetry;
 
     // Runtime-tunable via /ee reload (mirrors ChestSpillService): lifetime of a temp chest created to
     // preserve the destination's displaced items. volatile so a reload on the main thread is visible.
@@ -60,7 +62,7 @@ public final class ChestTransferService {
     public ChestTransferService(ChestSessionManager sessions, EnderChestStorage storage,
                                 ContainerCodec codec, StorageGateway storageGateway,
                                 LanguageManager lang, FoliaLib foliaLib, DbExecutor db, Logger logger,
-                                long tempExpiryMillis) {
+                                Telemetry telemetry, long tempExpiryMillis) {
         this.sessions         = sessions;
         this.storage          = storage;
         this.codec            = codec;
@@ -69,6 +71,7 @@ public final class ChestTransferService {
         this.foliaLib         = foliaLib;
         this.db               = db;
         this.logger           = logger;
+        this.telemetry        = telemetry;
         this.tempExpiryMillis = tempExpiryMillis;
     }
 
@@ -225,6 +228,7 @@ public final class ChestTransferService {
     private Void fail(CommandSender sender, UUID from, UUID to, Throwable e) {
         logger.error("Failed to transfer chests from {} to {}", from, to,
                 e.getCause() != null ? e.getCause() : e);
+        telemetry.error(e.getCause() != null ? e.getCause() : e, "transfer");
         foliaLib.getScheduler().runNextTick(t -> sender.sendMessage(lang.get("admin.transfer-failed")));
         return null;
     }

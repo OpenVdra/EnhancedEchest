@@ -27,11 +27,12 @@ import com.enhancedechest.service.PlayerSettingsCache;
 import com.enhancedechest.service.StorageGateway;
 import com.enhancedechest.storage.EnderChestStorage;
 import com.enhancedechest.storage.StorageFactory;
+import com.enhancedechest.telemetry.FastStatsTelemetry;
+import com.enhancedechest.telemetry.Telemetry;
 import com.enhancedechest.update.UpdateChecker;
 import com.enhancedechest.update.UpdateNotifyListener;
 import com.enhancedechest.util.DurationFormat;
 import com.tcoded.folialib.FoliaLib;
-import dev.faststats.bukkit.BukkitContext;
 import lombok.Getter;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
@@ -39,8 +40,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.io.InputStream;
-import java.util.Properties;
 
 @Getter
 public final class EnhancedEchestPlugin extends JavaPlugin {
@@ -67,7 +66,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     private UpdateChecker updateChecker;
     private FoliaLib foliaLib;
     private Metrics metrics;
-    private BukkitContext fastStats;
+    private Telemetry telemetry;
 
     @Override
     public void onEnable() {
@@ -90,6 +89,10 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
 
         languageManager = new LanguageManager(this, pluginConfig, pluginConfig.getLocale());
 
+        // FastStats custom metrics + error tracking behind the Telemetry facade. Wired before the
+        // service layer so the services can report errors; NOOP when no token was baked in at build time.
+        telemetry = FastStatsTelemetry.create(this, pluginConfig);
+
         // Service layer, wired bottom-up: the shared async pool, then the storage/settings wrappers
         // over it, then the dupe-safe session registry, then the item-moving and open-routing layers.
         // The pool cap is sized to the backend: threads beyond the JDBC connection count only block
@@ -102,11 +105,12 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         playerNameIndex.loadAll();
         settingsCache  = new PlayerSettingsCache(storage, dbExecutor, getSLF4JLogger(), playerNameIndex);
         sessionManager = new ChestSessionManager(languageManager, codec, storage,
-                getSLF4JLogger(), foliaLib, dbExecutor);
+                getSLF4JLogger(), foliaLib, dbExecutor, telemetry);
         spillService   = new ChestSpillService(sessionManager, storage, codec, storageGateway,
                 pluginConfig.getTempExpiryMillis());
         chestTransferService = new ChestTransferService(sessionManager, storage, codec, storageGateway,
-                languageManager, foliaLib, dbExecutor, getSLF4JLogger(), pluginConfig.getTempExpiryMillis());
+                languageManager, foliaLib, dbExecutor, getSLF4JLogger(), telemetry,
+                pluginConfig.getTempExpiryMillis());
         permissionChestService = new PermissionChestService(storageGateway, spillService,
                 pluginConfig.isPermissionChestsEnabled(), pluginConfig.getDefaultSize());
         databaseImportService = new DatabaseImportService(storage, pluginConfig, getSLF4JLogger(),
@@ -154,7 +158,6 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         updateChecker.checkAsync(foliaLib);
 
         initMetrics();
-        initFastStats();
 
         printStartupBanner(getSLF4JLogger());
     }
@@ -163,9 +166,6 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     public void onDisable() {
         if (metrics != null) {
             metrics.shutdown();
-        }
-        if (fastStats != null) {
-            fastStats.shutdown();
         }
         if (expirySweeper != null) {
             expirySweeper.stop();
@@ -177,6 +177,11 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         // pool last — so the flush above can still dispatch its writes onto it.
         if (sessionManager != null) {
             sessionManager.shutdown();
+        }
+        // After the session flush, so a save failure during that flush is still reported before the
+        // final telemetry submission goes out.
+        if (telemetry != null) {
+            telemetry.shutdown();
         }
         if (settingsCache != null) {
             settingsCache.clear();
@@ -241,42 +246,6 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 () -> pluginConfig.getDatabaseType().toUpperCase()));
         metrics.addCustomChart(new SimplePie("language",
                 () -> pluginConfig.getLocale()));
-    }
-
-    /**
-     * Registers the plugin with FastStats. The project token is baked into {@code faststats.properties}
-     * at build time (from the {@code FASTSTATS_TOKEN} env var or a gitignored {@code secrets.properties}),
-     * so it never lives in source. If no token was provided at build time the value is empty and
-     * FastStats is silently skipped.
-     */
-    private void initFastStats() {
-        String token = readFastStatsToken();
-        if (token.isEmpty() || token.startsWith("${")) {
-            return;
-        }
-        try {
-            fastStats = new BukkitContext.Factory(this, token)
-                    .metrics(dev.faststats.Metrics.Factory::create)
-                    .create();
-            fastStats.ready();
-        } catch (Exception e) {
-            getSLF4JLogger().warn("Failed to initialize FastStats metrics", e);
-            fastStats = null;
-        }
-    }
-
-    /** Reads the build-time FastStats token from the bundled {@code faststats.properties}. */
-    private String readFastStatsToken() {
-        try (InputStream in = getResource("faststats.properties")) {
-            if (in == null) {
-                return "";
-            }
-            Properties props = new Properties();
-            props.load(in);
-            return props.getProperty("token", "").trim();
-        } catch (Exception e) {
-            return "";
-        }
     }
 
     private void migrateConfigFile() {
