@@ -1,4 +1,4 @@
-**EnhancedEchest** upgrades the vanilla ender chest into a larger, persistent, multi-chest storage system. Every player gets ender chests of up to **54 slots**, can own several, and manages them from one clean in-game menu, and every chest is saved to a real database, so contents survive restarts, resets, and world wipes.
+Give players bigger ender chest up to **54 slots**, customizable and with support for multiple chests per player. Every chest is managed from one clean in-game menu and survives restarts, resets, and world wipes.
 
 <p align="center"> <img src="https://github.com/user-attachments/assets/a1f8a60e-5f31-4a30-b91b-07c5ba9243bf" alt="An enhanced ender chest with 54 slots" width="360" /> </p>
 
@@ -15,12 +15,19 @@
 ## Features
 
 - **Up to 54 slots**: swap the 27-slot vanilla ender chest for a GUI of up to 54 slots (a full double chest). Configurable in multiples of 9, from `9` to `54`. Opens the usual way (right-click the block or `/ec`), and the block keeps its lid animation.
+
 - **Multiple chests per player**: own several chests. With two or more, opening the ender chest shows an in-game menu (`/eclist`) to open and switch between them, **rename** them, give them **custom icons**, and pick a **main chest** that `/ec` opens directly.
+
 - **Permission-granted chests**: grant chests by rank with `enhancedechest.additional_amount.<count>.slot.<size>` (e.g. `...2.slot.54` = two 54-slot chests). Nodes stack, sync on open, and removing one removes those chests (items spill to a recoverable temp chest). The base chest is always protected.
+
 - **Admin tools**: manage any player's chests online or offline: `/ee add`, `/ee resize`, `/ee delete` (all item-spill safe), and `/ee view <player>` to open someone's chest read-only or editable. Temporary chests can auto-expire (e.g. `7d`, `1d_12h`).
+
 - **Database-backed**: contents are serialized to **SQLite** (built in, zero setup), **MySQL / MariaDB**, or **PostgreSQL**. All DB work runs off the main thread on a HikariCP pool, so saving never blocks the tick.
+
 - **Migration**: imports vanilla ender chest data automatically on join, or on demand with `/ee migrate vanilla <player>` / `all`. Also imports from the **AxVaults** plugin with `/ee migrate axvaults` (tested with AxVaults 2.15.0) and the **PlayerVaultsX** plugin with `/ee migrate playervaultsx` (tested with PlayerVaultsX 4.4.13), both supporting offline players. Each player is migrated only once.
+
 - **Bedrock support**: menus use Paper's **Dialog API**, which [Geyser](https://geysermc.org/) converts to native Bedrock forms with no extra setup.
+
 - **Localization**: all text lives in editable language files with full **MiniMessage** formatting.
 
 <p align="center">

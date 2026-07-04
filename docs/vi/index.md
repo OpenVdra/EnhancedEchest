@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "EnhancedEchest"
   text: "Rương Ender, Nâng Cấp"
-  tagline: Cho người chơi nhiều rương Ender với tối đa 54 ô mỗi rương, tên và biểu tượng tùy chỉnh, tất cả trong một menu trong game gọn gàng.
+  tagline: Cho người chơi rương Ender lớn hơn, tối đa 54 ô, có thể tùy chỉnh và hỗ trợ sở hữu nhiều rương mỗi người chơi
   image:
     src: /enderchest-hero.webp
     alt: EnhancedEchest
