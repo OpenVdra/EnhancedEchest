@@ -100,7 +100,7 @@ tasks.shadowJar {
     relocate("dev.faststats",       "com.enhancedechest.libs.faststats")
 
     mergeServiceFiles()
-    destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\Folia\\plugins"))
+    // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\Folia\\plugins"))
 }
 
 tasks.build {
