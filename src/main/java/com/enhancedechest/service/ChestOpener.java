@@ -15,7 +15,6 @@ import com.tcoded.folialib.FoliaLib;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -129,7 +128,13 @@ public final class ChestOpener {
         UUID uuid = player.getUniqueId();
         boolean canSetMain = canSetMain(player);
         foliaLib.getScheduler().runAtEntity(player, outerTask -> {
-            closeExistingGui(player);
+            // A player physically can't right-click or type while a chest GUI is open, so a request
+            // arriving with one open is a stale duplicate queued while a previous open was still
+            // loading (Folia opens span several thread hops + DB round-trips). Closing and reopening
+            // here would churn a full save/load cycle and spam the lid animation sound per click.
+            if (player.getOpenInventory().getTopInventory().getHolder() instanceof EnderChestHolder) {
+                return;
+            }
             // Reconcile permission-granted chests and the base-chest size override against the player's
             // permissions before routing, reusing the list /ec already fetches (no extra query in the
             // common case where nothing changed).
@@ -254,13 +259,6 @@ public final class ChestOpener {
             index = storage.createChest(uuid, defaultSize);
         }
         return index;
-    }
-
-    private void closeExistingGui(Player player) {
-        Inventory currentTop = player.getOpenInventory().getTopInventory();
-        if (currentTop.getHolder() instanceof EnderChestHolder) {
-            player.closeInventory();
-        }
     }
 
     private Void reportOpenFailure(Player player, Throwable e) {

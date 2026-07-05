@@ -2,6 +2,18 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.0.7 - 2026-07-05
+
+**Critical bug fix — item duplication. Please update immediately, especially on Folia.**
+
+### Fixed
+
+- **Critical:** fixed an item duplication exploit triggered by re-opening an ender chest rapidly (spam right-clicking the block, or mixing `/ec` with a right-click while the chest was still opening). The overlapping opens could silently disconnect the on-screen chest from saving: items taken out afterwards were never removed from the database and reappeared on the next open.
+  - Easiest to trigger on Folia, where opening a chest takes longer, but the window existed on Paper too.
+  - Fixed at every layer: a single right-click can no longer start two opens, duplicate open requests are collapsed into one, and a chest window can no longer outlive its save tracking.
+- Fixed spam right-clicking an ender chest playing the lid open/close sound over and over. A duplicate open request arriving while the chest is already open (or still loading) is now ignored instead of closing and re-opening the chest — this also removes the pointless save/load each of those cycles caused.
+- Fixed the update notification's download line showing raw colour codes (for example `&#9B59B6EnhancedEchest &8» &r`) instead of the formatted plugin prefix. Messages that mix the `&`-code prefix with MiniMessage text (like the clickable download link) now format both parts correctly.
+
 ## 1.0.6 - 2026-07-04
 
 This release adds a built-in tool to move all your data from one database backend to another, plus a set of performance improvements aimed at servers with many players online.

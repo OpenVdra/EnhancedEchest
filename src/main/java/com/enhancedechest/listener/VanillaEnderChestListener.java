@@ -10,6 +10,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 @RequiredArgsConstructor
 public final class VanillaEnderChestListener implements Listener {
@@ -19,6 +20,9 @@ public final class VanillaEnderChestListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        // The event fires once per hand; without this filter a single right-click can start two
+        // overlapping open flows for the same chest (see ChestSessionManager.decideOpen dedupe).
+        if (event.getHand() != EquipmentSlot.HAND) return;
 
         var block = event.getClickedBlock();
         if (block == null || block.getType() != Material.ENDER_CHEST) return;

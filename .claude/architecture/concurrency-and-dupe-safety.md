@@ -66,8 +66,9 @@ Every open path goes through `ChestSessionManager.open(player, owner, index, sou
 **If you add a new way to open a chest, route it here** — a second independently-loaded `Inventory`
 re-introduces duping.
 
-1. On the player's entity thread: `closeExistingGui(player)` (its close fires `detach`, see below), then
-   hop to `onGlobal` → `decideOpen`.
+1. On the player's entity thread: a request for the chest they are **already viewing** is dropped (a
+   stale duplicate — reopening would churn a save/load cycle and replay the lid sound); a *different*
+   chest GUI is closed first (its close fires `detach`, see below). Then hop to `onGlobal` → `decideOpen`.
 2. `decideOpen` (global thread):
    - **Live session exists & not closing** → attach. On **Folia**, if another viewer already holds it,
      deny with `chest.in-use` (single-viewer rule, below). If `ready`, `addViewerAndOpen`; else queue in
@@ -82,6 +83,31 @@ re-introduces duping.
    `chest.not-found`.
 4. `addViewerAndOpen` registers the viewer on the global thread, then `player.openInventory(inv)` on the
    player's entity thread (and plays the open lid animation if a source block was supplied).
+
+### Overlapping opens & the spurious-close hazard
+
+Opening an inventory while another is open makes Bukkit **close the current view first, firing an
+`InventoryCloseEvent`**. If that close is for the *same shared inventory* being re-shown, `detach`
+would treat it as the viewer leaving — tearing down and persisting the session while the player's GUI
+stays open on a now-orphaned `Inventory` whose later edits are never saved (a dupe on the next fresh
+load). On Folia an open spans many hops (entity → DB ×2 → entity → global → DB → global → entity), so
+fast players easily start two overlapping open flows for one chest. Three guards keep this impossible:
+
+1. `VanillaEnderChestListener` handles only `EquipmentSlot.HAND` (the interact event fires per hand —
+   one right-click must not start two open flows).
+2. `decideOpen` keeps **one `Pending` per player** in `waiting` (a later request replaces the earlier),
+   so `finishCreate` never double-opens.
+3. `addViewerAndOpen` skips `openInventory` when the player is **already viewing that exact inventory**,
+   and after opening re-verifies on the bookkeeping thread that the session is still live and the viewer
+   still registered — closing the view if the attach was superseded by a racing close/force-close.
+
+Additionally, both entry points **drop stale open requests instead of cycling the GUI**: a player
+physically can't click a block or type a command while a chest GUI is open, so a request that arrives
+with one open is spam queued before the GUI appeared. `ChestOpener.open` returns immediately when *any*
+`EnderChestHolder` GUI is open; `ChestSessionManager.open` returns when the player already views the
+**same** `(owner, index)` chest and only closes (→ `detach`) when they are switching to a different one.
+Without this, each spammed right-click ran a full close → save → load → reopen cycle, replaying the lid
+open/close sounds every time.
 
 ### Closing & saving — `detach` + `persist`
 

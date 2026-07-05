@@ -12,7 +12,7 @@ configurations {
 }
 
 group = "com.enhancedechest"
-version = "1.0.6"
+version = "1.0.7"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -100,7 +100,7 @@ tasks.shadowJar {
     relocate("dev.faststats",       "com.enhancedechest.libs.faststats")
 
     mergeServiceFiles()
-    // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
+    destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\Folia\\plugins"))
 }
 
 tasks.build {

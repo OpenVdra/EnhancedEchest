@@ -149,14 +149,22 @@ public final class ChestSessionManager {
     // ---- opening ----
 
     /**
-     * The single funnel through which every chest open passes. Closes the player's current chest GUI on
-     * their entity thread (flushing its session), then hands off to {@link #decideOpen} on the global
-     * bookkeeping thread to attach to — or create — the live session for {@code (owner, index)}.
+     * The single funnel through which every chest open passes. On the player's entity thread: a request
+     * for the chest they are <i>already viewing</i> is dropped (it is a stale duplicate — closing and
+     * reopening would churn a save/load cycle and replay the lid sound); a different chest GUI is closed
+     * first (flushing its session). Then hands off to {@link #decideOpen} on the global bookkeeping
+     * thread to attach to — or create — the live session for {@code (owner, index)}.
      */
     public void open(Player player, UUID owner, int index, @Nullable Location sourceBlock) {
         foliaLib.getScheduler().runAtEntity(player, t -> {
             if (!player.isOnline()) return;
-            closeExistingGui(player);
+            Inventory currentTop = player.getOpenInventory().getTopInventory();
+            if (currentTop.getHolder() instanceof EnderChestHolder h) {
+                if (h.getOwner().equals(owner) && h.getIndex() == index) {
+                    return;
+                }
+                player.closeInventory();
+            }
             onGlobal(() -> decideOpen(player, owner, index, sourceBlock));
         });
     }
@@ -174,6 +182,12 @@ public final class ChestSessionManager {
             if (existing.ready) {
                 addViewerAndOpen(player, existing, sourceBlock);
             } else {
+                // Overlapping opens by the same player (right-click spam, /ec + right-click while the
+                // first open is still loading) must collapse to ONE pending entry: two would openInventory
+                // twice on ready, and the second open fires an InventoryCloseEvent that detaches the
+                // viewer and tears the live session down under their still-open GUI — edits made after
+                // that are never persisted (dupe on the next fresh load).
+                existing.waiting.removeIf(p -> p.player().getUniqueId().equals(viewer));
                 existing.waiting.add(new Pending(player, sourceBlock));
             }
             return;
@@ -278,11 +292,31 @@ public final class ChestSessionManager {
                 onGlobal(() -> removeViewer(s, uuid));
                 return;
             }
+            // Already showing this exact shared inventory (a second overlapping open of the same chest):
+            // re-opening would make Bukkit close the current view first, and that InventoryCloseEvent
+            // would detach the viewer and tear the live session down while their GUI stays open.
+            if (player.getOpenInventory().getTopInventory() == inv) {
+                return;
+            }
             player.openInventory(inv);
             if (sourceBlock != null) {
                 foliaLib.getScheduler().runAtLocation(sourceBlock, lt ->
                         EnderChestAnimator.open(player, sourceBlock));
             }
+            // A real close (player, force-close) can race this open across threads and tear the session
+            // down between our global-thread registration and this openInventory — leaving an orphaned
+            // view whose edits would never persist. Re-verify on the bookkeeping thread and shut the
+            // view if this attach has been superseded.
+            onGlobal(() -> {
+                if (sessions.get(new SaveKey(s.owner, s.index)) != s
+                        || s.closing || !s.viewers.contains(uuid)) {
+                    foliaLib.getScheduler().runAtEntity(player, t2 -> {
+                        if (player.isOnline() && player.getOpenInventory().getTopInventory() == inv) {
+                            player.closeInventory();
+                        }
+                    });
+                }
+            });
         });
     }
 
@@ -297,13 +331,6 @@ public final class ChestSessionManager {
         if (!s.closing && s.viewers.isEmpty() && s.waiting.isEmpty()) {
             sessions.remove(new SaveKey(s.owner, s.index), s);
             persist(s);
-        }
-    }
-
-    private void closeExistingGui(Player player) {
-        Inventory currentTop = player.getOpenInventory().getTopInventory();
-        if (currentTop.getHolder() instanceof EnderChestHolder) {
-            player.closeInventory();
         }
     }
 

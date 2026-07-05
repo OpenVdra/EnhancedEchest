@@ -56,7 +56,7 @@ public final class LanguageManager {
     private FileConfiguration gui;
 
     // Hot-path values resolved once per (re)load instead of on every message/open.
-    private String cachedPrefix;
+    private Component cachedPrefix;
     private String cachedTitleBase;
     private String cachedTitleTemplate;
     private String cachedTitleTemp;
@@ -98,7 +98,7 @@ public final class LanguageManager {
         messages = loadFile(base + "messages.yml");
         gui      = loadFile(base + "gui.yml");
 
-        cachedPrefix        = messages.getString("prefix", "[EnhancedEchest] ");
+        cachedPrefix        = parse(messages.getString("prefix", "[EnhancedEchest] "));
         cachedTitleBase     = gui.getString("enderchest.title", "Ender Chest");
         cachedTitleTemplate = gui.getString("enderchest.title-numbered", "Ender Chest {index}");
         cachedTitleTemp     = gui.getString("enderchest.title-temp", "Temporary Storage");
@@ -151,14 +151,32 @@ public final class LanguageManager {
      */
     public Component get(String key, String... replacements) {
         if (replacements.length == 0) {
-            return messageCache.computeIfAbsent(key, k -> parse(messages.getString(k, k).replace("{prefix}", cachedPrefix)));
+            return messageCache.computeIfAbsent(key, k -> parsePrefixed(messages.getString(k, k)));
         }
         String raw = messages.getString(key, key);
-        raw = raw.replace("{prefix}", cachedPrefix);
         for (int i = 0; i + 1 < replacements.length; i += 2) {
             raw = raw.replace("{" + replacements[i] + "}", replacements[i + 1]);
         }
-        return parse(raw);
+        return parsePrefixed(raw);
+    }
+
+    /**
+     * Parses a message that may contain {@code {prefix}}: the prefix and the message body are parsed
+     * <b>independently</b>, each with its own auto-detected format, then joined as Components. The prefix
+     * (legacy {@code &} codes in the default files) must never be substituted as raw text into a
+     * MiniMessage body — MiniMessage does not understand {@code &} codes and would show them literally.
+     */
+    private Component parsePrefixed(String raw) {
+        if (!raw.contains("{prefix}")) {
+            return parse(raw);
+        }
+        String[] parts = raw.split(java.util.regex.Pattern.quote("{prefix}"), -1);
+        var out = Component.text();
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) out.append(cachedPrefix);
+            if (!parts[i].isEmpty()) out.append(parse(parts[i]));
+        }
+        return out.build();
     }
 
     /**
