@@ -57,7 +57,7 @@ dependencies {
     shade("org.postgresql:postgresql:42.7.12")
     shade("com.tcoded:FoliaLib:0.5.2")
     shade("org.bstats:bstats-bukkit:3.2.1")
-    shade("dev.faststats.metrics:bukkit:0.27.1")
+    shade("dev.faststats.metrics:bukkit:0.27.2")
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
