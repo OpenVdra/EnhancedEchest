@@ -64,6 +64,39 @@ dependencies {
 
     compileOnly("org.projectlombok:lombok:1.18.46")
     annotationProcessor("org.projectlombok:lombok:1.18.46")
+
+    // Test-only: JUnit 5 + a real sqlite driver (compileOnly for the plugin, Paper bundles it at
+    // runtime) + an slf4j binding so CachedStorage's logger has somewhere to print.
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.slf4j:slf4j-simple:2.0.16")
+    testRuntimeOnly("org.xerial:sqlite-jdbc:3.53.2.0")
+}
+
+// The normal `test` task stays fast: it skips the heavy load simulation.
+tasks.test {
+    useJUnitPlatform()
+    exclude("**/*Simulation*")
+}
+
+// ./gradlew stressTest — the 300–500 player concurrency/perf/leak simulation (no server needed).
+tasks.register<Test>("stressTest") {
+    description = "Concurrent 300–500 player load simulation against CachedStorage + SQLite."
+    group = "verification"
+    // A manually registered Test task must be pointed at the test source set explicitly
+    // (unlike the built-in `test` task) or it reports NO-SOURCE.
+    val testSourceSet = sourceSets["test"]
+    testClassesDirs = testSourceSet.output.classesDirs
+    classpath = testSourceSet.runtimeClasspath
+    useJUnitPlatform()
+    include("**/*Simulation*")
+    maxHeapSize = "384m"
+    outputs.upToDateWhen { false }   // always re-run
+    testLogging {
+        showStandardStreams = true   // print the simulation report to the console
+        events("passed", "failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
