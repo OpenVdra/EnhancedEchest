@@ -40,7 +40,3 @@ EnhancedEchest reports anonymous usage data to [bStats](https://bstats.org/plugi
 ## License
 
 Licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
-
-## Credits
-
-Plugin icon by [m11.dalp.sh](https://m11.dalp.sh/).

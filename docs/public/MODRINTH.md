@@ -10,23 +10,20 @@
 
 </div>
 
-## Features
+The vanilla ender chest is stuck at 27 slots, one per player, forever. **EnhancedEchest** fixes that: up to **54 slots**, as many chests per player as you want, each with its own name and icon, all managed from one clean in-game menu.
 
-- **Up to 54 slots**: swap the 27-slot vanilla ender chest for a GUI of up to 54 slots (a full double chest). Configurable in multiples of 9, from `9` to `54`. Opens the usual way (right-click the block or `/ec`), and the block keeps its lid animation.
+## Highlights
 
-- **Multiple chests per player**: own several chests. With two or more, opening the ender chest shows an in-game menu (`/eclist`) to open and switch between them, **rename** them, give them **custom icons**, and pick a **main chest** that `/ec` opens directly.
+- **Up to 54 slots**: a full double chest instead of 27, in steps of 9. Same block, same right-click.
+- **Multiple chests per player**: switch, rename, and set icons from an in-game menu (`/eclist`), no commands needed.
+- **Permission-based grants**: hand out extra chests by rank. They sync automatically and revoke cleanly, items spill safely instead of vanishing.
+- **Admin tools**: add, resize, delete, or view any player's chests, online or offline. Temporary chests can auto-expire.
+- **Any database**: <img src="https://skillicons.dev/icons?i=sqlite" width="18" height="18" alt="SQLite" style="vertical-align:middle;margin:0 2px" /> SQLite out of the box, or plug into <img src="https://skillicons.dev/icons?i=mysql" width="18" height="18" alt="MySQL" style="vertical-align:middle;margin:0 2px" /> MySQL, <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#242938;border-radius:5px;vertical-align:middle;margin:0 2px;box-sizing:border-box"><img src="https://cdn.simpleicons.org/mariadb/ffffff" width="13" height="13" alt="MariaDB" style="display:block" /></span> MariaDB, <img src="https://skillicons.dev/icons?i=postgres" width="18" height="18" alt="PostgreSQL" style="vertical-align:middle;margin:0 2px" /> PostgreSQL. Saving happens in the background, so it never lags your server.
+- **Painless migration**: imports vanilla ender chests automatically, plus one-command imports from **AxVaults** and **PlayerVaultsX**.
+- **Bedrock-ready**: menus work natively through Geyser, zero setup.
+- **Fully translatable**: every message is editable, with MiniMessage formatting.
 
-- **Permission-granted chests**: grant chests by rank with `enhancedechest.additional_amount.<count>.slot.<size>` (e.g. `...2.slot.54` = two 54-slot chests). Nodes stack, sync on open, and removing one removes those chests (items spill to a recoverable temp chest). The base chest is always protected.
-
-- **Admin tools**: manage any player's chests online or offline: `/ee add`, `/ee resize`, `/ee delete` (all item-spill safe), and `/ee view <player>` to open someone's chest read-only or editable. Temporary chests can auto-expire (e.g. `7d`, `1d_12h`).
-
-- **Database-backed**: contents are serialized to **SQLite** (built in, zero setup), **MySQL / MariaDB**, or **PostgreSQL**. All DB work runs off the main thread on a HikariCP pool, so saving never blocks the tick.
-
-- **Migration**: imports vanilla ender chest data automatically on join, or on demand with `/ee migrate vanilla <player>` / `all`. Also imports from the **AxVaults** plugin with `/ee migrate axvaults` (tested with AxVaults 2.15.0) and the **PlayerVaultsX** plugin with `/ee migrate playervaultsx` (tested with PlayerVaultsX 4.4.13), both supporting offline players. Each player is migrated only once.
-
-- **Bedrock support**: menus use Paper's **Dialog API**, which [Geyser](https://geysermc.org/) converts to native Bedrock forms with no extra setup.
-
-- **Localization**: all text lives in editable language files with full **MiniMessage** formatting.
+## Screenshots
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f693c05c-7427-489b-aa41-b68f3341cda1" alt="The chest list menu showing several owned ender chests" />
@@ -45,28 +42,32 @@
 
 **Player**
 
-- `/ec`: open your main chest (or the menu if you have several and no main set)
-- `/ec #<index>` / `/ec <name>`: open one specific chest directly
-- `/eclist`: always open the management menu
+| Command | Permission | Does |
+|---|---|---|
+| `/ec` | `enhancedechest.command.open` | Open your main chest (or the menu, if you own several) |
+| `/ec <name>` / `/ec #<index>` | `enhancedechest.command.open` | Open one specific chest directly |
+| `/eclist` | `enhancedechest.command.open` | Open the chest management menu |
 
 **Admin** (`/ee`)
 
-- `/ee add <player> <size> [count] [duration]`: give chest(s), optionally temporary
-- `/ee resize <player> <index> <size>`: change a chest's slot count (overflow spills safely)
-- `/ee delete <player> <count> [force]`: delete newest chests (the first is always kept)
-- `/ee view <player> [list | index]`: open another player's chest, view-only or editable
-- `/ee migrate vanilla <player> | all`: import vanilla ender chest data
-- `/ee migrate axvaults [<player>]`: import vaults from the AxVaults plugin
-- `/ee migrate playervaultsx [<player>]`: import vaults from the PlayerVaultsX plugin
-- `/ee reload`: reload config and language files
+| Command | Permission | Does |
+|---|---|---|
+| `/ee add <player> <size> [count] [duration]` | `enhancedechest.admin.add` | Grant chest(s), optionally temporary |
+| `/ee resize <player> <index> <size>` | `enhancedechest.admin.resize` | Resize a chest (overflow spills safely) |
+| `/ee delete <player> <count> [force]` | `enhancedechest.admin.delete` | Delete newest chests (first one is always kept) |
+| `/ee view <player> [list\|index]` | `enhancedechest.admin.view` | View or edit another player's chest |
+| `/ee transfer <from> <to> <#index\|name\|all>` | `enhancedechest.admin.transfer` | Move chest(s) onto another account |
+| `/ee import` | `enhancedechest.admin.import` | Copy all data from an old database into the active one |
+| `/ee migrate vanilla\|axvaults\|playervaultsx` | `enhancedechest.admin.migrate` | Import from vanilla, AxVaults, or PlayerVaultsX |
+| `/ee reload` | `enhancedechest.admin.reload` | Reload config and language files |
 
-## Requirements
+## Get started
 
-**Minecraft** 1.21.11 - 26.2 · **Server** Paper / Folia / Purpur (or compatible forks) · **Java** 21+
+**Minecraft** 1.21.11 - 26.2 · **Server** Paper / Folia / Purpur · **Java** 21+
 
-**Installation:** stop your server, drop the `.jar` into `plugins/`, and start. It runs on **SQLite out of the box**, no extra setup needed.
+Drop the `.jar` into `plugins/` and restart. SQLite works out of the box, zero config.
 
-EnhancedEchest is completely **free and open source**. Fork it, build on it, or contribute back. ❤️
+EnhancedEchest is **free and open source**. Fork it, build on it, or contribute back.
 
 <p align="center">
   <a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142">
