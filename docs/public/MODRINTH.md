@@ -15,12 +15,19 @@ The vanilla ender chest is stuck at 27 slots, one per player, forever. **Enhance
 ## Highlights
 
 - **Up to 54 slots**: a full double chest instead of 27, in steps of 9. Same block, same right-click.
+
 - **Multiple chests per player**: switch, rename, and set icons from an in-game menu (`/eclist`), no commands needed.
-- **Permission-based grants**: hand out extra chests by rank. They sync automatically and revoke cleanly, items spill safely instead of vanishing.
+
+- [**Permission-based grants**](https://openvdra.github.io/EnhancedEchest/docs/permissions#default-size-permission): hand out extra chests by rank. They sync automatically and revoke cleanly, items spill safely instead of vanishing.
+
 - **Admin tools**: add, resize, delete, or view any player's chests, online or offline. Temporary chests can auto-expire.
+
 - **Any database**: <img src="https://skillicons.dev/icons?i=sqlite" width="18" height="18" alt="SQLite" style="vertical-align:middle;margin:0 2px" /> SQLite out of the box, or plug into <img src="https://skillicons.dev/icons?i=mysql" width="18" height="18" alt="MySQL" style="vertical-align:middle;margin:0 2px" /> MySQL, <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#242938;border-radius:5px;vertical-align:middle;margin:0 2px;box-sizing:border-box"><img src="https://cdn.simpleicons.org/mariadb/ffffff" width="13" height="13" alt="MariaDB" style="display:block" /></span> MariaDB, <img src="https://skillicons.dev/icons?i=postgres" width="18" height="18" alt="PostgreSQL" style="vertical-align:middle;margin:0 2px" /> PostgreSQL. Saving happens in the background, so it never lags your server.
+
 - **Painless migration**: imports vanilla ender chests automatically, plus one-command imports from **AxVaults** and **PlayerVaultsX**.
+
 - **Bedrock-ready**: menus work natively through Geyser, zero setup.
+
 - **Fully translatable**: every message is editable, with MiniMessage formatting.
 
 ## Screenshots
