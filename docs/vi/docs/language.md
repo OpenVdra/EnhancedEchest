@@ -67,3 +67,62 @@ enderchest:
 Tên vật phẩm trong bộ chọn biểu tượng rương hoạt động khác với các tin nhắn ở trên. Chúng lấy trực tiếp từ máy khách Minecraft của từng người chơi và luôn hiển thị theo ngôn ngữ mà máy khách đó đang dùng, không cần cấu hình gì ở đây.
 
 Tìm kiếm theo tên trong bộ chọn biểu tượng hiện hoạt động tốt nhất với tiếng Anh hoặc tiếng Việt. Các ngôn ngữ máy khách khác vẫn hiển thị đúng tên vật phẩm, nhưng từ khóa tìm kiếm có thể chỉ khớp theo tên tiếng Anh.
+
+### Thêm Tìm Kiếm Biểu Tượng Cho Ngôn Ngữ Khác
+
+Bạn có thể thêm hỗ trợ tìm kiếm biểu tượng cho một ngôn ngữ chưa được đóng gói sẵn, hoặc ghi đè tiếng Anh/tiếng Việt, mà không cần cập nhật plugin. Trong lúc server đang chạy, tạo file tại:
+
+```
+plugins/EnhancedEchest/icons/lang/<locale>.json
+```
+
+với `<locale>` là locale Minecraft viết thường, ví dụ `de_de.json` hoặc `fr_fr.json`. Mỗi mục ánh xạ một translation key vật phẩm hoặc khối của Minecraft sang tên bạn muốn tìm kiếm khớp:
+
+```json
+{
+  "item.minecraft.diamond": "Diamant",
+  "block.minecraft.oak_planks": "Eichenbohlen"
+}
+```
+
+Sau đó chạy `/ee reload` để áp dụng, không cần khởi động lại server. Tên vật phẩm hiển thị trong danh sách chọn vốn đã tự động khớp đúng ngôn ngữ máy khách của người chơi; file này chỉ ảnh hưởng đến việc từ khóa tìm kiếm khớp với gì.
+
+### Lấy Dữ Liệu Từ Mojang
+
+Gõ tay tên của từng vật phẩm sẽ tốn khá nhiều công sức. Mojang cung cấp miễn phí tên chính thức, nhưng chúng nằm trong các file JSON lớn dành cho chương trình đọc, không phải cho con người đọc, nên dưới đây là hướng dẫn từng bước với các đường link thật để bạn bấm vào, dùng phiên bản `26.2` (bản mới nhất tại thời điểm viết bài) làm ví dụ. Với phiên bản khác, làm tương tự để lấy link mới.
+
+**Bước 1: Tìm phiên bản của bạn.** Mở version manifest:
+
+[https://piston-meta.mojang.com/mc/game/version_manifest_v2.json](https://piston-meta.mojang.com/mc/game/version_manifest_v2.json)
+
+Hầu hết trình duyệt hiển thị JSON dưới dạng trang có thể tìm kiếm được. Nhấn Ctrl+F (Cmd+F trên Mac), tìm số phiên bản trong dấu ngoặc kép, ví dụ `"26.2"`, rồi bấm vào link `url` hiện ngay bên cạnh nó. Với `26.2`, link đó là:
+
+[https://piston-meta.mojang.com/v1/packages/c8eb00be8a1f9fb9adf70ee415b7e1f746b636e8/26.2.json](https://piston-meta.mojang.com/v1/packages/c8eb00be8a1f9fb9adf70ee415b7e1f746b636e8/26.2.json)
+
+**Bước 2: Tìm asset index.** Trên trang bạn vừa mở, tìm `assetIndex` và bấm vào `url` ngay bên cạnh. Với `26.2`, link đó là:
+
+[https://piston-meta.mojang.com/v1/packages/49da57a9512de46382d2fe4b68af047fea7a16f9/32.json](https://piston-meta.mojang.com/v1/packages/49da57a9512de46382d2fe4b68af047fea7a16f9/32.json)
+
+Trang này liệt kê mọi asset của game nên khá lớn. Ô tìm kiếm sẽ rất cần thiết ở bước này.
+
+**Bước 3: Tìm file ngôn ngữ của bạn.** Trên trang asset index đó, tìm `minecraft/lang/` theo sau bởi locale của bạn, ví dụ `minecraft/lang/vi_vn.json`. Ngay sau nó là giá trị `hash`, một chuỗi chữ và số dài. Ghép thành link tải:
+
+```
+https://resources.download.minecraft.net/<2 ký tự đầu của hash>/<hash đầy đủ>
+```
+
+Ví dụ, tiếng Việt (`vi_vn`) trên `26.2` có hash là `06fd8f3fcfc2c75f874f69e720d574be140b1261`, nên link tải là:
+
+[https://resources.download.minecraft.net/06/06fd8f3fcfc2c75f874f69e720d574be140b1261](https://resources.download.minecraft.net/06/06fd8f3fcfc2c75f874f69e720d574be140b1261)
+
+Bấm vào link đó sẽ tải về (hoặc hiển thị) chính file ngôn ngữ. Lưu nó thành `plugins/EnhancedEchest/icons/lang/vi_vn.json` (đổi thành locale của bạn) rồi chuyển thẳng xuống bước cuối bên dưới.
+
+::: tip Tiếng Anh (`en_us`) hoạt động khác
+Tiếng Anh không phải file riêng trong asset index, nó nằm sẵn trong chính client của game. Ở trang từ bước 1, tìm `client` bên dưới `downloads` rồi bấm vào `url` của nó để tải client jar (file khá lớn, vài chục megabyte). Mở nó bằng công cụ giải nén bất kỳ (7-Zip, WinRAR, hoặc "Extract All" có sẵn trong Windows, nếu Windows không nhận diện được `.jar` thì đổi tên bản sao thành đuôi `.zip` trước) rồi lấy ra file `assets/minecraft/lang/en_us.json` bên trong.
+:::
+
+**Đọc và lưu file.** File tải về là một dòng văn bản khổng lồ không có khoảng trắng nào cả, không thể đọc được trong trình soạn thảo văn bản thường như Notepad. Hãy mở nó bằng một trình soạn thảo code miễn phí như [Visual Studio Code](https://code.visualstudio.com/) hoặc Notepad++. Trong VS Code, bấm chuột phải vào bất kỳ đâu trong văn bản rồi chọn **Format Document** để dàn nó thành các dòng có thụt lề dễ đọc, sau đó dùng Ctrl+F để tìm kiếm bên trong.
+
+File này có hàng nghìn mục cho menu, thành tựu, và nhiều thứ khác, không chỉ vật phẩm, nhưng bạn không cần xóa bớt gì cả. Bộ chọn biểu tượng chỉ đọc các key bắt đầu bằng `item.minecraft.` hoặc `block.minecraft.`, nên lưu nguyên file như đã tải về vẫn hoạt động tốt, các mục thừa đơn giản là không bao giờ được đọc tới.
+
+**Bước 4: Lưu file.** Đặt file hoàn chỉnh tại `plugins/EnhancedEchest/icons/lang/<locale>.json` (chữ thường, khớp với locale id ở bước 3, ví dụ `de_de.json`) rồi chạy `/ee reload`.

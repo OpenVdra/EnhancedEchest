@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,6 +18,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -63,6 +66,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * the client jar, since it alone ships inside the jar rather than as a separate asset object), filter it
  * the same way, and drop it in as {@code icons/lang/<locale>.json} — no code change needed. See
  * {@code docs/} for the full runbook.
+ *
+ * <p><b>Server-owner override, no rebuild needed.</b> {@link #setExternalLangDir} points the catalog at
+ * {@code plugins/EnhancedEchest/icons/lang/} (wired once from {@code EnhancedEchestPlugin#onEnable}); a
+ * same-named file dropped there is preferred over the bundled classpath resource, so an admin can add a
+ * locale this plugin doesn't ship, or override/fix a bundled one, purely by dropping a JSON file in while
+ * the server is running — no plugin update required. Per-locale results are cached after first lookup
+ * (like the bundled path), so a file added or edited after the server started only takes effect once
+ * {@link #reloadLocaleNames()} is called, which {@code /ee reload} does automatically.
  */
 public final class IconCatalog {
 
@@ -89,8 +100,30 @@ public final class IconCatalog {
     private static final Map<String, Component> SPRITE_CACHE = new ConcurrentHashMap<>();
     /** Per-locale {@code translationKey -> lowercased localized name}, lazily loaded and cached. */
     private static final Map<String, Map<String, String>> LOCALE_NAMES = new ConcurrentHashMap<>();
+    private static volatile @Nullable Path externalLangDir;
+    private static volatile @Nullable Logger externalLangLogger;
 
     private IconCatalog() {}
+
+    /**
+     * Points locale-name lookups at an on-disk override directory (an admin/dev drop-in folder), checked
+     * before the bundled classpath resource for each locale. Called once from
+     * {@code EnhancedEchestPlugin#onEnable} with {@code plugins/EnhancedEchest/icons/lang/}; the directory
+     * itself need not exist yet, it's only touched lazily on the first search that needs a given locale.
+     */
+    public static void setExternalLangDir(Path dir, Logger logger) {
+        externalLangDir = dir;
+        externalLangLogger = logger;
+    }
+
+    /**
+     * Drops every cached locale-name table so the next search re-reads from disk/classpath, picking up any
+     * file added or edited since the server started. Cheap to call (no work happens until a search actually
+     * needs a locale again) — wired into {@code /ee reload}.
+     */
+    public static void reloadLocaleNames() {
+        LOCALE_NAMES.clear();
+    }
 
     /** Lazily builds and returns the immutable, name-sorted list of pickable icons. */
     public static List<Entry> all() {
@@ -199,22 +232,44 @@ public final class IconCatalog {
     }
 
     private static Map<String, String> loadLocaleNames(String localeKey) {
+        Path dir = externalLangDir;
+        if (dir != null) {
+            Path external = dir.resolve(localeKey + ".json");
+            if (Files.isRegularFile(external)) {
+                try (Reader reader = Files.newBufferedReader(external, StandardCharsets.UTF_8)) {
+                    return parseLocaleNames(reader);
+                } catch (IOException | RuntimeException e) {
+                    // Admin-provided file: a mistake here (bad JSON, wrong encoding) must not break the
+                    // picker for every player, so warn and fall through to the bundled table instead of
+                    // throwing. reloadLocaleNames() (/ee reload) re-attempts once the file is fixed.
+                    Logger log = externalLangLogger;
+                    if (log != null) {
+                        log.warn("Failed to load {}, falling back to the bundled table (if any): {}",
+                                external, e.toString());
+                    }
+                }
+            }
+        }
         String resource = LANG_RESOURCE_PREFIX + localeKey + ".json";
         try (InputStream in = IconCatalog.class.getResourceAsStream(resource)) {
             if (in == null) {
                 return NO_LOCALE_NAMES; // no bundled table for this locale — search falls back to English.
             }
             try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-                JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
-                Map<String, String> map = new HashMap<>(obj.size() * 2);
-                for (Map.Entry<String, JsonElement> e : obj.entrySet()) {
-                    map.put(e.getKey(), e.getValue().getAsString().toLowerCase(Locale.ROOT));
-                }
-                return Map.copyOf(map);
+                return parseLocaleNames(reader);
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to load icon lang file " + resource, e);
         }
+    }
+
+    private static Map<String, String> parseLocaleNames(Reader reader) {
+        JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+        Map<String, String> map = new HashMap<>(obj.size() * 2);
+        for (Map.Entry<String, JsonElement> e : obj.entrySet()) {
+            map.put(e.getKey(), e.getValue().getAsString().toLowerCase(Locale.ROOT));
+        }
+        return Map.copyOf(map);
     }
 
     /**

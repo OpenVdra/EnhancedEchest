@@ -69,8 +69,20 @@ Two different problems, two different mechanisms:
 
 **What's bundled today:** `icons/lang/en_us.json` and `icons/lang/vi_vn.json` (matching this plugin's two
 supported message locales, `language/en_US` / `language/vi_VN`) — each a `translationKey -> name` map,
-generated once from Mojang's own client assets and filtered down to just `item.minecraft.*` /
-`block.minecraft.*` keys (~2.6–2.7k entries, ~150–180 KB each). `IconCatalog.search` normalizes the
+generated from Mojang's own client assets for game version **26.2** (regenerated 2026-07-11, was
+1.21.11) and filtered down to just `item.minecraft.*` / `block.minecraft.*` keys (~2.6–2.7k entries,
+~150–180 KB each). `vi_vn.json`'s raw source is byte-identical between 1.21.11 and 26.2 (Mojang hasn't
+touched the Vietnamese translation since), so only `en_us.json` actually changed content when
+regenerated; `valid-icon-sprites.txt` was regenerated from the same 26.2 client jar at the same time (see
+its own doc comment), so newly added items like Cinnabar, Sulfur, and the Sulfur Cube are both
+searchable and pickable. One incidental loss from that texture-set regeneration: `purpur_pillar` and
+`quartz_pillar` are no longer offered as icons, Mojang renamed their flat texture file from
+`block/purpur_pillar.png`/`block/quartz_pillar.png` to `..._side.png` (matching the naming every other
+multi-face block like furnace/jukebox/TNT already used and was already excluded under), so they now fall
+under the same "no single flat texture" exclusion as those — not treated as a bug worth a special-case
+fallback in `spriteFor()`, since broadening the match to any `_side` file would also pull in those other
+already-deliberately-excluded multi-face blocks using a not-necessarily-representative face as their icon.
+`IconCatalog.search` normalizes the
 viewer's `Player#locale()` to a lowercase Minecraft-style id (`Locale#toString()`, e.g. `vi_VN` →
 `vi_vn`) and looks up `icons/lang/<that id>.json` as a classpath resource, cached forever (including a
 cached "no table" miss) after first lookup. **A client locale with no bundled table just doesn't get
@@ -99,6 +111,25 @@ matching the English name.
    stale entries for renamed/removed items are harmless (they just never match), and new items simply
    fall back to English search until regenerated — same non-fatal-staleness tradeoff as
    `icons/valid-icon-sprites.txt` above.
+
+**Server-owner override, no rebuild** — the above is the maintainer path (bundled into the jar at build
+time); there's also a runtime path for a server owner who wants a locale we don't ship, or wants to tweak
+one we do, without waiting for a plugin update:
+
+- `IconCatalog.setExternalLangDir(Path, Logger)` is called once from `EnhancedEchestPlugin#onEnable` with
+  `plugins/EnhancedEchest/icons/lang/`. `loadLocaleNames` checks this directory **first** (same
+  `<locale>.json` filename/format as the bundled resource) and only falls through to the classpath
+  resource when no file is there — so a dropped-in file both adds unbundled locales and overrides bundled
+  ones.
+- A malformed external file (bad JSON, wrong encoding) is caught and logged as a warning, then falls
+  through to the bundled table rather than throwing — this input comes from a server owner, not the build,
+  so it must degrade gracefully instead of breaking the picker for every player.
+- `LOCALE_NAMES` is a `computeIfAbsent` cache with no TTL, so a file added or edited after the server
+  started (or after the last reload) has no effect until `IconCatalog.reloadLocaleNames()` clears it —
+  wired into `EnhancedEchestPlugin#reload()`, i.e. `/ee reload` picks up on-disk changes with no restart.
+- User-facing instructions (the file format example, no mention of `IconCatalog`/`Logger`/caching) live on
+  the docs site's Language page (`docs/docs/language.md` and the `vi/` mirror, `#icon-picker-item-names`
+  section) — keep both in sync with this file's format if it ever changes.
 
 ## Edit-mode persistence flow
 

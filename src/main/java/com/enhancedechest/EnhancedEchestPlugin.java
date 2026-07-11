@@ -5,6 +5,7 @@ import com.enhancedechest.config.ConfigMigrations;
 import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.config.YamlMigrator;
 import com.enhancedechest.expiry.ExpirySweeper;
+import com.enhancedechest.gui.dialog.IconCatalog;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.listener.EnderChestGuiListener;
 import com.enhancedechest.listener.JoinMigrationListener;
@@ -80,6 +81,12 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         scheduler       = new Scheduler(this);
         pluginConfig    = new PluginConfig(getConfig());
         codec           = new ContainerCodec();
+
+        // Lets a server owner drop icons/lang/<locale>.json into the plugin's data folder to add icon
+        // picker search support for a client language this plugin doesn't bundle, or to override a
+        // bundled one, without a plugin update or restart (/ee reload picks up changes).
+        IconCatalog.setExternalLangDir(getDataFolder().toPath().resolve("icons").resolve("lang"),
+                getSLF4JLogger());
 
         // FastStats custom metrics + error tracking behind the Telemetry facade. Wired before storage
         // (and the rest of the service layer) so every layer, including the cache's own shutdown flush,
@@ -244,6 +251,9 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         backupService.reschedule(pluginConfig.isBackupEnabled(), pluginConfig.getBackupIntervalMillis(),
                 pluginConfig.getBackupKeep());
         autosaveService.reschedule(pluginConfig.getAutosaveIntervalMillis());
+        // Re-reads plugins/EnhancedEchest/icons/lang/*.json, so a file added or edited since startup
+        // (or since the last reload) takes effect immediately.
+        IconCatalog.reloadLocaleNames();
 
         // Database settings are bound when the connection pool is built at startup; rebuilding it on a
         // live reload could drop connections mid-save and risk dupes, so we don't. Warn if they changed.

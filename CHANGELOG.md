@@ -4,9 +4,11 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 ## 1.0.9 - 2026-07-11
 
-### Changed
+### Added
 
-- Icon picker names now show in your Minecraft client's own language instead of English, matching how item names look in your inventory. Searching by name also matches the localized name when your client is set to English or Vietnamese; other client languages currently fall back to matching the English name.
+- Added full localization to the chest icon picker: item names always show in your Minecraft client's own language now, and searching icon by name also matches the localized name for English and Vietnamese clients (other client languages still show correct item names, but search currently only matches the English name).
+  - Added support for dropping a custom `icons/lang/<locale>.json` file into the plugin's folder to add search for a client language we don't bundle, or to override a bundled one. Run `/ee reload` to pick it up without restarting the server.
+  - The bundled name tables, and the list of items available as icons, now cover Minecraft 26.2, including recently added items such as Cinnabar, Sulfur, and the Sulfur Cube.
 
 ## 1.0.8 - 2026-07-07
 
