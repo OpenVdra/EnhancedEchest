@@ -63,3 +63,9 @@ enderchest:
 3. Translate the text inside `messages.yml` and `gui.yml`
 4. Set `language: <your-locale>` in `config.yml`
 5. Run `/ee reload`
+
+## Icon Picker Item Names {#icon-picker-item-names}
+
+Item names in the chest icon picker work differently from the messages above. They come straight from each player's own Minecraft client and always show in whatever language that client is set to, with no configuration needed here.
+
+Searching by name in the icon picker currently works best in English or Vietnamese. Other client languages still show correct item names, but a typed search term may only match the English name.

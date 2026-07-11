@@ -2,6 +2,7 @@ package com.enhancedechest.service;
 
 import com.enhancedechest.model.PlayerSettings;
 import com.enhancedechest.storage.EnderChestStorage;
+import com.enhancedechest.telemetry.Telemetry;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
@@ -28,14 +29,17 @@ public final class PlayerSettingsCache {
     private final DbExecutor db;
     private final Logger logger;
     private final PlayerNameIndex nameIndex;
+    private final Telemetry telemetry;
 
     private final ConcurrentHashMap<UUID, PlayerSettings> settingsCache = new ConcurrentHashMap<>();
 
-    public PlayerSettingsCache(EnderChestStorage storage, DbExecutor db, Logger logger, PlayerNameIndex nameIndex) {
+    public PlayerSettingsCache(EnderChestStorage storage, DbExecutor db, Logger logger,
+                               PlayerNameIndex nameIndex, Telemetry telemetry) {
         this.storage = storage;
         this.db = db;
         this.logger = logger;
         this.nameIndex = nameIndex;
+        this.telemetry = telemetry;
     }
 
     /**
@@ -54,7 +58,9 @@ public final class PlayerSettingsCache {
                     }
                 })
                 .exceptionally(e -> {
-                    logger.error("Failed to preload settings for {}", owner, e.getCause() != null ? e.getCause() : e);
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    logger.error("Failed to preload settings for {}", owner, cause);
+                    telemetry.error(cause, "settings.preload");
                     return null;
                 });
     }

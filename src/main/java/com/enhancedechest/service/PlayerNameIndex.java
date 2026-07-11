@@ -1,5 +1,6 @@
 package com.enhancedechest.service;
 
+import com.enhancedechest.telemetry.Telemetry;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -33,12 +34,14 @@ public final class PlayerNameIndex {
 
     private final StorageGateway gateway;
     private final Logger logger;
+    private final Telemetry telemetry;
 
     private final ConcurrentSkipListMap<String, NameEntry> byLowerName = new ConcurrentSkipListMap<>();
 
-    public PlayerNameIndex(StorageGateway gateway, Logger logger) {
+    public PlayerNameIndex(StorageGateway gateway, Logger logger, Telemetry telemetry) {
         this.gateway = gateway;
         this.logger = logger;
+        this.telemetry = telemetry;
     }
 
     /** Loads every known (uuid, username) pair from the DB once. Call exactly once, at plugin startup. */
@@ -51,7 +54,9 @@ public final class PlayerNameIndex {
                     logger.info("Loaded {} known player name(s) for offline lookups.", names.size());
                 })
                 .exceptionally(e -> {
-                    logger.error("Failed to load player name index", e.getCause() != null ? e.getCause() : e);
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    logger.error("Failed to load player name index", cause);
+                    telemetry.error(cause, "startup.name-index-load");
                     return null;
                 });
     }

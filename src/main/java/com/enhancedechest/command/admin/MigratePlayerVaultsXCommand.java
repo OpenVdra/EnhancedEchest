@@ -44,6 +44,7 @@ public final class MigratePlayerVaultsXCommand {
                 return service.migrateAll();
             } catch (Exception e) {
                 plugin.getSLF4JLogger().error("[PlayerVaultsX] Migration failed", e);
+                plugin.getTelemetry().error(e, "migrate.playervaultsx.command");
                 throw new RuntimeException(e);
             }
         }).whenComplete((result, error) -> {
@@ -86,6 +87,7 @@ public final class MigratePlayerVaultsXCommand {
                 return service.migratePlayer(target);
             } catch (Exception e) {
                 plugin.getSLF4JLogger().error("[PlayerVaultsX] Migration failed for {}", playerName, e);
+                plugin.getTelemetry().error(e, "migrate.playervaultsx.command");
                 throw new RuntimeException(e);
             }
         }).whenComplete((result, error) -> {

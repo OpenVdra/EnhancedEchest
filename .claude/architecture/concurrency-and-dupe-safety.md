@@ -177,7 +177,7 @@ full item-moving transaction model.
   threads touch JDBC only on a cache miss (an owner's first load; flushes run on `AutosaveService`/backup
   timers); their usual work is item encode/decode, so the sizing is just harmless headroom.
 - Session bookkeeping is single-threaded via `onGlobal`.
-- Anything touching a player/inventory/block runs on the right region thread via FoliaLib.
+- Anything touching a player/inventory/block runs on the right region thread via `Scheduler`.
 - On shutdown, `ChestSessionManager.shutdown()` runs `persistOpenSessions()` (saves every still-open
   session) then `flushPendingSaves()` (blocks ≤30s for all writes); only then does `DbExecutor.shutdown()`
   close the pool, and storage closes last — `CachedStorage.close()` performs the final full flush of all

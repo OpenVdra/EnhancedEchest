@@ -11,12 +11,22 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
 ```bash
 ./gradlew build        # compiles + runs shadowJar (the deliverable)
 ./gradlew shadowJar    # build the relocated fat jar only
+./gradlew test         # fast unit tests (excludes the heavy load simulation)
+./gradlew stressTest   # 300–500 player concurrency/perf/leak simulation, no server needed
 ```
 
 - Output jar: `EnhancedEchest-<version>.jar`. `build.gradle.kts` also copies it to a local
   `TestServer/plugins` directory (`shadowJar.destinationDirectory`) — adjust that path if your
   test server lives elsewhere.
-- There is no automated test suite yet; verification is done by running on a Paper/Folia server.
+- **Test suite is still thin** — most verification is still done by running on a Paper/Folia server.
+  Pure-Java logic (storage cache, codec, merge logic) gets plain JUnit 5 tests. Bukkit/Paper-dependent
+  code (listeners, scheduler, dialogs, commands) can be unit-tested with **MockBukkit**
+  (`testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:...")` — pinned to the `v1.21`
+  artifact line specifically, since it targets paper-api 1.21.11 on Java 21, matching this project;
+  the newer `v26.x` artifact line needs Java 25). MockBukkit mocks the Bukkit singleton — sync work
+  needs an explicit `server.getScheduler().performOneTick()`/`performTicks(n)`, async work needs
+  `server.getScheduler().waitAsyncTasksFinished()`; nothing runs on its own like a real tick loop. See
+  `src/test/java/com/enhancedechest/scheduler/SchedulerTest.java` for a working example.
 
 ## Stack & constraints
 
@@ -27,16 +37,25 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   the plugin requires **Paper** (or a Paper-compatible fork such as Purpur / Folia) and does not run
   on CraftBukkit.
 - All third-party libs are **shaded and relocated** under `com.enhancedechest.libs.*`
-  (HikariCP, MariaDB driver, PostgreSQL driver, FoliaLib). SQLite driver is `compileOnly`
+  (HikariCP, MariaDB driver, PostgreSQL driver). SQLite driver is `compileOnly`
   (Paper bundles it). Never reference these libs by their original package in new code without
   matching the relocation.
 - Base package: `com.enhancedechest`.
 
 ## Conventions
 
-- **Threading / Folia:** all scheduling goes through `FoliaLib` so the jar runs on Paper/Folia.
-  `runAsync` / `runAtEntity` / `runAtLocation` take a `Consumer<WrappedTask>`, **not** a `Runnable`;
-  the `*Later` variants have `Runnable` overloads. Never touch entities/blocks off their region thread.
+- **Threading / Folia:** all scheduling goes through
+  `com.enhancedechest.scheduler.Scheduler`, a thin wrapper over Paper's own
+  `io.papermc.paper.threadedregions.scheduler.*` API (`Bukkit.getAsyncScheduler()` /
+  `getGlobalRegionScheduler()` / `getRegionScheduler()` / `Entity#getScheduler()`), which Paper
+  itself implements safely on both plain Paper (main thread) and Folia (region-owning thread) — no
+  platform branching needed for dispatch. `runAsync` / `runAtEntity` / `runAtLocation` /
+  `runNextTick` take a `Consumer<ScheduledTask>`, **not** a `Runnable`; the `*Later`/`*Timer*`
+  variants have `Runnable` overloads. `Scheduler.isFolia()` (class-presence detection of
+  `io.papermc.paper.threadedregions.RegionizedServer`) exists only for the one genuine behavioral
+  branch (`ChestSessionManager`'s single-viewer-on-Folia vs concurrent-edit-on-Paper rule) — don't
+  add new platform branches elsewhere; the scheduler dispatch itself is already cross-platform.
+  Never touch entities/blocks off their region thread.
 - **Storage is a lazy-load + write-back cache** — the `EnderChestStorage` everyone sees is
   `CachedStorage`: a player's rows are read from SQL once on first touch (join prefetch via the settings
   preload; any cache miss — e.g. an admin command on an offline player — loads on demand inside the

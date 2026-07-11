@@ -53,13 +53,14 @@ public final class MigrateVanillaCommand {
                             ran = f.join();
                         } catch (Exception e) {
                             plugin.getSLF4JLogger().error("Vanilla migration failed for one player", e);
+                            plugin.getTelemetry().error(e.getCause() != null ? e.getCause() : e, "migrate.vanilla.command");
                             ran = false;
                         }
                         if (ran) migrated++; else skipped++;
                     }
                     int migratedCount = migrated;
                     int skippedCount = skipped;
-                    plugin.getFoliaLib().getScheduler().runNextTick(t ->
+                    plugin.getScheduler().runNextTick(t ->
                             source.getSender().sendMessage(lang.get("migrate.complete",
                                     "migrated", String.valueOf(migratedCount),
                                     "skipped", String.valueOf(skippedCount))));
@@ -80,10 +81,11 @@ public final class MigrateVanillaCommand {
         }
 
         plugin.getMigrationService().migrateOnline(target).whenComplete((ran, err) ->
-                plugin.getFoliaLib().getScheduler().runNextTick(t -> {
+                plugin.getScheduler().runNextTick(t -> {
                     if (err != null) {
-                        plugin.getSLF4JLogger().error("Vanilla migration failed for {}", target.getName(),
-                                err.getCause() != null ? err.getCause() : err);
+                        Throwable cause = err.getCause() != null ? err.getCause() : err;
+                        plugin.getSLF4JLogger().error("Vanilla migration failed for {}", target.getName(), cause);
+                        plugin.getTelemetry().error(cause, "migrate.vanilla.command");
                         source.getSender().sendMessage(lang.get("migrate.failed", "player", target.getName()));
                         return;
                     }

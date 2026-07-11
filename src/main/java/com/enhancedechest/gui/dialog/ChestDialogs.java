@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
@@ -113,9 +114,13 @@ public final class ChestDialogs {
      * @param canSetMain  whether "set as main" may be shown (owner-only, gated on the open permission)
      * @param canClear    whether the admin Clear button may be shown (gated on the clear permission)
      * @param sourceBlock owning ender-chest block for the lid animation on Open (self, right-click), or null
+     * @param locale      the <i>viewer's</i> client locale (owner or admin, whoever is looking at the
+     *                    dialog) — threaded into the icon picker so its search can match localized item
+     *                    names; see {@link IconCatalog#search(String, Locale)}
      */
     public record DetailContext(UUID owner, @Nullable String ownerName, boolean self, boolean canEdit,
-                                boolean canSetMain, boolean canClear, @Nullable Location sourceBlock) {}
+                                boolean canSetMain, boolean canClear, @Nullable Location sourceBlock,
+                                Locale locale) {}
 
     /**
      * Top-level list: one button per chest, plus an in-dialog "edit mode" checkbox.
@@ -168,7 +173,7 @@ public final class ChestDialogs {
                         }
                         if (editing) {
                             DetailContext ctx = new DetailContext(p.getUniqueId(), null, true, true,
-                                    canSetMain, false, sourceBlock);
+                                    canSetMain, false, sourceBlock, p.locale());
                             opener.runForPlayer(p, () -> {
                                 if (p.isOnline()) p.showDialog(detailDialog(chest, ctx));
                             });
@@ -398,7 +403,7 @@ public final class ChestDialogs {
     public Dialog iconPickerDialog(ChestSummary chest, DetailContext ctx, String filter) {
         int index = chest.index();
         UUID owner = ctx.owner();
-        List<IconCatalog.Entry> results = IconCatalog.search(filter);
+        List<IconCatalog.Entry> results = IconCatalog.search(filter, ctx.locale());
 
         List<ActionButton> buttons = new ArrayList<>(results.size() + 2);
 
@@ -422,8 +427,7 @@ public final class ChestDialogs {
 
         // One button per matching icon; the client scrolls the grid.
         for (IconCatalog.Entry entry : results) {
-            Component label = entry.sprite().append(Component.text(" "))
-                    .append(Component.text(entry.displayName()));
+            Component label = entry.sprite().append(Component.text(" ")).append(entry.name());
             buttons.add(ActionButton.create(label, null, ICON_BUTTON_WIDTH,
                     click((view, audience) -> {
                         if (!(audience instanceof Player p)) return;

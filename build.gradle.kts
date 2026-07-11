@@ -12,7 +12,7 @@ configurations {
 }
 
 group = "com.enhancedechest"
-version = "1.0.8"
+version = "1.0.9"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -21,12 +21,6 @@ java {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
-
-    // Folia library repository
-    maven {
-        name = "tcoded-releases"
-        url = uri("https://repo.tcoded.com/releases")
-    }
 
     // FastStats metrics SDK
     maven {
@@ -55,7 +49,6 @@ dependencies {
     shade("com.zaxxer:HikariCP:7.1.0")
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.9")   // compatible with MySQL 5.7+ and 8.x
     shade("org.postgresql:postgresql:42.7.13")
-    shade("com.tcoded:FoliaLib:0.5.2")
     shade("org.bstats:bstats-bukkit:3.2.1")
     shade("dev.faststats.metrics:bukkit:0.27.2")
 
@@ -71,6 +64,16 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.slf4j:slf4j-simple:2.0.18")
     testRuntimeOnly("org.xerial:sqlite-jdbc:3.53.2.0")
+
+    // MockBukkit — mocks the Bukkit/Paper server so Bukkit-dependent code (listeners, scheduler,
+    // commands) can run under plain JUnit instead of a live server. Pinned to the "v1.21" artifact
+    // specifically because it targets paper-api 1.21.11 (the exact version this plugin compiles
+    // against) on Java 21 (this project's toolchain) — the newer "v26.x" artifact line requires
+    // Java 25 and would conflict with the toolchain above. MockBukkit declares paper-api as
+    // compileOnly itself (not api), so it isn't pulled in transitively — repeat it here for tests
+    // (compileOnly above doesn't reach the test source set either).
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0")
+    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 }
 
 // The normal `test` task stays fast: it skips the heavy load simulation.
@@ -128,7 +131,6 @@ tasks.shadowJar {
     relocate("org.mariadb.jdbc", "com.enhancedechest.libs.mariadb")
     relocate("org.postgresql",   "com.enhancedechest.libs.postgresql")
     relocate("com.ongres",       "com.enhancedechest.libs.ongres")
-    relocate("com.tcoded.folialib", "com.enhancedechest.libs.folialib")
     relocate("org.bstats",          "com.enhancedechest.libs.bstats")
     relocate("dev.faststats",       "com.enhancedechest.libs.faststats")
 

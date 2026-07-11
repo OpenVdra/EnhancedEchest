@@ -6,10 +6,10 @@ import com.enhancedechest.model.ChestSummary;
 import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.serialization.CodecException;
 import com.enhancedechest.serialization.ContainerCodec;
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.service.ChestSessionManager.ChestRef;
 import com.enhancedechest.storage.EnderChestStorage;
 import com.enhancedechest.telemetry.Telemetry;
-import com.tcoded.folialib.FoliaLib;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +50,7 @@ public final class ChestTransferService {
     private final ContainerCodec codec;
     private final StorageGateway storageGateway;
     private final LanguageManager lang;
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
     private final DbExecutor db;
     private final Logger logger;
     private final Telemetry telemetry;
@@ -61,14 +61,14 @@ public final class ChestTransferService {
 
     public ChestTransferService(ChestSessionManager sessions, EnderChestStorage storage,
                                 ContainerCodec codec, StorageGateway storageGateway,
-                                LanguageManager lang, FoliaLib foliaLib, DbExecutor db, Logger logger,
+                                LanguageManager lang, Scheduler scheduler, DbExecutor db, Logger logger,
                                 Telemetry telemetry, long tempExpiryMillis) {
         this.sessions         = sessions;
         this.storage          = storage;
         this.codec            = codec;
         this.storageGateway   = storageGateway;
         this.lang             = lang;
-        this.foliaLib         = foliaLib;
+        this.scheduler        = scheduler;
         this.db               = db;
         this.logger           = logger;
         this.telemetry        = telemetry;
@@ -213,7 +213,7 @@ public final class ChestTransferService {
 
     private void report(CommandSender sender, String fromName, String toName, boolean all,
                         int count, boolean conflict, ConflictPolicy policy) {
-        foliaLib.getScheduler().runNextTick(t -> {
+        scheduler.runNextTick(t -> {
             String base = all ? "admin.transfer-complete-all" : "admin.transfer-complete-one";
             sender.sendMessage(lang.get(base,
                     "from", fromName, "to", toName, "count", Integer.toString(count)));
@@ -229,7 +229,7 @@ public final class ChestTransferService {
         logger.error("Failed to transfer chests from {} to {}", from, to,
                 e.getCause() != null ? e.getCause() : e);
         telemetry.error(e.getCause() != null ? e.getCause() : e, "transfer");
-        foliaLib.getScheduler().runNextTick(t -> sender.sendMessage(lang.get("admin.transfer-failed")));
+        scheduler.runNextTick(t -> sender.sendMessage(lang.get("admin.transfer-failed")));
         return null;
     }
 }

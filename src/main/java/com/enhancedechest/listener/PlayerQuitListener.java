@@ -1,8 +1,8 @@
 package com.enhancedechest.listener;
 
 import com.enhancedechest.gui.EnderChestHolder;
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.service.ChestSessionManager;
-import com.tcoded.folialib.FoliaLib;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,7 +25,7 @@ public final class PlayerQuitListener implements Listener {
 
     private final ChestSessionManager sessions;
     @SuppressWarnings("unused") // retained for stable constructor wiring; detach handles animation now
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {

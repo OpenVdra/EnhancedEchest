@@ -1,5 +1,8 @@
 package com.enhancedechest.gui.dialog;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.object.ObjectContents;
@@ -12,9 +15,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -43,19 +48,47 @@ import java.util.concurrent.ConcurrentHashMap;
  * a precomputed display name, lower-cased search name and a reusable sprite {@link Component}) are built
  * <b>once</b>, lazily, and cached immutably. Building any picker page is then just a sub-list — no
  * Material scan and no component allocation per render. Stored-icon sprites are memoized by key too.
+ *
+ * <p><b>Client-locale search.</b> {@link #search(String, Locale)} also matches a query against the
+ * item's <i>localized</i> name for the viewer's client locale, e.g. a Vietnamese client can type
+ * "kim cương" and still find Diamond. This only works for locales with a bundled name table at
+ * {@code icons/lang/<locale>.json} (lowercase Minecraft locale id, e.g. {@code en_us.json},
+ * {@code vi_vn.json}) — currently just the two locales this plugin's own messages support. For any
+ * other client locale, search silently falls back to the English name only (the label itself still
+ * renders correctly via {@link Component#translatable}, regardless of whether search covers it — see
+ * {@link Entry#name()}). Each table is generated once from Mojang's official
+ * {@code assets/minecraft/lang/<locale>.json}, filtered down to just {@code item.minecraft.*} /
+ * {@code block.minecraft.*} keys. To add another locale: fetch that file (via the version manifest →
+ * asset index → {@code resources.download.minecraft.net}, or extract {@code en_us.json} straight out of
+ * the client jar, since it alone ships inside the jar rather than as a separate asset object), filter it
+ * the same way, and drop it in as {@code icons/lang/<locale>.json} — no code change needed. See
+ * {@code docs/} for the full runbook.
  */
 public final class IconCatalog {
 
     private static final String VALID_SPRITES_RESOURCE = "/icons/valid-icon-sprites.txt";
+    private static final String LANG_RESOURCE_PREFIX = "/icons/lang/";
     private static final Key ATLAS_BLOCKS = Key.key("minecraft", "blocks");
     private static final Key ATLAS_ITEMS = Key.key("minecraft", "items");
+    /** computeIfAbsent-cacheable stand-in for "no bundled lang file for this locale". */
+    private static final Map<String, String> NO_LOCALE_NAMES = Map.of();
 
-    /** One pickable icon: a material with its precomputed display name and reusable sprite component. */
-    public record Entry(Material material, String key, String displayName, String lowerName, Component sprite) {}
+    /**
+     * One pickable icon: a material with its precomputed display name, reusable sprite component, and
+     * a translatable name component. {@code displayName}/{@code lowerName} are a server-derived English
+     * name used only for search matching (the server can't know what text a translation key resolves to
+     * client-side); {@code name} is what's actually shown to the player — a {@code Component.translatable}
+     * that the Minecraft client resolves using its own language file, so it renders in the viewer's
+     * client-side language exactly like the item's name in an inventory tooltip.
+     */
+    public record Entry(Material material, String key, String displayName, String lowerName, Component sprite,
+                         Component name) {}
 
     private static volatile List<Entry> catalog;
     private static volatile Set<String> validSprites;
     private static final Map<String, Component> SPRITE_CACHE = new ConcurrentHashMap<>();
+    /** Per-locale {@code translationKey -> lowercased localized name}, lazily loaded and cached. */
+    private static final Map<String, Map<String, String>> LOCALE_NAMES = new ConcurrentHashMap<>();
 
     private IconCatalog() {}
 
@@ -74,15 +107,26 @@ public final class IconCatalog {
         return local;
     }
 
-    /** Filters the catalog by a case-insensitive substring of the display name (blank = full list). */
-    public static List<Entry> search(@Nullable String query) {
+    /**
+     * Filters the catalog by a case-insensitive substring, matched against the server-derived English
+     * name and — when a bundled lang table exists for {@code viewerLocale} — the item's client-localized
+     * name too (blank query = full list). {@code viewerLocale} may be null (no localized matching, same
+     * as the old English-only behavior).
+     */
+    public static List<Entry> search(@Nullable String query, @Nullable Locale viewerLocale) {
         if (query == null || query.isBlank()) {
             return all();
         }
         String q = query.trim().toLowerCase(Locale.ROOT);
+        Map<String, String> localized = viewerLocale == null ? NO_LOCALE_NAMES : localeNames(viewerLocale);
         List<Entry> out = new ArrayList<>();
         for (Entry e : all()) {
             if (e.lowerName().contains(q)) {
+                out.add(e);
+                continue;
+            }
+            String localName = localized.get(e.material().translationKey());
+            if (localName != null && localName.contains(q)) {
                 out.add(e);
             }
         }
@@ -136,10 +180,41 @@ public final class IconCatalog {
                 continue; // no flat texture exists → would render as a missing-texture box, so omit it.
             }
             String display = displayName(m);
-            list.add(new Entry(m, m.getKey().toString(), display, display.toLowerCase(Locale.ROOT), sprite));
+            Component name = Component.translatable(m);
+            list.add(new Entry(m, m.getKey().toString(), display, display.toLowerCase(Locale.ROOT), sprite, name));
         }
         list.sort(Comparator.comparing(Entry::displayName));
         return List.copyOf(list);
+    }
+
+    /**
+     * Localized {@code translationKey -> lowercased name} table for one client locale, cached forever
+     * after first lookup (including an empty map for locales with no bundled table, so a repeated miss
+     * doesn't re-touch the classloader). Locale keys are lowercased Minecraft-style ids ({@code en_us},
+     * {@code vi_vn}, from {@link Locale#toString()}) matching the bundled {@code icons/lang/*.json} files.
+     */
+    private static Map<String, String> localeNames(Locale locale) {
+        String key = locale.toString().toLowerCase(Locale.ROOT);
+        return LOCALE_NAMES.computeIfAbsent(key, IconCatalog::loadLocaleNames);
+    }
+
+    private static Map<String, String> loadLocaleNames(String localeKey) {
+        String resource = LANG_RESOURCE_PREFIX + localeKey + ".json";
+        try (InputStream in = IconCatalog.class.getResourceAsStream(resource)) {
+            if (in == null) {
+                return NO_LOCALE_NAMES; // no bundled table for this locale — search falls back to English.
+            }
+            try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+                Map<String, String> map = new HashMap<>(obj.size() * 2);
+                for (Map.Entry<String, JsonElement> e : obj.entrySet()) {
+                    map.put(e.getKey(), e.getValue().getAsString().toLowerCase(Locale.ROOT));
+                }
+                return Map.copyOf(map);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load icon lang file " + resource, e);
+        }
     }
 
     /**

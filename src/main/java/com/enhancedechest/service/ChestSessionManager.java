@@ -5,11 +5,11 @@ import com.enhancedechest.gui.EnderChestHolder;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.model.ChestKind;
 import com.enhancedechest.model.EnderChestData;
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.serialization.CodecException;
 import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.storage.EnderChestStorage;
 import com.enhancedechest.telemetry.Telemetry;
-import com.tcoded.folialib.FoliaLib;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -111,7 +111,7 @@ public final class ChestSessionManager {
     private final ContainerCodec  codec;
     private final EnderChestStorage storage;
     private final Logger logger;
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
     private final DbExecutor db;
     private final Telemetry telemetry;
 
@@ -122,13 +122,13 @@ public final class ChestSessionManager {
     private final ConcurrentHashMap<SaveKey, Session> sessions = new ConcurrentHashMap<>();
 
     public ChestSessionManager(LanguageManager lang, ContainerCodec codec,
-                               EnderChestStorage storage, Logger logger, FoliaLib foliaLib,
+                               EnderChestStorage storage, Logger logger, Scheduler scheduler,
                                DbExecutor db, Telemetry telemetry) {
         this.lang      = lang;
         this.codec     = codec;
         this.storage   = storage;
         this.logger    = logger;
-        this.foliaLib  = foliaLib;
+        this.scheduler = scheduler;
         this.db        = db;
         this.telemetry = telemetry;
     }
@@ -139,10 +139,10 @@ public final class ChestSessionManager {
      * race-free across both platforms.
      */
     private void onGlobal(Runnable task) {
-        if (foliaLib.getScheduler().isGlobalTickThread()) {
+        if (scheduler.isGlobalTickThread()) {
             task.run();
         } else {
-            foliaLib.getScheduler().runNextTick(t -> task.run());
+            scheduler.runNextTick(t -> task.run());
         }
     }
 
@@ -156,7 +156,7 @@ public final class ChestSessionManager {
      * thread to attach to — or create — the live session for {@code (owner, index)}.
      */
     public void open(Player player, UUID owner, int index, @Nullable Location sourceBlock) {
-        foliaLib.getScheduler().runAtEntity(player, t -> {
+        scheduler.runAtEntity(player, t -> {
             if (!player.isOnline()) return;
             Inventory currentTop = player.getOpenInventory().getTopInventory();
             if (currentTop.getHolder() instanceof EnderChestHolder h) {
@@ -175,7 +175,7 @@ public final class ChestSessionManager {
         UUID viewer = player.getUniqueId();
         Session existing = sessions.get(key);
         if (existing != null && !existing.closing) {
-            if (foliaLib.isFolia() && isOccupiedByOther(existing, viewer)) {
+            if (scheduler.isFolia() && isOccupiedByOther(existing, viewer)) {
                 notifyOnPlayer(player, "chest.in-use");
                 return;
             }
@@ -287,7 +287,7 @@ public final class ChestSessionManager {
         s.viewers.add(uuid);
         if (sourceBlock != null) s.viewerBlocks.put(uuid, sourceBlock);
         Inventory inv = s.inv;
-        foliaLib.getScheduler().runAtEntity(player, task -> {
+        scheduler.runAtEntity(player, task -> {
             if (!player.isOnline() || inv == null) {
                 onGlobal(() -> removeViewer(s, uuid));
                 return;
@@ -300,7 +300,7 @@ public final class ChestSessionManager {
             }
             player.openInventory(inv);
             if (sourceBlock != null) {
-                foliaLib.getScheduler().runAtLocation(sourceBlock, lt ->
+                scheduler.runAtLocation(sourceBlock, lt ->
                         EnderChestAnimator.open(player, sourceBlock));
             }
             // A real close (player, force-close) can race this open across threads and tear the session
@@ -310,7 +310,7 @@ public final class ChestSessionManager {
             onGlobal(() -> {
                 if (sessions.get(new SaveKey(s.owner, s.index)) != s
                         || s.closing || !s.viewers.contains(uuid)) {
-                    foliaLib.getScheduler().runAtEntity(player, t2 -> {
+                    scheduler.runAtEntity(player, t2 -> {
                         if (player.isOnline() && player.getOpenInventory().getTopInventory() == inv) {
                             player.closeInventory();
                         }
@@ -335,9 +335,10 @@ public final class ChestSessionManager {
     }
 
     private Void reportOpenFailure(Player player, Throwable e) {
-        logger.error("Failed to load enderchest for {} — aborting open", player.getName(),
-                e.getCause() != null ? e.getCause() : e);
-        foliaLib.getScheduler().runAtEntity(player, t -> {
+        Throwable cause = e.getCause() != null ? e.getCause() : e;
+        logger.error("Failed to load enderchest for {} — aborting open", player.getName(), cause);
+        telemetry.error(cause, "chest.open-load");
+        scheduler.runAtEntity(player, t -> {
             if (player.isOnline()) player.sendMessage(lang.get("chest.load-failed"));
         });
         return null;
@@ -345,7 +346,7 @@ public final class ChestSessionManager {
 
     /** Sends a localized message to the player on their entity thread (if still online). */
     private void notifyOnPlayer(Player player, String key) {
-        foliaLib.getScheduler().runAtEntity(player, t -> {
+        scheduler.runAtEntity(player, t -> {
             if (player.isOnline()) player.sendMessage(lang.get(key));
         });
     }
@@ -368,7 +369,7 @@ public final class ChestSessionManager {
             boolean wasViewer = s.viewers.remove(uuid);
             Location block = s.viewerBlocks.remove(uuid);
             if (wasViewer && block != null) {
-                foliaLib.getScheduler().runAtLocation(block, lt ->
+                scheduler.runAtLocation(block, lt ->
                         EnderChestAnimator.close(player, block));
             }
 
@@ -396,6 +397,7 @@ public final class ChestSessionManager {
             runExclusive(owner, index, () -> { storage.deleteChest(owner, index); return null; })
                     .exceptionally(e -> {
                         logger.error("Failed to remove emptied temp chest {} for {}", index, owner, e);
+                        telemetry.error(e, "chest.temp-delete");
                         return null;
                     });
             return;
@@ -516,7 +518,7 @@ public final class ChestSessionManager {
                 if (p == null || !p.isOnline()) continue;
                 CompletableFuture<Void> c = new CompletableFuture<>();
                 closes.add(c);
-                foliaLib.getScheduler().runAtEntity(p, t -> {
+                scheduler.runAtEntity(p, t -> {
                     try {
                         Inventory top = p.getOpenInventory().getTopInventory();
                         if (top.getHolder() instanceof EnderChestHolder h
@@ -567,6 +569,7 @@ public final class ChestSessionManager {
                     .get(30, TimeUnit.SECONDS);
         } catch (Exception e) {
             logger.error("Timed out waiting for pending DB saves on shutdown — some data may be lost", e);
+            telemetry.error(e, "chest.shutdown-flush-timeout");
         }
     }
 

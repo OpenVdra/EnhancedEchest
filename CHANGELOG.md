@@ -2,7 +2,13 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
-## 1.0.8 - Unreleased
+## 1.0.9 - 2026-07-11
+
+### Changed
+
+- Icon picker names now show in your Minecraft client's own language instead of English, matching how item names look in your inventory. Searching by name also matches the localized name when your client is set to English or Vietnamese; other client languages currently fall back to matching the English name.
+
+## 1.0.8 - 2026-07-07
 
 This release changes how data is stored while the server runs: each player's ender chests are loaded into memory when they join and served from there, so opening and closing chests runs no database queries, no matter which backend you use.
 

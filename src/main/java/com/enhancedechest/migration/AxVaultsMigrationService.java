@@ -4,6 +4,7 @@ import com.enhancedechest.migration.AxVaultsReader.VaultRow;
 import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.storage.EnderChestStorage;
+import com.enhancedechest.telemetry.Telemetry;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.inventory.ItemStack;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public final class AxVaultsMigrationService {
     private final EnderChestStorage storage;
     private final ContainerCodec codec;
     private final Logger logger;
+    private final Telemetry telemetry;
     /** The server {@code plugins/} directory; the AxVaults data lives in {@code plugins/AxVaults}. */
     private final Path pluginsFolder;
 
@@ -60,6 +62,7 @@ public final class AxVaultsMigrationService {
                 } catch (Exception e) {
                     failed++;
                     logger.error("[AxVaults] Failed migrating {}", entry.getKey(), e);
+                    telemetry.error(e, "migrate.axvaults.player");
                 }
             }
             return new Result(players, vaults, skipped, failed);
@@ -121,6 +124,7 @@ public final class AxVaultsMigrationService {
                 encoded = codec.encode(slots);
             } catch (Exception e) {
                 logger.error("[AxVaults] Encode failed for vault #{} of {} — skipping", row.id(), owner, e);
+                telemetry.error(e, "migrate.axvaults.encode");
                 skipped++;
                 continue;
             }

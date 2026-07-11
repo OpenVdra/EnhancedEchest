@@ -1,6 +1,6 @@
 package com.enhancedechest.update;
 
-import com.tcoded.folialib.FoliaLib;
+import com.enhancedechest.scheduler.Scheduler;
 import lombok.Getter;
 import org.slf4j.Logger;
 
@@ -42,8 +42,8 @@ public final class UpdateChecker {
         this.log = log;
     }
 
-    public void checkAsync(FoliaLib foliaLib) {
-        foliaLib.getScheduler().runAsync(task -> this.performCheck());
+    public void checkAsync(Scheduler scheduler) {
+        scheduler.runAsync(task -> this.performCheck());
     }
 
     private void performCheck() {

@@ -1,15 +1,15 @@
 package com.enhancedechest.storage;
 
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.telemetry.Telemetry;
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.wrapper.task.WrappedTask;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.slf4j.Logger;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Write-back scheduling for the lazy cache: a FoliaLib async repeating timer at the configured
+ * Write-back scheduling for the lazy cache: an async repeating timer at the configured
  * {@code database.autosave-interval} (default 5m) that calls {@link CachedStorage#flush()} and then
  * {@link CachedStorage#evictIdle()} (releasing owners who are offline and fully flushed), plus the
  * per-player write-back a few seconds after a quit ({@link #flushQuitterLater}). The flush itself
@@ -32,18 +32,18 @@ public final class AutosaveService {
     private static final long QUIT_FLUSH_DELAY_MS = 5_000;
 
     private final CachedStorage storage;
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
     private final Logger logger;
     private final Telemetry telemetry;
 
     // Touched only on the main thread (start/stop/reschedule).
     private long intervalMillis;
-    private WrappedTask task;
+    private ScheduledTask task;
 
-    public AutosaveService(CachedStorage storage, FoliaLib foliaLib, Logger logger,
+    public AutosaveService(CachedStorage storage, Scheduler scheduler, Logger logger,
                            Telemetry telemetry, long intervalMillis) {
         this.storage        = storage;
-        this.foliaLib       = foliaLib;
+        this.scheduler      = scheduler;
         this.logger         = logger;
         this.telemetry      = telemetry;
         this.intervalMillis = intervalMillis;
@@ -51,7 +51,7 @@ public final class AutosaveService {
 
     /** Starts the repeating async autosave. */
     public void start() {
-        task = foliaLib.getScheduler().runTimerAsync(
+        task = scheduler.runTimerAsync(
                 this::saveNow, intervalMillis, intervalMillis, TimeUnit.MILLISECONDS);
     }
 
@@ -78,7 +78,7 @@ public final class AutosaveService {
      * {@link #QUIT_FLUSH_DELAY_MS}). Runs async; failures are logged and stay dirty for the autosave.
      */
     public void flushQuitterLater(UUID owner) {
-        foliaLib.getScheduler().runLaterAsync(() -> {
+        scheduler.runLaterAsync(() -> {
             try {
                 storage.flushOwner(owner);
             } catch (Exception e) {
@@ -90,7 +90,7 @@ public final class AutosaveService {
     }
 
     /**
-     * One flush + idle eviction. Runs on a FoliaLib async thread; logs and swallows all failures
+     * One flush + idle eviction. Runs on an async scheduler thread; logs and swallows all failures
      * (rows stay dirty, owners stay resident).
      */
     private void saveNow() {

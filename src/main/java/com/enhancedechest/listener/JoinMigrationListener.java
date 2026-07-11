@@ -4,6 +4,7 @@ import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.migration.MigrationService;
 import com.enhancedechest.service.DbExecutor;
 import com.enhancedechest.storage.EnderChestStorage;
+import com.enhancedechest.telemetry.Telemetry;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,6 +36,7 @@ public final class JoinMigrationListener implements Listener {
     private final EnderChestStorage storage;
     private final DbExecutor db;
     private final Logger logger;
+    private final Telemetry telemetry;
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
@@ -46,14 +48,16 @@ public final class JoinMigrationListener implements Listener {
                     if (migrated) return;
                     migrationService.migrateOnline(player)
                             .exceptionally(e -> {
-                                logger.error("Join migration failed for {}", player.getName(),
-                                        e.getCause() != null ? e.getCause() : e);
+                                Throwable cause = e.getCause() != null ? e.getCause() : e;
+                                logger.error("Join migration failed for {}", player.getName(), cause);
+                                telemetry.error(cause, "migrate.join");
                                 return false;
                             });
                 })
                 .exceptionally(e -> {
-                    logger.error("Join migration pre-check failed for {}", uuid,
-                            e.getCause() != null ? e.getCause() : e);
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    logger.error("Join migration pre-check failed for {}", uuid, cause);
+                    telemetry.error(cause, "migrate.join-precheck");
                     return null;
                 });
     }

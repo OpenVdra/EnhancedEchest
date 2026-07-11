@@ -4,8 +4,8 @@ import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.gui.EnderChestHolder;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.model.ChestKind;
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.service.ChestSessionManager;
-import com.tcoded.folialib.FoliaLib;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.entity.HumanEntity;
@@ -35,7 +35,7 @@ public final class EnderChestGuiListener implements Listener {
     @SuppressWarnings("unused") // kept for constructor wiring; no longer needed since detach handles animation
     private final ChestSessionManager sessions;
     @SuppressWarnings("unused")
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
     private final LanguageManager lang;
     private final PluginConfig config;
 
@@ -46,8 +46,8 @@ public final class EnderChestGuiListener implements Listener {
      */
     private final Map<UUID, Long> lastDenySoundAt = new ConcurrentHashMap<>();
 
-    // Wiring note: 'sessions' and 'foliaLib' are still injected by the plugin; sessions is used by
-    // onClose, foliaLib is retained so the constructor signature stays stable.
+    // Wiring note: 'sessions' and 'scheduler' are still injected by the plugin; sessions is used by
+    // onClose, scheduler is retained so the constructor signature stays stable.
 
     /**
      * Guards item moves on an open chest GUI:

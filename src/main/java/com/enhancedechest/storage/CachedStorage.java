@@ -6,6 +6,7 @@ import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.model.PlayerSettings;
 import com.enhancedechest.storage.ChestCacheState.ChestRow;
 import com.enhancedechest.storage.ChestCacheState.RowSnap;
+import com.enhancedechest.telemetry.Telemetry;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -47,12 +48,14 @@ public final class CachedStorage implements EnderChestStorage {
 
     private final StorageBackend backend;
     private final Logger logger;
+    private final Telemetry telemetry;
     private final ChestCacheState state = new ChestCacheState();
     private final OwnerResidencyCache cache;
 
-    public CachedStorage(StorageBackend backend, Logger logger) {
+    public CachedStorage(StorageBackend backend, Logger logger, Telemetry telemetry) {
         this.backend = backend;
         this.logger = logger;
+        this.telemetry = telemetry;
         this.cache = new OwnerResidencyCache(backend, state, logger);
     }
 
@@ -73,6 +76,7 @@ public final class CachedStorage implements EnderChestStorage {
             cache.flush();
         } catch (Exception e) {
             logger.error("Final flush to the database failed on shutdown — recent changes may be lost", e);
+            telemetry.error(e, "storage.shutdown-flush");
         }
         backend.close();
     }

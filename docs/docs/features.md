@@ -79,6 +79,8 @@ Players personalize their chests straight from the in-game menu, no commands nee
 
 Each is a server-wide toggle under <code>enderchest.features</code>. Name colours can be turned off and specific words blacklisted, see the <a href="/docs/configuration">Configuration</a> page.
 
+A few complex blocks, like chests, doors, or stairs, cannot be used as an icon because they have no simple picture to show on a button. Item names in the picker always match your own Minecraft client language automatically. Searching by name currently works best in English or Vietnamese; other client languages fall back to matching the English name. See <a href="/docs/language#icon-picker-item-names">Language</a> for details.
+
 </FeatureCard>
 
 <FeatureCard icon="Wrench" title="Admin Management">

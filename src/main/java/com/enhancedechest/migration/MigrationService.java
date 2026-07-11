@@ -2,10 +2,11 @@ package com.enhancedechest.migration;
 
 import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.serialization.CodecException;
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.service.ChestSessionManager;
 import com.enhancedechest.storage.EnderChestStorage;
-import com.tcoded.folialib.FoliaLib;
+import com.enhancedechest.telemetry.Telemetry;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +52,8 @@ public final class MigrationService {
     private final ContainerCodec codec;
     private final Logger logger;
     private final ChestSessionManager sessions;
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
+    private final Telemetry telemetry;
 
     // Runtime-tunable via /ee reload (see setTempExpiry). volatile so the value written on the main
     // thread during a reload is visible to the async thread that stamps a freshly spilled temp chest.
@@ -59,12 +61,14 @@ public final class MigrationService {
     private volatile long tempExpiryMillis;
 
     public MigrationService(EnderChestStorage storage, ContainerCodec codec, Logger logger,
-                            ChestSessionManager sessions, FoliaLib foliaLib, long tempExpiryMillis) {
+                            ChestSessionManager sessions, Scheduler scheduler,
+                            Telemetry telemetry, long tempExpiryMillis) {
         this.storage          = storage;
         this.codec            = codec;
         this.logger           = logger;
         this.sessions         = sessions;
-        this.foliaLib         = foliaLib;
+        this.scheduler        = scheduler;
+        this.telemetry        = telemetry;
         this.tempExpiryMillis = tempExpiryMillis;
     }
 
@@ -95,7 +99,7 @@ public final class MigrationService {
     public CompletableFuture<Boolean> migrateOnline(Player player) {
         UUID uuid = player.getUniqueId();
         CompletableFuture<Boolean> result = new CompletableFuture<>();
-        foliaLib.getScheduler().runAtEntity(player, t -> {
+        scheduler.runAtEntity(player, t -> {
             if (!player.isOnline()) {
                 result.complete(false);
                 return;
@@ -149,6 +153,7 @@ public final class MigrationService {
             } catch (CodecException e) {
                 logger.error("Cannot decode existing chest #1 for {} — migration aborted to protect stored data",
                         name, e);
+                telemetry.error(e, "migrate.vanilla.decode");
                 return false;
             }
         } else {
@@ -168,6 +173,7 @@ public final class MigrationService {
             }
         } catch (Exception e) {
             logger.error("Codec encode failed during migration for {} — migration aborted", name, e);
+            telemetry.error(e, "migrate.vanilla.encode");
             return false;
         }
 
@@ -251,7 +257,7 @@ public final class MigrationService {
      */
     private CompletableFuture<Boolean> clearVanilla(Player player) {
         CompletableFuture<Boolean> done = new CompletableFuture<>();
-        foliaLib.getScheduler().runAtEntity(player, t -> {
+        scheduler.runAtEntity(player, t -> {
             if (player.isOnline()) {
                 player.getEnderChest().clear();
             } else {

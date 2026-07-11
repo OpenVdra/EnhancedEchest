@@ -61,3 +61,9 @@ enderchest:
 3. Dịch văn bản bên trong `messages.yml` và `gui.yml`
 4. Đặt `language: <locale-của-bạn>` trong `config.yml`
 5. Chạy `/ee reload`
+
+## Tên Vật Phẩm Trong Bộ Chọn Biểu Tượng {#icon-picker-item-names}
+
+Tên vật phẩm trong bộ chọn biểu tượng rương hoạt động khác với các tin nhắn ở trên. Chúng lấy trực tiếp từ máy khách Minecraft của từng người chơi và luôn hiển thị theo ngôn ngữ mà máy khách đó đang dùng, không cần cấu hình gì ở đây.
+
+Tìm kiếm theo tên trong bộ chọn biểu tượng hiện hoạt động tốt nhất với tiếng Anh hoặc tiếng Việt. Các ngôn ngữ máy khách khác vẫn hiển thị đúng tên vật phẩm, nhưng từ khóa tìm kiếm có thể chỉ khớp theo tên tiếng Anh.

@@ -1,8 +1,9 @@
 package com.enhancedechest.backup;
 
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.storage.EnderChestStorage;
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.wrapper.task.WrappedTask;
+import com.enhancedechest.telemetry.Telemetry;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * Takes scheduled, self-pruning snapshots of the database.
  *
- * <p>Runs on a FoliaLib async repeating timer at the configured {@code interval} and writes a fresh
+ * <p>Runs on an async repeating timer at the configured {@code interval} and writes a fresh
  * file via {@link EnderChestStorage#backup(Path)} (SQLite {@code VACUUM INTO} — consistent even while
  * players are saving, so the hot path is never paused). Only the file-based SQLite backend supports
  * this; for remote backends {@link EnderChestStorage#supportsBackup()} is false and the service logs
@@ -36,8 +37,9 @@ public final class BackupService {
     private static final String SUFFIX = ".db";
 
     private final EnderChestStorage storage;
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
     private final Logger logger;
+    private final Telemetry telemetry;
     private final Path backupDir;
     private final String backendName;
 
@@ -47,14 +49,16 @@ public final class BackupService {
     private long intervalMillis;
     private volatile int keep;
 
-    private WrappedTask task;
+    private ScheduledTask task;
 
-    public BackupService(EnderChestStorage storage, FoliaLib foliaLib, Logger logger, Path dataFolder,
+    public BackupService(EnderChestStorage storage, Scheduler scheduler, Logger logger,
+                         Telemetry telemetry, Path dataFolder,
                          boolean enabled, long intervalMillis, int keep, String folderName,
                          String backendName) {
         this.storage        = storage;
-        this.foliaLib       = foliaLib;
+        this.scheduler      = scheduler;
         this.logger         = logger;
+        this.telemetry      = telemetry;
         this.backupDir      = dataFolder.resolve(folderName);
         this.enabled        = enabled;
         this.intervalMillis = intervalMillis;
@@ -73,7 +77,7 @@ public final class BackupService {
                     backendName);
             return;
         }
-        task = foliaLib.getScheduler().runTimerAsync(
+        task = scheduler.runTimerAsync(
                 this::backupNow, intervalMillis, intervalMillis, TimeUnit.MILLISECONDS);
     }
 
@@ -82,7 +86,7 @@ public final class BackupService {
         if (!enabled || !storage.supportsBackup()) {
             return;
         }
-        foliaLib.getScheduler().runAsync(t -> backupNow());
+        scheduler.runAsync(t -> backupNow());
     }
 
     /**
@@ -111,7 +115,7 @@ public final class BackupService {
         }
     }
 
-    /** One snapshot + prune. Runs on a FoliaLib async thread; logs and swallows all failures. */
+    /** One snapshot + prune. Runs on an async scheduler thread; logs and swallows all failures. */
     private void backupNow() {
         try {
             Files.createDirectories(backupDir);
@@ -121,6 +125,7 @@ public final class BackupService {
             prune();
         } catch (Exception e) {
             logger.error("Database backup failed", e);
+            telemetry.error(e, "backup.snapshot");
         }
     }
 

@@ -24,6 +24,7 @@ import com.enhancedechest.service.DbExecutor;
 import com.enhancedechest.service.PermissionChestService;
 import com.enhancedechest.service.PlayerNameIndex;
 import com.enhancedechest.service.PlayerSettingsCache;
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.service.StorageGateway;
 import com.enhancedechest.storage.AutosaveService;
 import com.enhancedechest.storage.CachedStorage;
@@ -34,7 +35,6 @@ import com.enhancedechest.telemetry.Telemetry;
 import com.enhancedechest.update.UpdateChecker;
 import com.enhancedechest.update.UpdateNotifyListener;
 import com.enhancedechest.util.DurationFormat;
-import com.tcoded.folialib.FoliaLib;
 import lombok.Getter;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
@@ -67,7 +67,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     private AxVaultsMigrationService axVaultsMigrationService;
     private PlayerVaultsXMigrationService playerVaultsXMigrationService;
     private UpdateChecker updateChecker;
-    private FoliaLib foliaLib;
+    private Scheduler scheduler;
     private Metrics metrics;
     private Telemetry telemetry;
 
@@ -77,15 +77,21 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         migrateConfigFile();
         reloadConfig();
 
-        foliaLib        = new FoliaLib(this);
+        scheduler       = new Scheduler(this);
         pluginConfig    = new PluginConfig(getConfig());
         codec           = new ContainerCodec();
+
+        // FastStats custom metrics + error tracking behind the Telemetry facade. Wired before storage
+        // (and the rest of the service layer) so every layer, including the cache's own shutdown flush,
+        // can report errors; NOOP when no token was baked in at build time.
+        telemetry = FastStatsTelemetry.create(this, pluginConfig);
+
         // The SQL backend is wrapped in the lazy write-back cache: a player's rows are read from SQL
         // once on first touch (join prefetch / on-demand miss) and served from memory after that; the
         // SQL side is otherwise touched only by the periodic autosave, the per-player write-back after
         // a quit, backups/imports, and the final flush at shutdown (CachedStorage.close()).
         StorageBackend backend = StorageFactory.create(pluginConfig, getDataFolder().toPath());
-        storage         = new CachedStorage(backend, getSLF4JLogger());
+        storage         = new CachedStorage(backend, getSLF4JLogger(), telemetry);
 
         try {
             storage.init();
@@ -97,10 +103,6 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
 
         languageManager = new LanguageManager(this, pluginConfig, pluginConfig.getLocale());
 
-        // FastStats custom metrics + error tracking behind the Telemetry facade. Wired before the
-        // service layer so the services can report errors; NOOP when no token was baked in at build time.
-        telemetry = FastStatsTelemetry.create(this, pluginConfig);
-
         // Service layer, wired bottom-up: the shared async pool, then the storage/settings wrappers
         // over it, then the dupe-safe session registry, then the item-moving and open-routing layers.
         // Storage calls now complete at memory speed (the SQL side is only touched by autosave/backup),
@@ -109,36 +111,36 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         boolean sqliteBackend = pluginConfig.getDatabaseType().equalsIgnoreCase("sqlite");
         dbExecutor     = new DbExecutor(sqliteBackend ? 4 : Math.max(8, pluginConfig.getDbPoolSize() * 2));
         storageGateway = new StorageGateway(storage, dbExecutor);
-        playerNameIndex = new PlayerNameIndex(storageGateway, getSLF4JLogger());
+        playerNameIndex = new PlayerNameIndex(storageGateway, getSLF4JLogger(), telemetry);
         playerNameIndex.loadAll();
-        settingsCache  = new PlayerSettingsCache(storage, dbExecutor, getSLF4JLogger(), playerNameIndex);
+        settingsCache  = new PlayerSettingsCache(storage, dbExecutor, getSLF4JLogger(), playerNameIndex, telemetry);
         sessionManager = new ChestSessionManager(languageManager, codec, storage,
-                getSLF4JLogger(), foliaLib, dbExecutor, telemetry);
+                getSLF4JLogger(), scheduler, dbExecutor, telemetry);
         spillService   = new ChestSpillService(sessionManager, storage, codec, storageGateway,
                 pluginConfig.getTempExpiryMillis());
         chestTransferService = new ChestTransferService(sessionManager, storage, codec, storageGateway,
-                languageManager, foliaLib, dbExecutor, getSLF4JLogger(), telemetry,
+                languageManager, scheduler, dbExecutor, getSLF4JLogger(), telemetry,
                 pluginConfig.getTempExpiryMillis());
         permissionChestService = new PermissionChestService(storageGateway, spillService,
                 pluginConfig.isPermissionChestsEnabled(), pluginConfig.getDefaultSize());
         databaseImportService = new DatabaseImportService(storage, pluginConfig, getSLF4JLogger(),
                 getDataFolder().toPath());
         chestOpener    = new ChestOpener(sessionManager, storageGateway, settingsCache, storage,
-                dbExecutor, languageManager, foliaLib, getSLF4JLogger(), pluginConfig.getDefaultSize(),
-                permissionChestService, spillService, pluginConfig, databaseImportService);
+                dbExecutor, languageManager, scheduler, getSLF4JLogger(), pluginConfig.getDefaultSize(),
+                permissionChestService, spillService, pluginConfig, databaseImportService, telemetry);
 
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger(),
-                sessionManager, foliaLib, pluginConfig.getTempExpiryMillis());
-        axVaultsMigrationService = new AxVaultsMigrationService(storage, codec, getSLF4JLogger(),
+                sessionManager, scheduler, telemetry, pluginConfig.getTempExpiryMillis());
+        axVaultsMigrationService = new AxVaultsMigrationService(storage, codec, getSLF4JLogger(), telemetry,
                 getDataFolder().getParentFile().toPath());
         playerVaultsXMigrationService = new PlayerVaultsXMigrationService(storage, codec, getSLF4JLogger(),
-                getDataFolder().getParentFile().toPath());
+                telemetry, getDataFolder().getParentFile().toPath());
 
-        expirySweeper = new ExpirySweeper(spillService, storage, foliaLib,
-                getSLF4JLogger(), pluginConfig.getExpiryCheckIntervalMillis());
+        expirySweeper = new ExpirySweeper(spillService, storage, scheduler,
+                getSLF4JLogger(), telemetry, pluginConfig.getExpiryCheckIntervalMillis());
         expirySweeper.start();
 
-        backupService = new BackupService(storage, foliaLib, getSLF4JLogger(), getDataFolder().toPath(),
+        backupService = new BackupService(storage, scheduler, getSLF4JLogger(), telemetry, getDataFolder().toPath(),
                 pluginConfig.isBackupEnabled(), pluginConfig.getBackupIntervalMillis(),
                 pluginConfig.getBackupKeep(), pluginConfig.getBackupFolder(),
                 pluginConfig.getDatabaseType());
@@ -149,16 +151,16 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
 
         // Periodic write-back of dirty in-memory rows to the database + eviction of flushed offline
         // players (the final full save happens in CachedStorage.close() at shutdown).
-        autosaveService = new AutosaveService(storage, foliaLib, getSLF4JLogger(), telemetry,
+        autosaveService = new AutosaveService(storage, scheduler, getSLF4JLogger(), telemetry,
                 pluginConfig.getAutosaveIntervalMillis());
         autosaveService.start();
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(new VanillaEnderChestListener(chestOpener), this);
-        pm.registerEvents(new EnderChestGuiListener(sessionManager, foliaLib, languageManager, pluginConfig), this);
-        pm.registerEvents(new PlayerQuitListener(sessionManager, foliaLib), this);
+        pm.registerEvents(new EnderChestGuiListener(sessionManager, scheduler, languageManager, pluginConfig), this);
+        pm.registerEvents(new PlayerQuitListener(sessionManager, scheduler), this);
         pm.registerEvents(new JoinMigrationListener(pluginConfig, migrationService, storage,
-                dbExecutor, getSLF4JLogger()), this);
+                dbExecutor, getSLF4JLogger(), telemetry), this);
         pm.registerEvents(new PlayerSettingsListener(settingsCache, chestOpener, storage,
                 autosaveService), this);
 
@@ -172,8 +174,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         });
 
         updateChecker = new UpdateChecker(getPluginMeta().getVersion(), getSLF4JLogger());
-        pm.registerEvents(new UpdateNotifyListener(foliaLib, updateChecker, languageManager), this);
-        updateChecker.checkAsync(foliaLib);
+        pm.registerEvents(new UpdateNotifyListener(scheduler, updateChecker, languageManager), this);
+        updateChecker.checkAsync(scheduler);
 
         initMetrics();
 
@@ -215,8 +217,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         if (storage != null) {
             storage.close();
         }
-        if (foliaLib != null) {
-            foliaLib.getScheduler().cancelAllTasks();
+        if (scheduler != null) {
+            scheduler.cancelAllTasks();
         }
         getSLF4JLogger().info("EnhancedEchest disabled.");
     }
@@ -298,7 +300,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         String locale    = pluginConfig.getLocale();
         String migration = pluginConfig.isMigrationEnabled() ? "ON" : "OFF";
         String backup    = backupStatus();
-        String folia     = foliaLib.isFolia() ? "Folia" : "Paper";
+        String folia     = scheduler.isFolia() ? "Folia" : "Paper";
         String sep       = "——————————————[ EnhancedEchest ]——————————————";
 
         log.info("> {}", sep);

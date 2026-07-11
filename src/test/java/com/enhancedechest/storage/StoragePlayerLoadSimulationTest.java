@@ -2,6 +2,7 @@ package com.enhancedechest.storage;
 
 import com.enhancedechest.model.ChestSummary;
 import com.enhancedechest.storage.sql.SqliteStorage;
+import com.enhancedechest.telemetry.Telemetry;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +95,7 @@ class StoragePlayerLoadSimulationTest {
         UUID[] universe = new UUID[PLAYER_UNIVERSE];
         for (int i = 0; i < PLAYER_UNIVERSE; i++) universe[i] = UUID.randomUUID();
 
-        CachedStorage storage = new CachedStorage(new SqliteStorage(dir, "stress.db"), log);
+        CachedStorage storage = new CachedStorage(new SqliteStorage(dir, "stress.db"), log, Telemetry.NOOP);
         storage.init();
 
         // Baseline heap after init + warmup GC.

@@ -1,7 +1,7 @@
 package com.enhancedechest.update;
 
 import com.enhancedechest.lang.LanguageManager;
-import com.tcoded.folialib.FoliaLib;
+import com.enhancedechest.scheduler.Scheduler;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public final class UpdateNotifyListener implements Listener {
 
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
     private final UpdateChecker checker;
     private final LanguageManager lang;
 
@@ -26,7 +26,7 @@ public final class UpdateNotifyListener implements Listener {
         // Slight delay so the player is fully loaded before receiving messages.
         // runAtEntityLater targets the player's entity thread (safe for Folia),
         // 2 seconds ≈ 40 ticks at 20 TPS.
-        foliaLib.getScheduler().runAtEntityLater(player, () -> {
+        scheduler.runAtEntityLater(player, () -> {
             if (!player.isOnline()) return;
             player.sendMessage(lang.get("update.available",
                     "current", checker.getCurrentVersion(),

@@ -1,10 +1,11 @@
 package com.enhancedechest.expiry;
 
 import com.enhancedechest.model.ChestKind;
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.service.ChestSpillService;
 import com.enhancedechest.storage.EnderChestStorage;
-import com.tcoded.folialib.FoliaLib;
-import com.tcoded.folialib.wrapper.task.WrappedTask;
+import com.enhancedechest.telemetry.Telemetry;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Periodically scans for expired chests and disposes of them.
  *
- * <p>Runs on a FoliaLib async repeating timer at the configured {@code check-interval}. Each sweep
+ * <p>Runs on an async repeating timer at the configured {@code check-interval}. Each sweep
  * calls {@code findExpired} — a DB-side candidate query (the only way to see offline, non-resident
  * owners' expired chests) whose hits are loaded into the cache and re-verified against the
  * authoritative in-memory rows, plus a scan of already-resident owners — and routes each hit through
@@ -30,26 +31,28 @@ public final class ExpirySweeper {
 
     private final ChestSpillService spillService;
     private final EnderChestStorage storage;
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
     private final Logger logger;
+    private final Telemetry telemetry;
     // Runtime-tunable via /ee reload (see reschedule). Only touched on the main thread (start/stop/
     // reschedule); the async sweep never reads it, so no extra synchronisation is needed.
     private long intervalMillis;
 
-    private WrappedTask task;
+    private ScheduledTask task;
 
     public ExpirySweeper(ChestSpillService spillService, EnderChestStorage storage,
-                         FoliaLib foliaLib, Logger logger, long intervalMillis) {
+                         Scheduler scheduler, Logger logger, Telemetry telemetry, long intervalMillis) {
         this.spillService   = spillService;
         this.storage        = storage;
-        this.foliaLib       = foliaLib;
+        this.scheduler      = scheduler;
         this.logger         = logger;
+        this.telemetry      = telemetry;
         this.intervalMillis = intervalMillis;
     }
 
     /** Starts the repeating async sweep. Safe to call once during plugin enable. */
     public void start() {
-        task = foliaLib.getScheduler().runTimerAsync(
+        task = scheduler.runTimerAsync(
                 this::sweep, intervalMillis, intervalMillis, TimeUnit.MILLISECONDS);
     }
 
@@ -80,7 +83,7 @@ public final class ExpirySweeper {
         }
     }
 
-    /** One sweep: find expired chests and dispose of each. Runs on a FoliaLib async thread. */
+    /** One sweep: find expired chests and dispose of each. Runs on an async scheduler thread. */
     private void sweep() {
         try {
             List<EnderChestStorage.ExpiredRef> expired = storage.findExpired(System.currentTimeMillis());
@@ -90,6 +93,7 @@ public final class ExpirySweeper {
             }
         } catch (Exception e) {
             logger.error("Expiry sweep failed", e);
+            telemetry.error(e, "expiry.sweep");
         }
     }
 }

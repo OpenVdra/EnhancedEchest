@@ -15,7 +15,7 @@ being lost silently.
 
 ## Sweeper (`expiry/ExpirySweeper`)
 
-A FoliaLib async repeating timer at `temp-enderchest.check-interval` (default `5m`). Each tick runs
+An async repeating timer (via `Scheduler`) at `temp-enderchest.check-interval` (default `5m`). Each tick runs
 `findExpired(now)` — a DB-side candidate query (the only way to see offline, non-resident owners'
 expired chests) whose hits are loaded into the cache and re-verified against the authoritative
 in-memory rows, plus the scan of already-resident owners — and routes each

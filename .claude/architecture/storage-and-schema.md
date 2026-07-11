@@ -187,7 +187,7 @@ Stored bytes are `[1-byte version tag] + [body]`. The tag lets the format evolve
 
 ## Auto-backup (`BackupService`)
 
-Scheduled DB snapshots, modelled on `ExpirySweeper`: a FoliaLib async repeating timer at `backup.interval`
+Scheduled DB snapshots, modelled on `ExpirySweeper`: an async repeating timer (via `Scheduler`) at `backup.interval`
 calls `EnderChestStorage.backup(Path)` — which, on `CachedStorage`, first flushes all dirty in-memory rows
 so the snapshot is complete — then prunes the `backup.folder` to the most recent `backup.keep`
 files (`keep <= 0` = unlimited). Snapshot names are `enderchests-<yyyyMMdd-HHmmss>.db`, so lexical order is

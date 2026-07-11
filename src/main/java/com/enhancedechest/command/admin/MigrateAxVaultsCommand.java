@@ -43,6 +43,7 @@ public final class MigrateAxVaultsCommand {
                 return service.migrateAll();
             } catch (Exception e) {
                 plugin.getSLF4JLogger().error("[AxVaults] Migration failed", e);
+                plugin.getTelemetry().error(e, "migrate.axvaults.command");
                 throw new RuntimeException(e);
             }
         }).whenComplete((result, error) -> {
@@ -85,6 +86,7 @@ public final class MigrateAxVaultsCommand {
                 return service.migratePlayer(target);
             } catch (Exception e) {
                 plugin.getSLF4JLogger().error("[AxVaults] Migration failed for {}", playerName, e);
+                plugin.getTelemetry().error(e, "migrate.axvaults.command");
                 throw new RuntimeException(e);
             }
         }).whenComplete((result, error) -> {

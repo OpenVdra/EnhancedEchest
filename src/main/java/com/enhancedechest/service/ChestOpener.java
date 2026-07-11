@@ -9,9 +9,10 @@ import com.enhancedechest.migration.DatabaseImportService;
 import com.enhancedechest.migration.SourceSpec;
 import com.enhancedechest.model.ChestKind;
 import com.enhancedechest.model.ChestSummary;
+import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.storage.EnderChestStorage;
+import com.enhancedechest.telemetry.Telemetry;
 import com.enhancedechest.util.DurationFormat;
-import com.tcoded.folialib.FoliaLib;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -57,13 +58,14 @@ public final class ChestOpener {
     private final EnderChestStorage storage;
     private final DbExecutor db;
     private final LanguageManager lang;
-    private final FoliaLib foliaLib;
+    private final Scheduler scheduler;
     private final Logger logger;
     private final ChestDialogs dialogs;
     private final PermissionChestService permService;
     private final ChestSpillService spillService;
     private final PluginConfig config;
     private final DatabaseImportService importService;
+    private final Telemetry telemetry;
 
     /** Last time (epoch millis) each player sorted a chest, for the anti-spam Sort cooldown. */
     private final ConcurrentHashMap<UUID, Long> lastSortAt = new ConcurrentHashMap<>();
@@ -75,22 +77,23 @@ public final class ChestOpener {
 
     public ChestOpener(ChestSessionManager sessions, StorageGateway storageGateway,
                        PlayerSettingsCache settings, EnderChestStorage storage, DbExecutor db,
-                       LanguageManager lang, FoliaLib foliaLib, Logger logger, int defaultSize,
+                       LanguageManager lang, Scheduler scheduler, Logger logger, int defaultSize,
                        PermissionChestService permService, ChestSpillService spillService,
-                       PluginConfig config, DatabaseImportService importService) {
+                       PluginConfig config, DatabaseImportService importService, Telemetry telemetry) {
         this.sessions       = sessions;
         this.storageGateway = storageGateway;
         this.settings       = settings;
         this.storage        = storage;
         this.db             = db;
         this.lang           = lang;
-        this.foliaLib       = foliaLib;
+        this.scheduler      = scheduler;
         this.logger         = logger;
         this.defaultSize    = defaultSize;
         this.permService    = permService;
         this.spillService   = spillService;
         this.config         = config;
         this.importService  = importService;
+        this.telemetry      = telemetry;
         this.dialogs        = new ChestDialogs(this, storageGateway, settings, lang, config);
     }
 
@@ -127,7 +130,7 @@ public final class ChestOpener {
     public void open(Player player, @Nullable Location sourceBlock) {
         UUID uuid = player.getUniqueId();
         boolean canSetMain = canSetMain(player);
-        foliaLib.getScheduler().runAtEntity(player, outerTask -> {
+        scheduler.runAtEntity(player, outerTask -> {
             // A player physically can't right-click or type while a chest GUI is open, so a request
             // arriving with one open is a stale duplicate queued while a previous open was still
             // loading (Folia opens span several thread hops + DB round-trips). Closing and reopening
@@ -171,7 +174,7 @@ public final class ChestOpener {
                         } else {
                             // Seed the edit-mode checkbox from the player's saved preference.
                             settings.loadSettingsAsync(uuid).thenAccept(s ->
-                                    foliaLib.getScheduler().runAtEntity(player, task -> {
+                                    scheduler.runAtEntity(player, task -> {
                                         if (player.isOnline()) player.showDialog(
                                                 dialogs.listDialog(chests, canSetMain, sourceBlock, s.editMode()));
                                     }));
@@ -209,7 +212,7 @@ public final class ChestOpener {
         }
         UUID uuid = player.getUniqueId();
         storageGateway.listChestsAsync(uuid).thenAccept(chests ->
-                foliaLib.getScheduler().runAtEntity(player, task -> {
+                scheduler.runAtEntity(player, task -> {
                     if (!player.isOnline()) return;
                     chests.stream()
                             .filter(c -> c.customName() != null
@@ -262,9 +265,10 @@ public final class ChestOpener {
     }
 
     private Void reportOpenFailure(Player player, Throwable e) {
-        logger.error("Failed to load enderchest for {} — aborting open", player.getName(),
-                e.getCause() != null ? e.getCause() : e);
-        foliaLib.getScheduler().runAtEntity(player, t -> {
+        Throwable cause = e.getCause() != null ? e.getCause() : e;
+        logger.error("Failed to load enderchest for {} — aborting open", player.getName(), cause);
+        telemetry.error(cause, "chest.open-load");
+        scheduler.runAtEntity(player, t -> {
             if (player.isOnline()) player.sendMessage(lang.get("chest.load-failed"));
         });
         return null;
@@ -294,10 +298,10 @@ public final class ChestOpener {
         boolean canSetMain = canSetMain(player);
         // Reconcile permission-granted chests before building the list, so /eclist reflects the current
         // grants. resolveTargets must read permissions on the entity thread.
-        foliaLib.getScheduler().runAtEntity(player, outerTask -> {
+        scheduler.runAtEntity(player, outerTask -> {
             reconcileForOpen(player, uuid)
                     .thenAccept(chests ->
-                            foliaLib.getScheduler().runAtEntity(player, task -> {
+                            scheduler.runAtEntity(player, task -> {
                                 if (!player.isOnline()) return;
                                 if (chests.isEmpty()) {
                                     // Should not happen: reconcile bootstraps the base chest before this runs.
@@ -362,7 +366,7 @@ public final class ChestOpener {
      * and pushes the dialog on the admin's entity thread.
      */
     public void showAdminViewList(Player admin, String targetName, UUID target, List<ChestSummary> chests) {
-        foliaLib.getScheduler().runAtEntity(admin, t -> {
+        scheduler.runAtEntity(admin, t -> {
             if (admin.isOnline()) admin.showDialog(dialogs.adminViewListDialog(targetName, target, chests));
         });
     }
@@ -370,7 +374,7 @@ public final class ChestOpener {
     /** Reloads the target's chests and shows the admin view-list dialog (used for Back from a detail dialog). */
     public void openAdminViewList(Player admin, String targetName, UUID target) {
         storageGateway.listChestsAsync(target).thenAccept(chests ->
-                foliaLib.getScheduler().runAtEntity(admin, task -> {
+                scheduler.runAtEntity(admin, task -> {
                     if (!admin.isOnline()) return;
                     if (chests.isEmpty()) {
                         admin.sendMessage(lang.get("admin.view-no-chests", "player", targetName));
@@ -390,20 +394,20 @@ public final class ChestOpener {
     public void openAdminDetail(Player admin, String targetName, UUID target, int index) {
         DetailContext ctx = new DetailContext(target, targetName, false,
                 admin.hasPermission(ADMIN_EDIT_PERMISSION), false,
-                admin.hasPermission(ADMIN_CLEAR_PERMISSION), null);
+                admin.hasPermission(ADMIN_CLEAR_PERMISSION), null, admin.locale());
         showDetail(admin, ctx, index);
     }
 
     /** Shows the "are you sure?" confirmation before an admin clears a chest (guards the destructive wipe). */
     public void openAdminClearConfirm(Player admin, String targetName, UUID target, int index) {
         if (!admin.hasPermission(ADMIN_CLEAR_PERMISSION)) {
-            foliaLib.getScheduler().runAtEntity(admin, t -> {
+            scheduler.runAtEntity(admin, t -> {
                 if (admin.isOnline()) admin.sendMessage(lang.get("admin.no-permission"));
             });
             return;
         }
         storageGateway.listChestsAsync(target).thenAccept(chests ->
-                foliaLib.getScheduler().runAtEntity(admin, task -> {
+                scheduler.runAtEntity(admin, task -> {
                     if (!admin.isOnline()) return;
                     chests.stream().filter(c -> c.index() == index).findFirst().ifPresentOrElse(
                             c -> admin.showDialog(dialogs.adminClearConfirmDialog(targetName, target, c)),
@@ -418,13 +422,13 @@ public final class ChestOpener {
      */
     public void adminClear(Player admin, String targetName, UUID target, int index) {
         if (!admin.hasPermission(ADMIN_CLEAR_PERMISSION)) {
-            foliaLib.getScheduler().runAtEntity(admin, t -> {
+            scheduler.runAtEntity(admin, t -> {
                 if (admin.isOnline()) admin.sendMessage(lang.get("admin.no-permission"));
             });
             return;
         }
         spillService.clearChest(target, index).thenRun(() ->
-                foliaLib.getScheduler().runAtEntity(admin, t -> {
+                scheduler.runAtEntity(admin, t -> {
                     if (!admin.isOnline()) return;
                     admin.sendMessage(lang.get("admin.chest-cleared",
                             "player", targetName, "index", Integer.toString(index)));
@@ -448,7 +452,8 @@ public final class ChestOpener {
 
     /** Builds the owner's detail context: full edit rights, set-main gated on the open permission. */
     private DetailContext selfContext(Player player, @Nullable Location sourceBlock) {
-        return new DetailContext(player.getUniqueId(), null, true, true, canSetMain(player), false, sourceBlock);
+        return new DetailContext(player.getUniqueId(), null, true, true, canSetMain(player), false, sourceBlock,
+                player.locale());
     }
 
     /**
@@ -468,7 +473,7 @@ public final class ChestOpener {
             Long last = lastSortAt.get(viewerId);
             if (last != null && now - last < cooldown) {
                 String remaining = DurationFormat.formatRemaining(cooldown - (now - last));
-                foliaLib.getScheduler().runAtEntity(viewer, t -> {
+                scheduler.runAtEntity(viewer, t -> {
                     if (viewer.isOnline()) viewer.sendMessage(lang.get("chest.sort-cooldown", "time", remaining));
                 });
                 return;
@@ -476,7 +481,7 @@ public final class ChestOpener {
         }
         lastSortAt.put(viewerId, now);
         spillService.sortChest(ctx.owner(), index).thenRun(() ->
-                foliaLib.getScheduler().runAtEntity(viewer, t -> {
+                scheduler.runAtEntity(viewer, t -> {
                     if (!viewer.isOnline()) return;
                     viewer.sendMessage(lang.get("chest.sorted"));
                     showDetail(viewer, ctx, index);
@@ -518,7 +523,7 @@ public final class ChestOpener {
     private void showChestDialog(Player viewer, UUID owner, int index,
                                  java.util.function.Function<ChestSummary, io.papermc.paper.dialog.Dialog> builder) {
         storageGateway.listChestsAsync(owner).thenAccept(chests ->
-                foliaLib.getScheduler().runAtEntity(viewer, task -> {
+                scheduler.runAtEntity(viewer, task -> {
                     if (!viewer.isOnline()) return;
                     chests.stream().filter(c -> c.index() == index).findFirst().ifPresentOrElse(
                             c -> viewer.showDialog(builder.apply(c)),
@@ -529,14 +534,14 @@ public final class ChestOpener {
 
     /** Runs the given action on the player's entity thread (helper for command/dialog callbacks). */
     public void runForPlayer(Player player, Runnable action) {
-        foliaLib.getScheduler().runAtEntity(player, task -> action.run());
+        scheduler.runAtEntity(player, task -> action.run());
     }
 
     // ---- database import (/ee import) ----
 
     /** Shows the DB→DB import dialog (source connection form) to the admin. */
     public void showImportDialog(Player admin) {
-        foliaLib.getScheduler().runAtEntity(admin, t -> {
+        scheduler.runAtEntity(admin, t -> {
             if (admin.isOnline()) admin.showDialog(dialogs.importDialog());
         });
     }
@@ -557,7 +562,7 @@ public final class ChestOpener {
         String validationKey = validateSpec(spec);
         if (validationKey != null) {
             final String key = validationKey;
-            foliaLib.getScheduler().runAtEntity(admin, t -> {
+            scheduler.runAtEntity(admin, t -> {
                 if (admin.isOnline()) admin.sendMessage(lang.get(key));
             });
             return;
@@ -565,7 +570,7 @@ public final class ChestOpener {
 
         // Run the in-memory guards on the global/next tick so Bukkit.getOnlinePlayers() is read on a safe
         // thread (the dialog callback may arrive on a region thread under Folia).
-        foliaLib.getScheduler().runNextTick(t -> {
+        scheduler.runNextTick(t -> {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (!online.getUniqueId().equals(admin.getUniqueId())) {
                     admin.sendMessage(lang.get("import.players-online"));
@@ -588,10 +593,12 @@ public final class ChestOpener {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            }).whenComplete((outcome, error) -> foliaLib.getScheduler().runAtEntity(admin, tt -> {
+            }).whenComplete((outcome, error) -> scheduler.runAtEntity(admin, tt -> {
                 if (!admin.isOnline()) return;
                 if (error != null) {
-                    logger.error("[Import] Database import failed", error.getCause() != null ? error.getCause() : error);
+                    Throwable cause = error.getCause() != null ? error.getCause() : error;
+                    logger.error("[Import] Database import failed", cause);
+                    telemetry.error(cause, "import.db-import");
                     admin.sendMessage(lang.get("import.failed", "error", rootMessage(error)));
                     return;
                 }

@@ -85,5 +85,5 @@ shared-view feature: `chest.in-use`, `chest.view-only`, `admin.view-no-chests` (
 
 ## Updates (`update/`)
 
-`UpdateChecker.checkAsync` runs on a FoliaLib async task at startup; `UpdateNotifyListener` notifies
+`UpdateChecker.checkAsync` runs on a `Scheduler` async task at startup; `UpdateNotifyListener` notifies
 admins shortly after they join (with a clickable MiniMessage download link).
