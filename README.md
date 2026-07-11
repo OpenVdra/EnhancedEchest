@@ -1,6 +1,8 @@
 <div align="center">
 
-![Logo](https://openvdra.github.io/EnhancedEchest/logo.png)
+<p align="center">
+  <img src="https://openvdra.github.io/EnhancedEchest/logo.png" alt="Logo" width="160">
+</p>
 
 [![Modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/modrinth_vector.svg)](https://modrinth.com/plugin/enhancedechest)
 [![Spigot](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/spigot_vector.svg)](https://www.spigotmc.org/resources/enhancedechest-double-echest-plugin-%E2%9C%A8-26-1-2-26-2-%EF%B8%8F.136442/)
