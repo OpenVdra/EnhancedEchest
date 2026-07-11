@@ -6,6 +6,9 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 ### Added
 
+- **Database tables are now prefixed** (`echest_enderchests`, `echest_players`, `echest_schema_meta` by default), so it's easy to tell the plugin's data apart from other plugins' tables and safe to keep them in a database you share with other plugins. Configurable with the new `database.table-prefix` setting (letters, digits and underscore only; an empty or invalid value falls back to `echest_`).
+  - Existing installs are upgraded automatically: on the next startup, the plugin renames its existing tables to match, with no data loss and no manual steps. Verified on SQLite (a real 1399-player/1399-chest database, byte-identical before/after), MySQL, and PostgreSQL.
+
 - Added full localization to the chest icon picker: item names always show in your Minecraft client's own language now, and searching icon by name also matches the localized name for English and Vietnamese clients (other client languages still show correct item names, but search currently only matches the English name).
   - Added support for dropping a custom `icons/lang/<locale>.json` file into the plugin's folder to add search for a client language we don't bundle, or to override a bundled one. Run `/ee reload` to pick it up without restarting the server.
   - The bundled name tables, and the list of items available as icons, now cover Minecraft 26.2, including recently added items such as Cinnabar, Sulfur, and the Sulfur Cube.

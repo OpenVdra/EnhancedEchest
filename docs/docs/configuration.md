@@ -83,6 +83,10 @@ Configures where ender chest contents are stored. SQLite works out of the box wi
 Storage backend. Supported values: <code>sqlite</code>, <code>mysql</code>, <code>mariadb</code>, <code>postgres</code>.
 </ConfigProperty>
 
+<ConfigProperty name="table-prefix" value="echest_" type="string">
+Prepended to every table this plugin creates (e.g. <code>echest_enderchests</code>), so its data is easy to tell apart from other plugins' tables and safe to keep in a database shared with them. Letters, digits and underscore only. Changing it on an existing install renames its existing tables to match on the next startup. See <a href="/docs/database#tables">Tables</a>.
+</ConfigProperty>
+
 <ConfigProperty name="autosave-interval" value="5m" type="string">
 How often in-memory changes are written back to the database (each online player's data is kept in memory; it is also saved a few seconds after they quit and once at shutdown). Minimum <code>30s</code>. See <a href="/docs/database#how-data-is-saved">How data is saved</a>.
 </ConfigProperty>
@@ -189,6 +193,8 @@ permission-chests:
 database:
   # Storage backend: sqlite | mysql | mariadb | postgres
   type: sqlite
+  # Prepended to every table this plugin creates. Letters, digits and underscore only.
+  table-prefix: echest_
   # How often in-memory changes are written back to the database. Minimum 30s.
   autosave-interval: 5m
   sqlite-file: enderchests.db

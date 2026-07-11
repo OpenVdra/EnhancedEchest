@@ -29,60 +29,64 @@ import java.util.List;
  */
 public abstract class AbstractSqlStorage implements StorageBackend {
 
-    private static final String SQL_DELETE_CHEST =
-            "DELETE FROM enderchests WHERE player_uuid = ? AND chest_index = ?";
-
-    private static final String SQL_DELETE_PLAYER =
-            "DELETE FROM players WHERE player_uuid = ?";
-
-    // Verbatim full-row inserts: every column is written from the row as-is (no defaults relied on).
-    // Shared by the /ee import copy and the flush write-back, reused as one batched PreparedStatement
-    // per table under a single transaction.
-    private static final String SQL_INSERT_PLAYER =
-            "INSERT INTO players (player_uuid, username, edit_mode, applied_default_size) VALUES (?, ?, ?, ?)";
-
-    private static final String SQL_INSERT_CHEST =
-            "INSERT INTO enderchests " +
-            "(player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, last_updated, kind, expires_at, icon) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-    private static final String SQL_LOAD_PLAYER_CHESTS =
-            "SELECT player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, " +
-            "last_updated, kind, expires_at, icon FROM enderchests WHERE player_uuid = ?";
-
-    private static final String SQL_LOAD_ALL_PLAYERS =
-            "SELECT player_uuid, username, edit_mode, applied_default_size FROM players";
-
-    private static final String SQL_LOAD_ONE_PLAYER =
-            SQL_LOAD_ALL_PLAYERS + " WHERE player_uuid = ?";
-
-    private static final String SQL_FIND_EXPIRED =
-            "SELECT player_uuid, chest_index, kind FROM enderchests " +
-            "WHERE expires_at IS NOT NULL AND expires_at <= ?";
-
-    private static final String SQL_COUNT_CHESTS =
-            "SELECT COUNT(*) FROM enderchests";
-
-    private static final String SQL_NAME_FIND =
-            "SELECT player_uuid FROM players WHERE username IS NOT NULL AND LOWER(username) = LOWER(?)";
-
     /** Rows per JDBC batch flush, to bound memory while still collapsing round-trips. */
     private static final int BATCH_SIZE = 1000;
 
     protected final HikariDataSource dataSource;
+
+    /** Prepended to every table name (see {@link com.enhancedechest.config.PluginConfig#getTablePrefix()}). */
+    protected final String tablePrefix;
 
     // Dialect-specific schema-creation statements injected by subclasses to avoid calling abstract
     // methods from the constructor (which would access uninitialized subclass state). Each entry is
     // one CREATE TABLE; they are executed in order on init().
     private final String[] schemaStatements;
 
-    protected AbstractSqlStorage(HikariConfig config, String... schemaStatements) {
+    private final String sqlDeleteChest;
+    private final String sqlDeletePlayer;
+    private final String sqlInsertPlayer;
+    private final String sqlInsertChest;
+    private final String sqlLoadPlayerChests;
+    private final String sqlLoadAllPlayers;
+    private final String sqlLoadOnePlayer;
+    private final String sqlFindExpired;
+    private final String sqlCountChests;
+    private final String sqlNameFind;
+
+    protected AbstractSqlStorage(HikariConfig config, String tablePrefix, String... schemaStatements) {
         this.dataSource = new HikariDataSource(config);
+        this.tablePrefix = tablePrefix;
         this.schemaStatements = schemaStatements;
+
+        String chests = tablePrefix + "enderchests";
+        String players = tablePrefix + "players";
+
+        this.sqlDeleteChest = "DELETE FROM " + chests + " WHERE player_uuid = ? AND chest_index = ?";
+        this.sqlDeletePlayer = "DELETE FROM " + players + " WHERE player_uuid = ?";
+        // Verbatim full-row inserts: every column is written from the row as-is (no defaults relied on).
+        // Shared by the /ee import copy and the flush write-back, reused as one batched PreparedStatement
+        // per table under a single transaction.
+        this.sqlInsertPlayer = "INSERT INTO " + players
+                + " (player_uuid, username, edit_mode, applied_default_size) VALUES (?, ?, ?, ?)";
+        this.sqlInsertChest = "INSERT INTO " + chests + " "
+                + "(player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, last_updated, kind, expires_at, icon) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        this.sqlLoadPlayerChests = "SELECT player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, "
+                + "last_updated, kind, expires_at, icon FROM " + chests + " WHERE player_uuid = ?";
+        this.sqlLoadAllPlayers = "SELECT player_uuid, username, edit_mode, applied_default_size FROM " + players;
+        this.sqlLoadOnePlayer = sqlLoadAllPlayers + " WHERE player_uuid = ?";
+        this.sqlFindExpired = "SELECT player_uuid, chest_index, kind FROM " + chests + " "
+                + "WHERE expires_at IS NOT NULL AND expires_at <= ?";
+        this.sqlCountChests = "SELECT COUNT(*) FROM " + chests;
+        this.sqlNameFind = "SELECT player_uuid FROM " + players + " WHERE username IS NOT NULL AND LOWER(username) = LOWER(?)";
     }
 
     @Override
     public void init() {
+        // Renames any pre-existing bare-named tables (enderchests/players/schema_meta, or tables from a
+        // previously-configured prefix) to the current prefix before CREATE TABLE IF NOT EXISTS below can
+        // create empty ones under the new names — see SchemaMigrator.renameLegacyTables.
+        SchemaMigrator.renameLegacyTables(dataSource, tablePrefix);
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
             for (String ddl : schemaStatements) {
@@ -93,7 +97,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
         }
         // Bring an existing (older) database up to the current schema version. On a fresh install the
         // CREATE statements above already carry every column, so the migrator's guarded steps no-op.
-        SchemaMigrator.migrate(dataSource);
+        SchemaMigrator.migrate(dataSource, tablePrefix);
     }
 
     @Override
@@ -108,7 +112,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     @Override
     public List<RawPlayerRow> loadAllPlayers() {
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_LOAD_ALL_PLAYERS);
+             PreparedStatement ps = conn.prepareStatement(sqlLoadAllPlayers);
              ResultSet rs = ps.executeQuery()) {
             List<RawPlayerRow> rows = new ArrayList<>();
             while (rs.next()) {
@@ -123,7 +127,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     @Override
     public List<RawChestRow> loadChests(String playerUuid) {
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_LOAD_PLAYER_CHESTS)) {
+             PreparedStatement ps = conn.prepareStatement(sqlLoadPlayerChests)) {
             ps.setString(1, playerUuid);
             try (ResultSet rs = ps.executeQuery()) {
                 List<RawChestRow> rows = new ArrayList<>();
@@ -140,7 +144,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     @Override
     public RawPlayerRow loadPlayer(String playerUuid) {
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_LOAD_ONE_PLAYER)) {
+             PreparedStatement ps = conn.prepareStatement(sqlLoadOnePlayer)) {
             ps.setString(1, playerUuid);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? readPlayerRow(rs) : null;
@@ -153,7 +157,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     @Override
     public List<ExpiredKey> findExpired(long now) {
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_FIND_EXPIRED)) {
+             PreparedStatement ps = conn.prepareStatement(sqlFindExpired)) {
             ps.setLong(1, now);
             try (ResultSet rs = ps.executeQuery()) {
                 List<ExpiredKey> keys = new ArrayList<>();
@@ -171,7 +175,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     @Override
     public long countChests() {
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_COUNT_CHESTS);
+             PreparedStatement ps = conn.prepareStatement(sqlCountChests);
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getLong(1) : 0;
         } catch (SQLException e) {
@@ -182,7 +186,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     @Override
     public String findUuidByName(String name) {
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_NAME_FIND)) {
+             PreparedStatement ps = conn.prepareStatement(sqlNameFind)) {
             ps.setString(1, name);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getString(1) : null;
@@ -226,7 +230,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
             try {
                 // Upserts are portable delete-then-insert: clear the key first (no-op for a brand-new
                 // row), then write the full row via the same verbatim insert the import path uses.
-                try (PreparedStatement ps = conn.prepareStatement(SQL_DELETE_CHEST)) {
+                try (PreparedStatement ps = conn.prepareStatement(sqlDeleteChest)) {
                     int pending = 0;
                     for (RawChestRow c : upserts) {
                         ps.setString(1, c.playerUuid());
@@ -260,7 +264,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                try (PreparedStatement ps = conn.prepareStatement(SQL_DELETE_PLAYER)) {
+                try (PreparedStatement ps = conn.prepareStatement(sqlDeletePlayer)) {
                     int pending = 0;
                     for (RawPlayerRow p : rows) {
                         ps.setString(1, p.playerUuid());
@@ -308,7 +312,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
 
     private int batchPlayers(Connection conn, List<RawPlayerRow> players) throws SQLException {
         int pending = 0, total = 0;
-        try (PreparedStatement ps = conn.prepareStatement(SQL_INSERT_PLAYER)) {
+        try (PreparedStatement ps = conn.prepareStatement(sqlInsertPlayer)) {
             for (RawPlayerRow p : players) {
                 ps.setString(1, p.playerUuid());
                 if (p.username() == null) ps.setNull(2, Types.VARCHAR); else ps.setString(2, p.username());
@@ -328,7 +332,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
 
     private int batchChests(Connection conn, List<RawChestRow> chests) throws SQLException {
         int pending = 0, total = 0;
-        try (PreparedStatement ps = conn.prepareStatement(SQL_INSERT_CHEST)) {
+        try (PreparedStatement ps = conn.prepareStatement(sqlInsertChest)) {
             for (RawChestRow c : chests) {
                 ps.setString(1, c.playerUuid());
                 ps.setInt(2, c.chestIndex());

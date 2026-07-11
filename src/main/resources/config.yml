@@ -76,6 +76,11 @@ database:
   #
   # Storage backend: sqlite | mysql | mariadb | postgres
   type: sqlite
+  # Prepended to every table this plugin creates (e.g. "echest_enderchests"), so its data is easy to
+  # tell apart from other plugins' tables and safe to keep in a database shared with them. Letters,
+  # digits and underscore only. If you change this on an existing install, the plugin renames its
+  # existing tables to match on the next startup.
+  table-prefix: echest_
   # Each player's ender chest data is loaded into memory when they join and kept there while they are
   # online; opening/closing chests never queries the database. Changes are written back to the database
   # on this interval, a few seconds after a player quits, and one final time at shutdown. Lower = less

@@ -13,7 +13,7 @@ public final class StorageFactory {
 
     public static StorageBackend create(PluginConfig config, Path dataFolder) {
         return switch (config.getDatabaseType().toLowerCase()) {
-            case "sqlite"                -> new SqliteStorage(dataFolder, config.getSqliteFile());
+            case "sqlite"                -> new SqliteStorage(dataFolder, config.getSqliteFile(), config.getTablePrefix());
             case "mysql", "mariadb"      -> new MysqlStorage(config);
             case "postgres", "postgresql" -> new PostgresStorage(config);
             default -> throw new IllegalArgumentException(

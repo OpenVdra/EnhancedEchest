@@ -89,11 +89,25 @@ The default PostgreSQL port is **5432**, so remember to change `port` from the M
 
 The plugin creates and manages its own database tables automatically. You never need to write any SQL yourself.
 
+Every table name is prefixed (`echest_` by default) so the plugin's data is easy to tell apart from other
+plugins' tables, and safe to keep in a database you share with them:
+
 | Table | Stores |
 |-------|--------|
-| `enderchests` | Every chest's contents, size, name, and icon. |
-| `players` | Each player's settings and their last known username (used for offline lookups, see below). |
-| `schema_meta` | The database version, used for automatic upgrades. |
+| `echest_enderchests` | Every chest's contents, size, name, and icon. |
+| `echest_players` | Each player's settings and their last known username (used for offline lookups, see below). |
+| `echest_schema_meta` | The database version, used for automatic upgrades. |
+
+You can change the prefix with `database.table-prefix` in `config.yml`, for example if you run several
+servers sharing one database and want a different prefix per server:
+
+```yaml
+database:
+  table-prefix: echest_
+```
+
+If you change it on an existing install, the plugin renames its existing tables to match the next time it
+starts — no data is lost. Only letters, digits and underscore are used; anything else is stripped.
 
 ### Automatic upgrades
 

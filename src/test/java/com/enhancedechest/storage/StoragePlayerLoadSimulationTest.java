@@ -95,7 +95,7 @@ class StoragePlayerLoadSimulationTest {
         UUID[] universe = new UUID[PLAYER_UNIVERSE];
         for (int i = 0; i < PLAYER_UNIVERSE; i++) universe[i] = UUID.randomUUID();
 
-        CachedStorage storage = new CachedStorage(new SqliteStorage(dir, "stress.db"), log, Telemetry.NOOP);
+        CachedStorage storage = new CachedStorage(new SqliteStorage(dir, "stress.db", "echest_"), log, Telemetry.NOOP);
         storage.init();
 
         // Baseline heap after init + warmup GC.

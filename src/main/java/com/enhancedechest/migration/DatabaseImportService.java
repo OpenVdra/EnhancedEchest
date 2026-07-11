@@ -57,7 +57,7 @@ public final class DatabaseImportService {
      * {@code SQLException} ("source schema outdated"); a duplicate key rolls the whole import back.
      */
     public Result importFrom(SourceSpec spec) throws Exception {
-        try (SourceDatabaseReader reader = SourceDatabaseReader.open(spec, dataFolder, logger)) {
+        try (SourceDatabaseReader reader = SourceDatabaseReader.open(spec, dataFolder, logger, config.getTablePrefix())) {
             SourceDatabaseReader.Data data = reader.readAll();
             logger.info("[Import] Read {} player row(s) and {} chest row(s) from {} source",
                     data.players().size(), data.chests().size(), reader.backend());

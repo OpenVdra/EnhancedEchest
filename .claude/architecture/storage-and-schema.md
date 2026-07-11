@@ -70,10 +70,35 @@ The SQL side implements the deliberately narrow **`StorageBackend`** interface (
 primary resolution, transfer collision rules, targeted settings upserts) live in `CachedStorage`. Only
 `CREATE TABLE` statements are dialect-specific, injected by each subclass (`SqliteStorage`,
 `MysqlStorage`, `PostgresStorage`) as a `String...` of DDL run in order by `init()` (currently
-`enderchests` + `players`). Connections come from a HikariCP pool (size 1 for SQLite, configurable
-otherwise). `StorageFactory` picks the backend from `config.type`. The `DbExecutor` dispatch convention
-is unchanged (services still never call storage on a region/main thread; cache-miss JDBC runs on those
-executor threads), which is what keeps the dupe-safety ordering model intact without modification.
+`<prefix>enderchests` + `<prefix>players`, see below). Connections come from a HikariCP pool (size 1 for
+SQLite, configurable otherwise). `StorageFactory` picks the backend from `config.type`. The `DbExecutor`
+dispatch convention is unchanged (services still never call storage on a region/main thread; cache-miss
+JDBC runs on those executor threads), which is what keeps the dupe-safety ordering model intact without
+modification.
+
+### Table prefix (`database.table-prefix`, default `echest_`)
+
+Every table this plugin creates is prefixed (`echest_enderchests`, `echest_players`,
+`echest_schema_meta`) so the plugin's data is identifiable and safe to keep in a database shared with
+other plugins. `PluginConfig.getTablePrefix()` sanitizes the configured value to `[A-Za-z0-9_]` (falling
+back to `echest_` if that leaves nothing) since table names are concatenated directly into SQL — they
+can't be bound as JDBC parameters. `AbstractSqlStorage` builds every `SQL_*` statement as an **instance**
+field in its constructor from `<prefix>enderchests`/`<prefix>players` (no longer `static final`
+constants); each dialect subclass formats its own `CREATE TABLE` DDL with the same prefix and passes it
+through. `SourceDatabaseReader` (`/ee import`'s source-side reader) assumes the source shares the active
+install's prefix, since both are the same plugin's schema.
+
+`SchemaMigrator.renameLegacyTables(dataSource, prefix)` runs once at the very start of
+`AbstractSqlStorage.init()`, **before** the CREATE TABLE IF NOT EXISTS statements: for each of
+`enderchests`/`players`/`schema_meta` it renames the bare (pre-prefix) table to its prefixed name via the
+portable `ALTER TABLE ... RENAME TO ...` (accepted by SQLite, MySQL/MariaDB and PostgreSQL alike), guarded
+by `tableExists(old) && !tableExists(new)` so it is idempotent and a no-op once already prefixed. This
+must run *before* CREATE, not after — the CREATE would otherwise materialize an empty table under the new
+prefixed name first, and the rename target would then already exist and fail. Failures here are logged
+and swallowed per table (never fatal), so a rename hiccup degrades to a fresh empty table rather than
+blocking startup. The old 1.0.4 `player_settings` → `players` merge (`SchemaMigrator` version-1 `Step`)
+now targets `<prefix>players` and still runs *after* the rename+CREATE, so a hypothetical pre-1.0.4
+install jumping straight to a prefixed build merges into the already-prefixed (freshly created) table.
 
 SQLite runs in **WAL mode** with `synchronous=NORMAL` (set as driver properties in
 `SqliteStorage.buildConfig`, applied as PRAGMAs per connection; `journal_mode` also persists in the DB
@@ -82,16 +107,18 @@ deliberate **30s** — the backup's `VACUUM INTO` holds the single connection fo
 an autosave flush that lands mid-backup must ride that out and then succeed rather than time out
 unwritten.
 
-`init()` also calls `SchemaMigrator.migrate()` right after running the CREATE statements: a versioned,
-forward-only migrator (`schema_meta` table) that brings an existing (older) database up to the current
-schema — additive column steps guarded by a JDBC-metadata `columnExists` check, occasional table
-renames/merges guarded by `tableExists` (e.g. the 1.0.4 `player_settings` → `players` merge). A fresh
-install's CREATE statements already carry every column, so the migrator's steps no-op on it.
+`init()` also calls `SchemaMigrator.migrate(dataSource, prefix)` right after running the CREATE
+statements: a versioned, forward-only migrator (`<prefix>schema_meta` table) that brings an existing
+(older) database up to the current schema — additive column steps guarded by a JDBC-metadata
+`columnExists` check, occasional table renames/merges guarded by `tableExists` (e.g. the 1.0.4
+`player_settings` → `players` merge). A fresh install's CREATE statements already carry every column, so
+the migrator's steps no-op on it. `ensureIndexes` (the `expires_at` index) also carries the prefix in both
+the table and the index name, since SQLite/PostgreSQL require index names unique database-wide.
 
 **Rule:** all SQL portable, only DDL per-dialect. Avoid `ON CONFLICT` / `ON DUPLICATE KEY`; the flush
 upserts are portable delete-then-insert full-row replaces instead.
 
-## Schema: `enderchests`
+## Schema: `enderchests` (table: `<prefix>enderchests`, default `echest_enderchests`)
 
 | Column | Notes |
 |--------|-------|
@@ -121,7 +148,7 @@ Primary resolution (`getPrimaryIndex`) filters `kind != TEMP` (everything **exce
 the flagged main, otherwise the lowest-indexed non-temp chest. Both NORMAL and PERM chests are eligible
 to be opened by `/ec` and set as the main; only temp chests are excluded.
 
-## Schema: `players`
+## Schema: `players` (table: `<prefix>players`, default `echest_players`)
 
 Per-player state, **one row per player** (`player_uuid` PK), separate from `enderchests` because it is
 per-player, not per-chest. Wide table, one typed column per setting (not EAV/JSON) — fast, type-safe,

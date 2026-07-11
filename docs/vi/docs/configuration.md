@@ -85,6 +85,10 @@ Cấu hình nơi lưu nội dung rương Ender. SQLite dùng được ngay khôn
 Backend lưu trữ. Giá trị được hỗ trợ: <code>sqlite</code>, <code>mysql</code>, <code>mariadb</code>, <code>postgres</code>.
 </ConfigProperty>
 
+<ConfigProperty name="table-prefix" value="echest_" type="string">
+Được thêm vào trước mọi tên bảng mà plugin tạo ra (ví dụ <code>echest_enderchests</code>), giúp dễ phân biệt dữ liệu của plugin với các plugin khác và an toàn khi dùng chung cơ sở dữ liệu với chúng. Chỉ chữ cái, chữ số và dấu gạch dưới. Đổi giá trị này trên bản cài đã có sẵn sẽ khiến plugin tự đổi tên các bảng hiện có cho khớp vào lần khởi động tiếp theo. Xem <a href="/vi/docs/database#cac-bang">Các Bảng</a>.
+</ConfigProperty>
+
 <ConfigProperty name="autosave-interval" value="5m" type="string">
 Tần suất ghi các thay đổi trong bộ nhớ về cơ sở dữ liệu (dữ liệu của mỗi người chơi trực tuyến được giữ trong bộ nhớ; cũng được lưu vài giây sau khi họ thoát và một lần khi tắt máy chủ). Tối thiểu <code>30s</code>. Xem <a href="/vi/docs/database#cach-du-lieu-duoc-luu">Cách dữ liệu được lưu</a>.
 </ConfigProperty>
@@ -197,6 +201,8 @@ permission-chests:
 database:
   # Backend lưu trữ: sqlite | mysql | mariadb | postgres
   type: sqlite
+  # Được thêm vào trước mọi tên bảng mà plugin tạo ra. Chỉ chữ cái, chữ số và dấu gạch dưới.
+  table-prefix: echest_
   # Tần suất ghi các thay đổi trong bộ nhớ về cơ sở dữ liệu. Tối thiểu 30s.
   autosave-interval: 5m
   # SQLite: đường dẫn tương đối với thư mục dữ liệu của plugin

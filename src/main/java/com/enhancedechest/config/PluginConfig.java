@@ -51,6 +51,13 @@ public final class PluginConfig {
     private String databaseType;
     /** How often the in-memory data is written back to the database (also written once at shutdown). */
     private long autosaveIntervalMillis;
+    /**
+     * Prepended to every table this plugin creates (e.g. {@code echest_enderchests}), so the plugin's
+     * data is easy to tell apart from other plugins' tables and safe to keep in a database shared with
+     * them. Sanitized to {@code [A-Za-z0-9_]} since it is concatenated directly into DDL/DML — table
+     * names can't be bound as JDBC parameters.
+     */
+    private String tablePrefix;
 
     // SQLite
     private String sqliteFile;
@@ -100,6 +107,7 @@ public final class PluginConfig {
         tempDenySound             = parseSound(config);
 
         databaseType = config.getString("database.type", "sqlite");
+        tablePrefix  = sanitizeTablePrefix(config.getString("database.table-prefix", "echest_"));
         sqliteFile   = config.getString("database.sqlite-file", "enderchests.db");
         // Clamped to at least 30s so a typo can never turn the autosave into a busy loop.
         autosaveIntervalMillis = Math.max(30_000L,
@@ -137,6 +145,16 @@ public final class PluginConfig {
             key = Key.key("minecraft:entity.villager.no");
         }
         return Sound.sound(key, Sound.Source.MASTER, 1.0f, 1.0f);
+    }
+
+    /**
+     * Keeps only {@code [A-Za-z0-9_]} from a configured table prefix (table names are concatenated into
+     * SQL directly, never bound as a JDBC parameter) and falls back to {@code echest_} if that leaves
+     * nothing usable.
+     */
+    private static String sanitizeTablePrefix(String value) {
+        String cleaned = value == null ? "" : value.replaceAll("[^A-Za-z0-9_]", "");
+        return cleaned.isEmpty() ? "echest_" : cleaned;
     }
 
     /** Parses a duration string, falling back to {@code fallback} (and ultimately a safe value) on error. */

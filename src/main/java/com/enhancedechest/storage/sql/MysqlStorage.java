@@ -7,7 +7,7 @@ public final class MysqlStorage extends AbstractSqlStorage {
 
     // MEDIUMBLOB supports up to 16 MB — more than enough for 54 serialized ItemStacks.
     private static final String INIT_SQL = """
-            CREATE TABLE IF NOT EXISTS enderchests (
+            CREATE TABLE IF NOT EXISTS %1$senderchests (
                 player_uuid    VARCHAR(36)  NOT NULL,
                 chest_index    INT          NOT NULL,
                 size           INT          NOT NULL,
@@ -29,7 +29,7 @@ public final class MysqlStorage extends AbstractSqlStorage {
     // offline admin resize, before any name is recorded) to comfortably fit Java (16), Bedrock/Floodgate-
     // prefixed names and the like.
     private static final String INIT_SETTINGS_SQL = """
-            CREATE TABLE IF NOT EXISTS players (
+            CREATE TABLE IF NOT EXISTS %1$splayers (
                 player_uuid          VARCHAR(36) NOT NULL,
                 username             VARCHAR(48),
                 edit_mode            TINYINT(1)  NOT NULL DEFAULT 0,
@@ -39,7 +39,8 @@ public final class MysqlStorage extends AbstractSqlStorage {
             """;
 
     public MysqlStorage(PluginConfig config) {
-        super(buildConfig(config), INIT_SQL, INIT_SETTINGS_SQL);
+        super(buildConfig(config), config.getTablePrefix(),
+                INIT_SQL.formatted(config.getTablePrefix()), INIT_SETTINGS_SQL.formatted(config.getTablePrefix()));
     }
 
     private static HikariConfig buildConfig(PluginConfig config) {

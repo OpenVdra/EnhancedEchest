@@ -9,7 +9,7 @@ import java.sql.Statement;
 public final class SqliteStorage extends AbstractSqlStorage {
 
     private static final String INIT_SQL = """
-            CREATE TABLE IF NOT EXISTS enderchests (
+            CREATE TABLE IF NOT EXISTS %1$senderchests (
                 player_uuid    TEXT    NOT NULL,
                 chest_index    INTEGER NOT NULL,
                 size           INTEGER NOT NULL,
@@ -30,7 +30,7 @@ public final class SqliteStorage extends AbstractSqlStorage {
     // a rename (or ever) — not on join. username is nullable — a row can exist (e.g. from an offline
     // admin resize) before any name has ever been recorded.
     private static final String INIT_SETTINGS_SQL = """
-            CREATE TABLE IF NOT EXISTS players (
+            CREATE TABLE IF NOT EXISTS %1$splayers (
                 player_uuid          TEXT    NOT NULL,
                 username             TEXT,
                 edit_mode            INTEGER NOT NULL DEFAULT 0,
@@ -39,8 +39,9 @@ public final class SqliteStorage extends AbstractSqlStorage {
             )
             """;
 
-    public SqliteStorage(Path dataFolder, String fileName) {
-        super(buildConfig(dataFolder, fileName), INIT_SQL, INIT_SETTINGS_SQL);
+    public SqliteStorage(Path dataFolder, String fileName, String tablePrefix) {
+        super(buildConfig(dataFolder, fileName), tablePrefix,
+                INIT_SQL.formatted(tablePrefix), INIT_SETTINGS_SQL.formatted(tablePrefix));
     }
 
     @Override

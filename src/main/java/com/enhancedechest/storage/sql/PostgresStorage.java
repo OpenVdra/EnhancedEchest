@@ -7,7 +7,7 @@ public final class PostgresStorage extends AbstractSqlStorage {
 
     // BYTEA maps directly to byte[] via JDBC — no size cap unlike MySQL's BLOB tiers.
     private static final String INIT_SQL = """
-            CREATE TABLE IF NOT EXISTS enderchests (
+            CREATE TABLE IF NOT EXISTS %1$senderchests (
                 player_uuid    VARCHAR(36)  NOT NULL,
                 chest_index    INTEGER      NOT NULL,
                 size           INTEGER      NOT NULL,
@@ -28,7 +28,7 @@ public final class PostgresStorage extends AbstractSqlStorage {
     // a rename (or ever) — not on join. username is nullable — a row can exist (e.g. from an offline
     // admin resize) before any name has ever been recorded.
     private static final String INIT_SETTINGS_SQL = """
-            CREATE TABLE IF NOT EXISTS players (
+            CREATE TABLE IF NOT EXISTS %1$splayers (
                 player_uuid          VARCHAR(36) NOT NULL,
                 username             VARCHAR(48),
                 edit_mode            SMALLINT    NOT NULL DEFAULT 0,
@@ -38,7 +38,8 @@ public final class PostgresStorage extends AbstractSqlStorage {
             """;
 
     public PostgresStorage(PluginConfig config) {
-        super(buildConfig(config), INIT_SQL, INIT_SETTINGS_SQL);
+        super(buildConfig(config), config.getTablePrefix(),
+                INIT_SQL.formatted(config.getTablePrefix()), INIT_SETTINGS_SQL.formatted(config.getTablePrefix()));
     }
 
     private static HikariConfig buildConfig(PluginConfig config) {
