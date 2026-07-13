@@ -64,11 +64,13 @@ database:
   database: enhancedechest
   username: root
   password: "your-password"
+  ssl: false
   pool-size: 10
 ```
 
 - Create the database (schema) beforehand, for example `CREATE DATABASE enhancedechest;`
 - The plugin creates and manages its own tables automatically
+- Set `ssl: true` to require an encrypted connection. The connection fails if the database server does not support TLS.
 
 ## <img src="https://skillicons.dev/icons?i=postgres" width="28" height="28" alt="PostgreSQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /> PostgreSQL
 
@@ -80,10 +82,13 @@ database:
   database: enhancedechest
   username: postgres
   password: "your-password"
+  ssl: false
   pool-size: 10
 ```
 
 The default PostgreSQL port is **5432**, so remember to change `port` from the MySQL default.
+
+Set `ssl: true` to require an encrypted connection. For both MySQL/MariaDB and PostgreSQL, this option encrypts traffic but does not verify the server certificate or hostname.
 
 ## Tables
 

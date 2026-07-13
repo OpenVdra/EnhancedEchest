@@ -140,6 +140,10 @@ Tên người dùng cơ sở dữ liệu.
 Mật khẩu cơ sở dữ liệu. Để trống nếu không có mật khẩu.
 </ConfigProperty>
 
+<ConfigProperty name="ssl" value="false" type="boolean">
+Bắt buộc kết nối TLS được mã hóa cho MySQL, MariaDB hoặc PostgreSQL. Tùy chọn này mã hóa lưu lượng cơ sở dữ liệu nhưng không xác minh certificate hay hostname của máy chủ. Cần khởi động lại máy chủ hoàn toàn.
+</ConfigProperty>
+
 <ConfigProperty name="pool-size" value="10" type="number">
 Số kết nối tối đa trong pool. Chỉ áp dụng cho MySQL, MariaDB và PostgreSQL.
 </ConfigProperty>
@@ -285,6 +289,8 @@ database:
   database: enhancedechest
   username: root
   password: ""
+  # Bắt buộc kết nối TLS mã hóa cho cơ sở dữ liệu từ xa. Cần khởi động lại.
+  ssl: false
   pool-size: 10
 
 cross-server:

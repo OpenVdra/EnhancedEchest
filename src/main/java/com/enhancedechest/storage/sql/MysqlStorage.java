@@ -54,9 +54,7 @@ public final class MysqlStorage extends AbstractSqlStorage {
         // which isn't the plugin's at enable time), so without this Hikari fails with
         // "No suitable driver" even though the driver class is present in the jar.
         hc.setDriverClassName("com.enhancedechest.libs.mariadb.Driver");
-        hc.setJdbcUrl("jdbc:mariadb://" + config.getDbHost() + ":" + config.getDbPort()
-                + "/" + config.getDbName()
-                + "?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8");
+        hc.setJdbcUrl(buildJdbcUrl(config));
         hc.setUsername(config.getDbUsername());
         hc.setPassword(config.getDbPassword());
         hc.setMaximumPoolSize(config.getDbPoolSize());
@@ -69,5 +67,13 @@ public final class MysqlStorage extends AbstractSqlStorage {
         hc.setMaxLifetime(1_800_000);
 
         return hc;
+    }
+
+    /** Builds the MariaDB Connector/J URL; {@code trust} requires encryption without CA verification. */
+    static String buildJdbcUrl(PluginConfig config) {
+        String sslMode = config.isDbSsl() ? "trust" : "disable";
+        return "jdbc:mariadb://" + config.getDbHost() + ":" + config.getDbPort()
+                + "/" + config.getDbName()
+                + "?sslMode=" + sslMode + "&allowPublicKeyRetrieval=true&characterEncoding=utf8";
     }
 }

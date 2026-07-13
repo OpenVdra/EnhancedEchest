@@ -80,6 +80,8 @@ public final class PluginConfig {
     private String dbName;
     private String dbUsername;
     private String dbPassword;
+    /** Whether remote database connections must use TLS encryption. */
+    private boolean dbSsl;
     private int dbPoolSize;
 
     // Auto-backup (SQLite only)
@@ -139,6 +141,7 @@ public final class PluginConfig {
         dbName     = config.getString("database.database", "enhancedechest");
         dbUsername = config.getString("database.username", "root");
         dbPassword = config.getString("database.password", "");
+        dbSsl      = config.getBoolean("database.ssl", false);
         dbPoolSize = config.getInt("database.pool-size", 10);
 
         backupEnabled        = config.getBoolean("backup.enabled", true);

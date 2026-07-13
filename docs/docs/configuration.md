@@ -138,6 +138,10 @@ Database username.
 Database password. Leave empty for no password.
 </ConfigProperty>
 
+<ConfigProperty name="ssl" value="false" type="boolean">
+Require an encrypted TLS connection for MySQL, MariaDB, or PostgreSQL. This encrypts database traffic but does not verify the server certificate or hostname. Requires a full server restart.
+</ConfigProperty>
+
 <ConfigProperty name="pool-size" value="10" type="number">
 Maximum number of pooled database connections. Only applies to MySQL, MariaDB, and PostgreSQL.
 </ConfigProperty>
@@ -275,6 +279,8 @@ database:
   database: enhancedechest
   username: root
   password: ""
+  # Require an encrypted TLS connection for a remote database. Requires a restart.
+  ssl: false
   pool-size: 10
 
 cross-server:

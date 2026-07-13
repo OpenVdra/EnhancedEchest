@@ -65,11 +65,13 @@ database:
   database: enhancedechest
   username: root
   password: "your-password"
+  ssl: false
   pool-size: 10
 ```
 
 - Tạo cơ sở dữ liệu trước, ví dụ `CREATE DATABASE enhancedechest;`
 - Plugin tự tạo và quản lý các bảng của riêng nó
+- Đặt `ssl: true` để bắt buộc kết nối mã hóa. Kết nối sẽ thất bại nếu máy chủ cơ sở dữ liệu không hỗ trợ TLS.
 
 ## <img src="https://skillicons.dev/icons?i=postgres" width="28" height="28" alt="PostgreSQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /> PostgreSQL
 
@@ -81,10 +83,13 @@ database:
   database: enhancedechest
   username: postgres
   password: "your-password"
+  ssl: false
   pool-size: 10
 ```
 
 Port mặc định của PostgreSQL là **5432**, nhớ đổi `port` khỏi giá trị mặc định của MySQL.
+
+Đặt `ssl: true` để bắt buộc kết nối mã hóa. Với cả MySQL/MariaDB và PostgreSQL, tùy chọn này mã hóa lưu lượng nhưng không xác minh certificate hay hostname của máy chủ.
 
 ## Các Bảng
 

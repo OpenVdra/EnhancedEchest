@@ -340,7 +340,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         PluginConfig c = pluginConfig;
         return String.join(" ",
                 c.getDatabaseType(), c.getSqliteFile(), c.getDbHost(), String.valueOf(c.getDbPort()),
-                c.getDbName(), c.getDbUsername(), c.getDbPassword(), String.valueOf(c.getDbPoolSize()),
+                c.getDbName(), c.getDbUsername(), c.getDbPassword(), String.valueOf(c.isDbSsl()),
+                String.valueOf(c.getDbPoolSize()),
                 // Cross-server coordination is bound at startup exactly like the connection pool.
                 String.valueOf(c.isCrossServerEnabled()), c.getCrossServerServerId(),
                 c.getRedisHost(), String.valueOf(c.getRedisPort()), c.getRedisPassword(),

@@ -46,8 +46,7 @@ public final class PostgresStorage extends AbstractSqlStorage {
         HikariConfig hc = new HikariConfig();
         // See MysqlStorage.buildConfig for why this is required under Paper's plugin classloader.
         hc.setDriverClassName("com.enhancedechest.libs.postgresql.Driver");
-        hc.setJdbcUrl("jdbc:postgresql://" + config.getDbHost() + ":" + config.getDbPort()
-                + "/" + config.getDbName());
+        hc.setJdbcUrl(buildJdbcUrl(config));
         hc.setUsername(config.getDbUsername());
         hc.setPassword(config.getDbPassword());
         hc.setMaximumPoolSize(config.getDbPoolSize());
@@ -58,5 +57,12 @@ public final class PostgresStorage extends AbstractSqlStorage {
         hc.setIdleTimeout(600_000);
         hc.setMaxLifetime(1_800_000);
         return hc;
+    }
+
+    /** Adds {@code sslmode=require} only when TLS is requested; otherwise preserves pgJDBC defaults. */
+    static String buildJdbcUrl(PluginConfig config) {
+        String url = "jdbc:postgresql://" + config.getDbHost() + ":" + config.getDbPort()
+                + "/" + config.getDbName();
+        return config.isDbSsl() ? url + "?sslmode=require" : url;
     }
 }
