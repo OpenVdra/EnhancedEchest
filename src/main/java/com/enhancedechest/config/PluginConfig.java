@@ -116,7 +116,7 @@ public final class PluginConfig {
 
         permissionChestsEnabled = config.getBoolean("permission-chests.enabled", true);
 
-        tempExpiryMillis          = parseDuration(config.getString("temp-enderchest.expiry", "24h"), "24h");
+        tempExpiryMillis          = parseDuration(config.getString("temp-enderchest.expiry", "7d"), "7d");
         expiryCheckIntervalMillis = parseDuration(config.getString("temp-enderchest.check-interval", "5m"), "5m");
         tempDenySound             = parseSound(config);
 
@@ -125,7 +125,7 @@ public final class PluginConfig {
         sqliteFile   = config.getString("database.sqlite-file", "enderchests.db");
         // Clamped to at least 30s so a typo can never turn the autosave into a busy loop.
         autosaveIntervalMillis = Math.max(30_000L,
-                parseDuration(config.getString("database.autosave-interval", "5m"), "5m"));
+                parseDuration(config.getString("database.autosave-interval", "3m"), "3m"));
 
         crossServerEnabled  = config.getBoolean("cross-server.enabled", false);
         crossServerServerId = config.getString("cross-server.server-id", "");

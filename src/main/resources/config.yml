@@ -58,7 +58,7 @@ temp-enderchest:
   #
   # Time format: 20s, 5m, 1h, or complex 1d_2h_30m_15s. Units: s m h d w mo y (mo = 30d, y = 365d).
   # Lifetime of a temp chest created on shrink/delete/expire-with-items.
-  expiry: 24h
+  expiry: 7d
   # How often the plugin scans for expired chests.
   check-interval: 5m
   # Sound played to a player who tries to deposit into a take-only temporary chest.
@@ -86,7 +86,7 @@ database:
   # on this interval, a few seconds after a player quits, and one final time at shutdown. Lower = less
   # data at risk if the server ever crashes hard; higher = fewer database writes. Minimum 30s.
   # Time format: 30s, 5m, 1h, ... (units: s m h d)
-  autosave-interval: 5m
+  autosave-interval: 3m
   # SQLite: path relative to plugin data folder (default: enderchests.db)
   sqlite-file: enderchests.db
   # MySQL/MariaDB default port: 3306 | Postgres default port: 5432

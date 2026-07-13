@@ -20,7 +20,7 @@ Plugin giữ dữ liệu rương Ender của **từng người chơi đang trự
 - Khi một người chơi vào máy chủ, rương của họ được nạp từ cơ sở dữ liệu một
   lần duy nhất.
 - Mở và đóng rương hoạt động hoàn toàn từ bộ nhớ, không có truy vấn cơ sở dữ liệu nào trong lúc chơi.
-- Các thay đổi được ghi ngược về cơ sở dữ liệu tự động mỗi **5 phút** theo mặc định (cấu hình bằng
+- Các thay đổi được ghi ngược về cơ sở dữ liệu tự động mỗi **3 phút** theo mặc định (cấu hình bằng
   `database.autosave-interval` trong `config.yml`), vài giây sau khi người chơi thoát, và một lần cuối
   khi máy chủ tắt.
 - Sau khi người chơi thoát và thay đổi của họ đã được lưu, dữ liệu của họ được gỡ khỏi bộ nhớ, nên
@@ -34,7 +34,7 @@ vài giây. Hãy giảm `autosave-interval` nếu bạn muốn thu hẹp khoản
 ```yaml
 database:
   # Tần suất ghi các thay đổi trong bộ nhớ về cơ sở dữ liệu. Tối thiểu 30s.
-  autosave-interval: 5m
+  autosave-interval: 3m
 ```
 
 ## <img src="https://skillicons.dev/icons?i=sqlite" width="28" height="28" alt="SQLite" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /> SQLite (mặc định)

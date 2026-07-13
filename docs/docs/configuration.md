@@ -79,7 +79,7 @@ See the <a href="/docs/permissions#permission-granted-chests">Permissions</a> pa
 Controls temporary chests. When a chest is shrunk, deleted (without <code>force</code>), or expires with items still inside, those items move into a temporary chest that disappears once emptied or once it expires. Temporary chests are take-only: players can take items out but not put new ones in.
 </template>
 
-<ConfigProperty name="expiry" value="24h" type="string">
+<ConfigProperty name="expiry" value="7d" type="string">
 How long a temporary chest lasts before it expires, along with any items still inside it. Time format: <code>20s</code>, <code>5m</code>, <code>1h</code>, or combined like <code>1d_2h_30m</code>. Units: <code>s m h d w mo y</code>.
 </ConfigProperty>
 
@@ -110,7 +110,7 @@ Storage backend. Supported values: <code>sqlite</code>, <code>mysql</code>, <cod
 Prepended to every table this plugin creates (e.g. <code>echest_enderchests</code>), so its data is easy to tell apart from other plugins' tables and safe to keep in a database shared with them. Letters, digits and underscore only. Changing it on an existing install renames its existing tables to match on the next startup. See <a href="/docs/database#tables">Tables</a>.
 </ConfigProperty>
 
-<ConfigProperty name="autosave-interval" value="5m" type="string">
+<ConfigProperty name="autosave-interval" value="3m" type="string">
 How often in-memory changes are written back to the database (each online player's data is kept in memory; it is also saved a few seconds after they quit and once at shutdown). Minimum <code>30s</code>. See <a href="/docs/database#how-data-is-saved">How data is saved</a>.
 </ConfigProperty>
 
@@ -264,7 +264,7 @@ permission-chests:
 
 temp-enderchest:
   # Lifetime of a temporary chest created on shrink/delete/expire-with-items.
-  expiry: 24h
+  expiry: 7d
   # How often the plugin scans for expired chests.
   check-interval: 5m
   # Sound played to a player who tries to deposit into a take-only temporary chest.
@@ -278,7 +278,7 @@ database:
   # Prepended to every table this plugin creates. Letters, digits and underscore only.
   table-prefix: echest_
   # How often in-memory changes are written back to the database. Minimum 30s.
-  autosave-interval: 5m
+  autosave-interval: 3m
   sqlite-file: enderchests.db
   host: localhost
   port: 3306

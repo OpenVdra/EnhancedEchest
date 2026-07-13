@@ -60,7 +60,7 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   `CachedStorage`: a player's rows are read from SQL once on first touch (join prefetch via the settings
   preload; any cache miss — e.g. an admin command on an offline player — loads on demand inside the
   storage call) and served from memory after that, with identical semantics to the old SQL. Dirty rows
-  are flushed by `AutosaveService` (`database.autosave-interval`, default 5m, reload-safe), each quitter
+  are flushed by `AutosaveService` (`database.autosave-interval`, default 3m, reload-safe), each quitter
   is written back + evicted ~5s after quit (`flushQuitterLater`), flushed offline owners are evicted
   after each autosave (`evictIdle`), and `CachedStorage.close()` does a final full flush at shutdown.
   Backup and `/ee import` flush first. The **residency invariant is load-bearing**: per-owner ops go

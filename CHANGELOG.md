@@ -4,6 +4,12 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 ## 1.0.10 - 2026-07-12
 
+### Changed
+
+- New default for `temp-enderchest.expiry` is now **7d** (was 24h), so temporary overflow chests keep their items for a week before expiring.
+- New default for `database.autosave-interval` is now **3m** (was 5m), narrowing the window of unsaved changes if the server is killed hard.
+- Both only affect fresh installs — existing `config.yml` files keep whatever value they already have. Edit those keys (and `/ee reload` for `autosave-interval`) to adopt the new values.
+
 ### Added
 
 - **Optional TLS encryption for remote databases.** A new `database.ssl` setting encrypts the connection to a remote MySQL, MariaDB, or PostgreSQL server. Off by default; requires a full server restart to change (like the other connection settings). SQLite is unaffected.

@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Write-back scheduling for the lazy cache: an async repeating timer at the configured
- * {@code database.autosave-interval} (default 5m) that calls {@link CachedStorage#flush()} and then
+ * {@code database.autosave-interval} (default 3m) that calls {@link CachedStorage#flush()} and then
  * {@link CachedStorage#evictIdle()} (releasing owners who are offline and fully flushed), plus the
  * per-player write-back a few seconds after a quit ({@link #flushQuitterLater}). The flush itself
  * snapshots dirty rows under the cache lock and performs the JDBC writes off it, so an autosave never

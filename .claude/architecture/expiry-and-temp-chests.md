@@ -5,7 +5,7 @@ being lost silently.
 
 - **Temp chest (`kind = TEMP`)** — an overflow holder created automatically when items are cut off by a
   shrink, a non-`force` delete, or a normal chest expiring with items inside. It always carries an
-  `expires_at` (config `temp-enderchest.expiry`, default `24h`), is never primary, and cannot be renamed
+  `expires_at` (config `temp-enderchest.expiry`, default `7d`), is never primary, and cannot be renamed
   or set-as-main in the dialog (Open + Back only). It is **take-only** (deposits are cancelled for
   everyone, including admins — see [ui-dialogs.md](ui-dialogs.md) / `EnderChestGuiListener`). It
   **auto-deletes the moment it is emptied** (`persist` deletes the row instead of writing an empty temp),

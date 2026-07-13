@@ -19,7 +19,7 @@ The plugin keeps each **online player's** ender chest data in memory:
 
 - When a player joins, their chests are loaded from the database once.
 - Opening and closing chests works entirely from memory, with no database queries during gameplay.
-- Changes are written back to the database automatically every **5 minutes** by default (configurable
+- Changes are written back to the database automatically every **3 minutes** by default (configurable
   with `database.autosave-interval` in `config.yml`), a few seconds after a player quits, and one
   final time when the server shuts down.
 - After a player quits and their changes are saved, their data is removed from memory, so memory use
@@ -33,7 +33,7 @@ quit are saved within seconds. Lower `autosave-interval` if you want a smaller w
 ```yaml
 database:
   # How often in-memory changes are written back to the database. Minimum 30s.
-  autosave-interval: 5m
+  autosave-interval: 3m
 ```
 
 ## <img src="https://skillicons.dev/icons?i=sqlite" width="28" height="28" alt="SQLite" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /> SQLite (default)

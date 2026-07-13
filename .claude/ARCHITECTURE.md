@@ -31,7 +31,7 @@ back on last close. **Do not regress this** — see
 Storage is a **lazy-load + write-back cache**: `CachedStorage` reads a player's rows from SQL once on
 first touch (join prefetch, or on demand inside any storage call that misses — admin commands on
 offline players, expiry sweeps) and is authoritative for every owner it holds resident;
-`AutosaveService` flushes dirty rows to SQL on `database.autosave-interval` (default 5m) and then
+`AutosaveService` flushes dirty rows to SQL on `database.autosave-interval` (default 3m) and then
 evicts flushed offline owners, each quitter is written back + evicted a few seconds after quit, and
 `CachedStorage.close()` flushes everything at shutdown. Memory stays proportional to online players.
 Cross-server sharing (multiple servers on one database) is **off by default**; with

@@ -38,7 +38,7 @@ methods all run under the engine's lock. The behaviour below is unchanged by tha
   delete-then-insert full-row replaces (reusing the verbatim import inserts). Row presence at flush time
   decides upsert vs `DELETE`. A failed flush re-marks the rows dirty and they retry on the next autosave.
 - Write-back + eviction is driven by **`AutosaveService`**: the periodic timer
-  (`database.autosave-interval`, default `5m`, min 30s, reload-safe) calls `flush()` then `evictIdle()`
+  (`database.autosave-interval`, default `3m`, min 30s, reload-safe) calls `flush()` then `evictIdle()`
   (drops every owner that is offline/unpinned **and** clean); `flushQuitterLater` writes back and evicts
   one player ~5s after they quit (delayed so the close-save of a chest open at quit lands first; a
   rejoin re-pins them and the eviction declines); and **`CachedStorage.close()`** does the final full
