@@ -87,3 +87,9 @@ Imports vaults from the AxVaults plugin into matching EnhancedEchest chests. Wor
 Imports vaults from the PlayerVaultsX plugin into matching EnhancedEchest chests. Works for offline players and reads the PlayerVaultsX flat-file vault data directly. See the [Migration](/docs/migration#playervaultsx) page for setup.
 
 </CommandRow>
+
+<CommandRow :commands="['/ee migrate customenderchest', '/ee migrate customenderchest &lt;player&gt;']" permission="enhancedechest.admin.migrate">
+
+Imports a player's single chest from CustomEnderChest into EnhancedEchest chest #1. Works for offline players and reads CustomEnderChest's YAML player files; its H2 and MySQL storage backends are not supported. See the [Migration](/docs/migration#customenderchest) page for setup.
+
+</CommandRow>

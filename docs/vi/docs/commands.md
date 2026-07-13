@@ -87,3 +87,9 @@ Nhập kho từ plugin AxVaults vào các rương EnhancedEchest tương ứng. 
 Nhập kho từ plugin PlayerVaultsX vào các rương EnhancedEchest tương ứng. Hoạt động cả với người chơi ngoại tuyến và đọc trực tiếp dữ liệu kho tệp phẳng của PlayerVaultsX. Xem trang [Chuyển Dữ Liệu](/vi/docs/migration#playervaultsx) để biết cách thiết lập.
 
 </CommandRow>
+
+<CommandRow :commands="['/ee migrate customenderchest', '/ee migrate customenderchest &lt;player&gt;']" permission="enhancedechest.admin.migrate">
+
+Nhập rương duy nhất của người chơi từ CustomEnderChest vào rương #1 của EnhancedEchest. Hoạt động với người chơi ngoại tuyến và đọc các file người chơi dạng YAML của CustomEnderChest; backend H2 và MySQL không được hỗ trợ. Xem trang [Chuyển Dữ Liệu](/vi/docs/migration#customenderchest) để biết cách thiết lập.
+
+</CommandRow>

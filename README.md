@@ -29,7 +29,7 @@
 ./gradlew build
 ```
 
-The output jar is placed in `build/libs/` and copied to `TestServer/plugins/` automatically via the `shadowJar` task. Adjust the destination path in `build.gradle.kts` if your test server is located elsewhere.
+The shaded plugin jar is placed in `build/libs/`.
 
 ## Statistics
 

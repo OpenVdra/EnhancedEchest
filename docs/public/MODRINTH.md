@@ -24,7 +24,7 @@ The vanilla ender chest is stuck at 27 slots, one per player, forever. **Enhance
 
 - **Any database**: <img src="https://skillicons.dev/icons?i=sqlite" width="18" height="18" alt="SQLite" style="vertical-align:middle;margin:0 2px" /> SQLite out of the box, or plug into <img src="https://skillicons.dev/icons?i=mysql" width="18" height="18" alt="MySQL" style="vertical-align:middle;margin:0 2px" /> MySQL, <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#242938;border-radius:5px;vertical-align:middle;margin:0 2px;box-sizing:border-box"><img src="https://cdn.simpleicons.org/mariadb/ffffff" width="13" height="13" alt="MariaDB" style="display:block" /></span> MariaDB, <img src="https://skillicons.dev/icons?i=postgres" width="18" height="18" alt="PostgreSQL" style="vertical-align:middle;margin:0 2px" /> PostgreSQL. Saving happens in the background, so it never lags your server.
 
-- **Painless migration**: imports vanilla ender chests automatically, plus one-command imports from **AxVaults** and **PlayerVaultsX**.
+- **Painless migration**: imports vanilla ender chests automatically, plus one-command imports from **AxVaults**, **PlayerVaultsX**, and **CustomEnderChest**.
 
 - **Bedrock-ready**: menus work natively through Geyser, zero setup.
 
@@ -65,7 +65,7 @@ The vanilla ender chest is stuck at 27 slots, one per player, forever. **Enhance
 | `/ee view <player> [list\|index]` | `enhancedechest.admin.view` | View or edit another player's chest |
 | `/ee transfer <from> <to> <#index\|name\|all>` | `enhancedechest.admin.transfer` | Move chest(s) onto another account |
 | `/ee import` | `enhancedechest.admin.import` | Copy all data from an old database into the active one |
-| `/ee migrate vanilla\|axvaults\|playervaultsx` | `enhancedechest.admin.migrate` | Import from vanilla, AxVaults, or PlayerVaultsX |
+| `/ee migrate vanilla\|axvaults\|playervaultsx\|customenderchest` | `enhancedechest.admin.migrate` | Import from vanilla, AxVaults, PlayerVaultsX, or CustomEnderChest |
 | `/ee reload` | `enhancedechest.admin.reload` | Reload config and language files |
 
 ## Get started
