@@ -76,10 +76,6 @@ Drop the `.jar` into `plugins/` and restart. SQLite works out of the box, zero c
 
 EnhancedEchest is **free and open source**. Fork it, build on it, or contribute back.
 
-## Telemetry
-
-EnhancedEchest reports anonymous usage statistics to bStats, which server owners can disable globally in `plugins/bStats/config.yml`. Official release builds also use FastStats to report the configured storage type and language and to collect anonymized error reports. Player identities, chest contents, and database credentials are not intentionally attached. FastStats is inactive in builds without a project token; there is currently no server-side setting to disable it separately.
-
 <p align="center">
   <a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142">
     <img src="https://bstats.org/signatures/bukkit/EnhancedEchest.svg" alt="EnhancedEchest bStats charts" width="100%" />

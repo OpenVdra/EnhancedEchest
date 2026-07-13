@@ -14,7 +14,7 @@ Here is an overview of everything **EnhancedEchest** brings to your Minecraft se
 
 <DocCard icon="Globe" title="Localization" link="#localization" desc="All player-facing text is editable and translatable." />
 
-<DocCard icon="BarChart2" title="Usage Statistics" link="#usage-statistics" desc="Anonymous metrics and error reports through bStats and FastStats." />
+<DocCard icon="BarChart2" title="Usage Statistics" link="#usage-statistics" desc="Anonymous usage data reported to bStats." />
 
 </CardGrid>
 
@@ -142,10 +142,7 @@ All player-facing text lives in editable language files. Ship a translation by c
 
 ## Usage Statistics {#usage-statistics}
 
-EnhancedEchest uses two telemetry services:
-
-- [bStats](https://bstats.org/plugin/bukkit/EnhancedEchest/32142) collects anonymous plugin usage statistics. It can be turned off globally in `plugins/bStats/config.yml`.
-- Official release builds use FastStats to report the configured storage type and language, and to collect anonymized error reports. Player identities, chest contents, and database credentials are not intentionally attached. FastStats is inactive in builds without a project token; there is currently no server-side setting to disable it separately.
+EnhancedEchest reports anonymous usage data to [bStats](https://bstats.org/plugin/bukkit/EnhancedEchest/32142). The collection is anonymous and can be turned off globally in `plugins/bStats/config.yml`.
 
 <p align="center">
   <a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142" target="_blank" rel="noreferrer">

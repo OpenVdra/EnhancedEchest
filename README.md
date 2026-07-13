@@ -33,9 +33,7 @@ The shaded plugin jar is placed in `build/libs/`.
 
 ## Statistics
 
-EnhancedEchest reports anonymous usage data to [bStats](https://bstats.org/plugin/bukkit/EnhancedEchest/32142). bStats can be turned off globally in `plugins/bStats/config.yml`.
-
-Official release builds also use FastStats to report the configured storage type and language, and to collect anonymized error reports. Player identities, chest contents, and database credentials are not intentionally attached. FastStats is inactive in builds that do not contain a project token; there is currently no server-side setting to disable it separately.
+EnhancedEchest reports anonymous usage data to [bStats](https://bstats.org/plugin/bukkit/EnhancedEchest/32142). Collection is anonymous and can be turned off globally in `plugins/bStats/config.yml`.
 
 <a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142">
   <img src="https://bstats.org/signatures/bukkit/EnhancedEchest.svg" alt="EnhancedEchest bStats charts" width="100%" />
