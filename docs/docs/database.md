@@ -64,13 +64,13 @@ database:
   database: enhancedechest
   username: root
   password: "your-password"
-  ssl: false
+  ssl: disable
   pool-size: 10
 ```
 
 - Create the database (schema) beforehand, for example `CREATE DATABASE enhancedechest;`
 - The plugin creates and manages its own tables automatically
-- Set `ssl: true` to require an encrypted connection. The connection fails if the database server does not support TLS.
+- Set `ssl` to `require` to encrypt the connection (fails if the server does not support TLS), or to `verify-full` to also verify the server certificate and hostname. See [SSL / TLS](#ssl-tls) below.
 
 ## <img src="https://skillicons.dev/icons?i=postgres" width="28" height="28" alt="PostgreSQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /> PostgreSQL
 
@@ -82,13 +82,23 @@ database:
   database: enhancedechest
   username: postgres
   password: "your-password"
-  ssl: false
+  ssl: disable
   pool-size: 10
 ```
 
 The default PostgreSQL port is **5432**, so remember to change `port` from the MySQL default.
 
-Set `ssl: true` to require an encrypted connection. For both MySQL/MariaDB and PostgreSQL, this option encrypts traffic but does not verify the server certificate or hostname.
+## SSL / TLS
+
+The `ssl` option controls transport encryption for a remote MySQL, MariaDB, or PostgreSQL database. It has no effect on SQLite. Changing it requires a full server restart.
+
+| Value | Behaviour |
+| --- | --- |
+| `disable` | No encryption (default). |
+| `require` | Encrypts the connection but does **not** verify the server certificate or hostname. Stops passive snooping, but not an active man-in-the-middle. |
+| `verify-full` | Encrypts **and** verifies the certificate chain and hostname. The only mode that defends against a man-in-the-middle. |
+
+`verify-full` requires the database server's certificate authority to be trusted by the JVM running your Minecraft server (its truststore). If the certificate is self-signed or issued by a private CA, import it into the JVM truststore first, otherwise the connection will fail at startup.
 
 ## Tables
 

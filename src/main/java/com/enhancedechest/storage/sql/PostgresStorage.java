@@ -59,10 +59,26 @@ public final class PostgresStorage extends AbstractSqlStorage {
         return hc;
     }
 
-    /** Adds {@code sslmode=require} only when TLS is requested; otherwise preserves pgJDBC defaults. */
+    // pgJDBC's default SSLSocketFactory for verify-ca/verify-full is LibPQFactory, which reads the CA from
+    // ~/.postgresql/root.crt (%APPDATA%\postgresql\root.crt on Windows) and ignores the JVM truststore.
+    // We force DefaultJavaSSLFactory so verify-full validates against the JVM truststore instead — the same
+    // trust model as MariaDB Connector/J and Jedis, and what the docs tell users to set up. Hardcoded
+    // relocated (like setDriverClassName above), since the shaded driver lives under com.enhancedechest.libs.
+    private static final String JAVA_SSL_FACTORY = "com.enhancedechest.libs.postgresql.ssl.DefaultJavaSSLFactory";
+
+    /**
+     * Adds an explicit {@code sslmode} only when TLS is requested. {@code require} encrypts without
+     * verification (pgJDBC's NonValidatingFactory); {@code verify-full} verifies the certificate chain and
+     * hostname against the JVM truststore (see {@link #JAVA_SSL_FACTORY}). DISABLE preserves the pre-SSL
+     * behaviour of leaving pgJDBC's own defaults untouched.
+     */
     static String buildJdbcUrl(PluginConfig config) {
         String url = "jdbc:postgresql://" + config.getDbHost() + ":" + config.getDbPort()
                 + "/" + config.getDbName();
-        return config.isDbSsl() ? url + "?sslmode=require" : url;
+        return switch (config.getDbSslMode()) {
+            case REQUIRE -> url + "?sslmode=require";
+            case VERIFY_FULL -> url + "?sslmode=verify-full&sslfactory=" + JAVA_SSL_FACTORY;
+            case DISABLE -> url;
+        };
     }
 }

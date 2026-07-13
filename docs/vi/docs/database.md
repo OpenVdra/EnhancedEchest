@@ -65,13 +65,13 @@ database:
   database: enhancedechest
   username: root
   password: "your-password"
-  ssl: false
+  ssl: disable
   pool-size: 10
 ```
 
 - Tạo cơ sở dữ liệu trước, ví dụ `CREATE DATABASE enhancedechest;`
 - Plugin tự tạo và quản lý các bảng của riêng nó
-- Đặt `ssl: true` để bắt buộc kết nối mã hóa. Kết nối sẽ thất bại nếu máy chủ cơ sở dữ liệu không hỗ trợ TLS.
+- Đặt `ssl` thành `require` để mã hóa kết nối (thất bại nếu máy chủ không hỗ trợ TLS), hoặc `verify-full` để đồng thời xác minh certificate và hostname của máy chủ. Xem mục [SSL / TLS](#ssl-tls) bên dưới.
 
 ## <img src="https://skillicons.dev/icons?i=postgres" width="28" height="28" alt="PostgreSQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /> PostgreSQL
 
@@ -83,13 +83,23 @@ database:
   database: enhancedechest
   username: postgres
   password: "your-password"
-  ssl: false
+  ssl: disable
   pool-size: 10
 ```
 
 Port mặc định của PostgreSQL là **5432**, nhớ đổi `port` khỏi giá trị mặc định của MySQL.
 
-Đặt `ssl: true` để bắt buộc kết nối mã hóa. Với cả MySQL/MariaDB và PostgreSQL, tùy chọn này mã hóa lưu lượng nhưng không xác minh certificate hay hostname của máy chủ.
+## SSL / TLS
+
+Tùy chọn `ssl` điều khiển mã hóa đường truyền cho cơ sở dữ liệu MySQL, MariaDB hoặc PostgreSQL từ xa. Nó không ảnh hưởng đến SQLite. Thay đổi giá trị này cần khởi động lại máy chủ hoàn toàn.
+
+| Giá trị | Hành vi |
+| --- | --- |
+| `disable` | Không mã hóa (mặc định). |
+| `require` | Mã hóa kết nối nhưng **không** xác minh certificate hay hostname của máy chủ. Chặn nghe lén thụ động, nhưng không chặn man-in-the-middle chủ động. |
+| `verify-full` | Mã hóa **và** xác minh chuỗi certificate cùng hostname. Chế độ duy nhất chống được man-in-the-middle. |
+
+`verify-full` yêu cầu CA (certificate authority) của máy chủ cơ sở dữ liệu phải được JVM chạy máy chủ Minecraft tin cậy (truststore). Nếu certificate là self-signed hoặc do CA riêng cấp, hãy import nó vào truststore của JVM trước, nếu không kết nối sẽ thất bại lúc khởi động.
 
 ## Các Bảng
 

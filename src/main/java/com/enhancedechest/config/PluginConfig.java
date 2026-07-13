@@ -80,8 +80,8 @@ public final class PluginConfig {
     private String dbName;
     private String dbUsername;
     private String dbPassword;
-    /** Whether remote database connections must use TLS encryption. */
-    private boolean dbSsl;
+    /** TLS mode for remote database connections (MySQL/MariaDB/PostgreSQL). */
+    private DbSslMode dbSslMode;
     private int dbPoolSize;
 
     // Auto-backup (SQLite only)
@@ -141,7 +141,7 @@ public final class PluginConfig {
         dbName     = config.getString("database.database", "enhancedechest");
         dbUsername = config.getString("database.username", "root");
         dbPassword = config.getString("database.password", "");
-        dbSsl      = config.getBoolean("database.ssl", false);
+        dbSslMode  = parseSslMode(config.getString("database.ssl", "disable"));
         dbPoolSize = config.getInt("database.pool-size", 10);
 
         backupEnabled        = config.getBoolean("backup.enabled", true);
@@ -189,6 +189,33 @@ public final class PluginConfig {
     private static String sanitizeRedisPrefix(String value) {
         String cleaned = value == null ? "" : value.replaceAll("[^A-Za-z0-9_:.\\-]", "");
         return cleaned.isEmpty() ? "echest:" : cleaned;
+    }
+
+    /**
+     * TLS mode for a remote database connection, mirroring the drivers' own {@code sslMode}/{@code sslmode}
+     * levels. {@link #REQUIRE} encrypts but trusts any certificate; {@link #VERIFY_FULL} additionally
+     * verifies the certificate chain and hostname (the only mode that defends against a man-in-the-middle).
+     */
+    public enum DbSslMode {
+        DISABLE,
+        REQUIRE,
+        VERIFY_FULL
+    }
+
+    /**
+     * Parses the {@code database.ssl} value into one of {@code disable} / {@code require} /
+     * {@code verify-full}. Anything unrecognised (including a blank value or a stray boolean) falls back
+     * to {@code DISABLE}, an unencrypted connection.
+     */
+    static DbSslMode parseSslMode(String value) {
+        if (value == null) {
+            return DbSslMode.DISABLE;
+        }
+        return switch (value.trim().toLowerCase(Locale.ROOT)) {
+            case "require" -> DbSslMode.REQUIRE;
+            case "verify-full", "verify_full" -> DbSslMode.VERIFY_FULL;
+            default -> DbSslMode.DISABLE; // "disable", empty, or anything unrecognised
+        };
     }
 
     /** Parses a duration string, falling back to {@code fallback} (and ultimately a safe value) on error. */

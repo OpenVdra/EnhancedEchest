@@ -12,6 +12,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.params.SetParams;
 
+import javax.net.ssl.SSLParameters;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -122,6 +123,14 @@ public final class RedisCoordinator implements CrossServerCoordinator {
                 .database(database)
                 .ssl(ssl)
                 .timeoutMillis(5_000);
+        if (ssl) {
+            // Jedis validates the certificate chain against the JVM truststore when ssl is on, but does
+            // NOT verify the hostname by default. Turn on endpoint identification so a valid certificate
+            // issued for a different host is rejected — i.e. full verify-full behaviour, not just verify-ca.
+            SSLParameters sslParameters = new SSLParameters();
+            sslParameters.setEndpointIdentificationAlgorithm("HTTPS");
+            cfg.sslParameters(sslParameters);
+        }
         if (password != null && !password.isEmpty()) {
             cfg.password(password);
         }

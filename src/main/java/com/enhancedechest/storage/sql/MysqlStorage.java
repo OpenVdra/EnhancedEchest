@@ -69,9 +69,16 @@ public final class MysqlStorage extends AbstractSqlStorage {
         return hc;
     }
 
-    /** Builds the MariaDB Connector/J URL; {@code trust} requires encryption without CA verification. */
+    /**
+     * Builds the MariaDB Connector/J URL. {@code trust} encrypts without verifying the certificate;
+     * {@code verify-full} verifies the certificate chain and hostname.
+     */
     static String buildJdbcUrl(PluginConfig config) {
-        String sslMode = config.isDbSsl() ? "trust" : "disable";
+        String sslMode = switch (config.getDbSslMode()) {
+            case REQUIRE -> "trust";
+            case VERIFY_FULL -> "verify-full";
+            case DISABLE -> "disable";
+        };
         return "jdbc:mariadb://" + config.getDbHost() + ":" + config.getDbPort()
                 + "/" + config.getDbName()
                 + "?sslMode=" + sslMode + "&allowPublicKeyRetrieval=true&characterEncoding=utf8";

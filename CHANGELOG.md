@@ -6,6 +6,12 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 ### Added
 
+- **Optional TLS encryption for remote databases.** A new `database.ssl` setting encrypts the connection to a remote MySQL, MariaDB, or PostgreSQL server. Off by default; requires a full server restart to change (like the other connection settings). SQLite is unaffected.
+  - `disable` (default) keeps the connection unencrypted.
+  - `require` encrypts the connection but does not verify the server's certificate or hostname — it stops passive snooping, not an active man-in-the-middle.
+  - `verify-full` encrypts and verifies the certificate chain and hostname; the database server's CA must be trusted by your Minecraft server's JVM. This is the only mode that defends against a man-in-the-middle.
+  - The Redis connection (`cross-server.redis.ssl`) verifies the certificate chain **and** hostname when enabled, matching database `verify-full`.
+
 - **Cross-server support.** Several servers behind a proxy (Velocity, BungeeCord) can now share one database, so a player's ender chests follow them between servers. Off by default; enable it with the new `cross-server.enabled` setting.
   - Requires a MySQL, MariaDB, or PostgreSQL database shared by every server, plus a shared Redis server (`cross-server.redis.*`). SQLite cannot be shared.
   - Redis stores no chest data. It only tracks which server currently holds a player's data, so fast server switching can never lose or duplicate items.

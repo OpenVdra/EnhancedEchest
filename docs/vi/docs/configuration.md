@@ -140,8 +140,14 @@ Tên người dùng cơ sở dữ liệu.
 Mật khẩu cơ sở dữ liệu. Để trống nếu không có mật khẩu.
 </ConfigProperty>
 
-<ConfigProperty name="ssl" value="false" type="boolean">
-Bắt buộc kết nối TLS được mã hóa cho MySQL, MariaDB hoặc PostgreSQL. Tùy chọn này mã hóa lưu lượng cơ sở dữ liệu nhưng không xác minh certificate hay hostname của máy chủ. Cần khởi động lại máy chủ hoàn toàn.
+<ConfigProperty name="ssl" value="disable" type="string">
+Chế độ TLS cho kết nối MySQL, MariaDB hoặc PostgreSQL từ xa. Một trong các giá trị:
+
+- **`disable`** — không mã hóa (mặc định).
+- **`require`** — mã hóa kết nối, nhưng **không** xác minh certificate hay hostname của máy chủ. Chặn được nghe lén thụ động, nhưng không chặn được tấn công man-in-the-middle chủ động.
+- **`verify-full`** — mã hóa **và** xác minh chuỗi certificate cùng hostname. Đây là chế độ duy nhất chống được man-in-the-middle; CA của máy chủ cơ sở dữ liệu phải được JVM của máy chủ Minecraft tin cậy (truststore).
+
+Cần khởi động lại máy chủ hoàn toàn.
 </ConfigProperty>
 
 <ConfigProperty name="pool-size" value="10" type="number">
@@ -176,7 +182,7 @@ Mật khẩu Redis. Để trống nếu Redis không có mật khẩu.
 </ConfigProperty>
 
 <ConfigProperty name="redis.ssl" value="false" type="boolean">
-Kết nối Redis qua SSL/TLS.
+Kết nối Redis qua TLS. Khi bật, kết nối được mã hóa và chuỗi certificate **cùng** hostname của máy chủ được xác minh theo JVM truststore — tương đương chế độ `verify-full` của cơ sở dữ liệu. Certificate self-signed hoặc do CA riêng cấp phải được JVM tin cậy trước, nếu không kết nối sẽ thất bại lúc khởi động.
 </ConfigProperty>
 
 <ConfigProperty name="redis.database" value="0" type="number">

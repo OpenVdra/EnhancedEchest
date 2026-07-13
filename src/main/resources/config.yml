@@ -95,9 +95,13 @@ database:
   database: enhancedechest
   username: root
   password: ""
-  # Require an encrypted TLS connection for MySQL/MariaDB/PostgreSQL. This encrypts traffic but does
-  # not verify the database server's certificate or hostname. Requires a full server restart.
-  ssl: false
+  # TLS mode for a remote MySQL/MariaDB/PostgreSQL connection. Requires a full server restart.
+  #   disable      - no encryption (default)
+  #   require      - encrypt the connection, but do NOT verify the server certificate or hostname.
+  #                  Stops passive snooping, not an active man-in-the-middle.
+  #   verify-full  - encrypt AND verify the certificate chain + hostname. The only mode that defends
+  #                  against a man-in-the-middle; needs the server's CA to be trusted by the JVM.
+  ssl: disable
   pool-size: 10
 
 cross-server:
@@ -123,6 +127,8 @@ cross-server:
     port: 6379
     # Leave empty when Redis has no password.
     password: ""
+    # Connect to Redis over TLS. When true, the certificate chain AND hostname are verified against the
+    # JVM truststore, so a self-signed certificate must be imported first or the connection will fail.
     ssl: false
     # Redis database number (0-15 on a default Redis install).
     database: 0

@@ -138,8 +138,14 @@ Database username.
 Database password. Leave empty for no password.
 </ConfigProperty>
 
-<ConfigProperty name="ssl" value="false" type="boolean">
-Require an encrypted TLS connection for MySQL, MariaDB, or PostgreSQL. This encrypts database traffic but does not verify the server certificate or hostname. Requires a full server restart.
+<ConfigProperty name="ssl" value="disable" type="string">
+TLS mode for a remote MySQL, MariaDB, or PostgreSQL connection. One of:
+
+- **`disable`** — no encryption (default).
+- **`require`** — encrypt the connection, but do **not** verify the server certificate or hostname. Stops passive snooping, but not an active man-in-the-middle.
+- **`verify-full`** — encrypt **and** verify the certificate chain and hostname. The only mode that defends against a man-in-the-middle; the database server's CA must be trusted by the server's JVM (its truststore).
+
+Requires a full server restart.
 </ConfigProperty>
 
 <ConfigProperty name="pool-size" value="10" type="number">
@@ -174,7 +180,7 @@ Redis password. Leave empty when Redis has no password.
 </ConfigProperty>
 
 <ConfigProperty name="redis.ssl" value="false" type="boolean">
-Connect to Redis over SSL/TLS.
+Connect to Redis over TLS. When enabled, the connection is encrypted and the server's certificate chain **and** hostname are verified against the JVM truststore — equivalent to the database `verify-full` mode. A self-signed or private-CA certificate must be trusted by the JVM first, otherwise the connection fails at startup.
 </ConfigProperty>
 
 <ConfigProperty name="redis.database" value="0" type="number">
