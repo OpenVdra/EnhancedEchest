@@ -52,7 +52,7 @@ dependencies {
     shade("org.bstats:bstats-bukkit:3.2.1")
     shade("dev.faststats.metrics:bukkit:0.27.2")
     // Redis client for the cross-server owner-lock coordination (cross-server.enabled)
-    shade("redis.clients:jedis:5.2.0")
+    shade("redis.clients:jedis:7.5.3")
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
