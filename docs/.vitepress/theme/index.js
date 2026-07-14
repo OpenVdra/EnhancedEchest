@@ -14,6 +14,7 @@ import DocCard from '../components/card/DocCard.vue'
 import FeatureCard from '../components/card/FeatureCard.vue'
 
 import Contributors from '../components/home/Contributors.vue'
+import UsageStats from '../components/home/UsageStats.vue'
 import LucideIcon from '../components/icon/LucideIcon.vue'
 
 export default {
@@ -33,6 +34,7 @@ export default {
         app.component('FeatureCard', FeatureCard)
 
         app.component('Contributors', Contributors)
+        app.component('UsageStats', UsageStats)
         app.component('LucideIcon', LucideIcon)
     }
 }

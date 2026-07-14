@@ -10,82 +10,82 @@ enderchest:
 dialog:
 
   # ===== List dialog (one button per owned chest) =====
-  list-title: '<white>Your Ender Chests'
-  list-body: '<white>Select a chest to open or manage.'
+  list-title: 'Your Ender Chests'
+  list-body: 'Select a chest to open or manage.'
   # When ticked, clicking a chest opens its management menu; unticked (default), opens it directly.
-  edit-mode: '<white>Edit mode (manage chests on click)'
-  close: '<red>✖ <white>Close'
+  edit-mode: 'Edit mode (manage chests on click)'
+  close: '<red>✖ Close'
   # Hover tooltip on each chest button. {size} = slot count.
-  slots: '<white>{size} slots'
+  slots: '{size} slots'
   # Appended to the main chest's label so the list marks which chest /ec opens.
   main-tag: '<gold>★'
   # Static "time remaining" snapshot on chests that expire. {time} e.g. "23h 45m".
-  expires-in: '<white>Expires in {time}'
+  expires-in: 'Expires in {time}'
 
   # ===== Admin view list (/ee view <player> [list]) =====
   # {player} = the owner whose chests are being viewed.
-  admin-list-title: '<white>{player}''s Ender Chests'
-  admin-list-body: '<white>Select a chest to view.'
+  admin-list-title: '{player}''s Ender Chests'
+  admin-list-body: 'Select a chest to view.'
 
   # ===== Admin detail dialog (per chest, /ee view) =====
   # The Clear button only appears for admins with enhancedechest.admin.clear. The red (Admin) tag marks
   # it as a privileged action; it opens a confirmation before wiping anything.
-  admin-clear: '<red>(Admin) <white>Clear chest'
-  admin-clear-desc: '<white>Permanently empty every item from this chest.'
+  admin-clear: '<red>(Admin) Clear chest'
+  admin-clear-desc: 'Permanently empty every item from this chest.'
   # Confirmation dialog: a dedicated title + warning body, then a clear yes/no pair (✔ confirm / ✖ cancel).
-  admin-clear-confirm-title: '<white>Clear this chest?'
+  admin-clear-confirm-title: 'Clear this chest?'
   admin-clear-confirm-body: '<gray>Every item in this chest will be <red>permanently deleted</red>.<newline><gray>This cannot be undone.'
-  admin-clear-confirm: '<green>✔ <white>Clear chest'
+  admin-clear-confirm: '<green>✔ Clear chest'
 
   # ===== Detail dialog (a single chest) =====
   # Centred text under the title. {size} = slot count.
-  detail-body: '<white>{size} slots'
-  open: '<white>Open'
-  open-desc: '<white>Open this chest.'
-  set-main: '<gold>★ <white>Set as main'
-  set-main-desc: '<white>Make this the chest opened by /ec and by right-clicking an ender chest block.'
-  unset-main: '<gray>☆ <white>Unset main'
-  unset-main-desc: '<white>Stop using this chest as your main. /ec will open the management menu again.'
-  rename: '<white>Rename'
-  rename-desc: '<white>Give this chest a custom display name.'
-  choose-icon: '<white>Choose icon'
-  choose-icon-desc: '<white>Pick an item to show as this chest''s icon in the list.'
+  detail-body: '{size} slots'
+  open: 'Open'
+  open-desc: 'Open this chest.'
+  set-main: '<gold>★ Set as main'
+  set-main-desc: 'Make this the chest opened by /ec and by right-clicking an ender chest block.'
+  unset-main: '<gray>☆ Unset main'
+  unset-main-desc: 'Stop using this chest as your main. /ec will open the management menu again.'
+  rename: 'Rename'
+  rename-desc: 'Give this chest a custom display name.'
+  choose-icon: 'Choose icon'
+  choose-icon-desc: 'Pick an item to show as this chest''s icon in the list.'
   # Sort button; only shown when enderchest.features.sort is enabled in config.yml.
-  sort: '<white>Sort'
-  sort-desc: '<white>Merge identical items into full stacks and reorder this chest by item type.'
+  sort: 'Sort'
+  sort-desc: 'Merge identical items into full stacks and reorder this chest by item type.'
   # Returns to the previous dialog; reused by the icon picker.
-  back: '<white>Back'
+  back: 'Back'
 
   # ===== Rename dialog =====
-  rename-body: '<white>Enter a new display name for this chest.'
-  name-label: '<white>Display name'
-  save-name: '<green>✔ <white>Save'
-  cancel: '<red>✖ <white>Cancel'
+  rename-body: 'Enter a new display name for this chest.'
+  name-label: 'Display name'
+  save-name: '<green>✔ Save'
+  cancel: '<red>✖ Cancel'
 
   # ===== Icon picker dialog =====
-  icon-title: '<white>Choose Icon'
+  icon-title: 'Choose Icon'
   # {count} = number of matching items (scroll the list to browse).
-  icon-body: '<white>{count} items. Type a name and press Search to filter; scroll to browse.'
-  icon-search-label: '<white>Search'
-  icon-search: '<white>Search'
-  icon-default: '<white>Default'
-  icon-default-desc: '<white>Show this chest with no icon.'
+  icon-body: '{count} items. Type a name and press Search to filter; scroll to browse.'
+  icon-search-label: 'Search'
+  icon-search: 'Search'
+  icon-default: 'Default'
+  icon-default-desc: 'Show this chest with no icon.'
 
   # ===== Import dialog (/ee import: copy an old database backend into the active one) =====
-  import-title: '<white>Import from another database'
-  import-body: '<gray>Move data from your old database to the one set in config. The new database must be <white>empty</white> before you start.'
+  import-title: 'Import from another database'
+  import-body: '<gray>Move data from your old database to the one set in config. The new database must be empty before you start.'
   # Field labels.
-  import-sqlite-file: '<white>SQLite file'
-  import-host: '<white>Host (host or host:port)'
-  import-database: '<white>Database name'
-  import-username: '<white>Username'
-  import-password: '<white>Password'
+  import-sqlite-file: 'SQLite file'
+  import-host: 'Host (host or host:port)'
+  import-database: 'Database name'
+  import-username: 'Username'
+  import-password: 'Password'
   # Buttons.
-  import-run: '<green>✔ <white>Start import'
-  import-run-desc: '<white>Copy every chest from the source database into the active one.'
+  import-run: '<green>✔ Start import'
+  import-run-desc: 'Copy every chest from the source database into the active one.'
   # Source-type toggle (top button of the column, above Start import + Cancel). Its label shows the
   # current type and clicking it flips the type; the detail is in the tooltip below. Two types only:
   # SQLite (a file) or Server (MySQL / MariaDB / PostgreSQL; they share the same form).
-  import-type-sqlite: '<white>Type: <yellow>SQLite'
-  import-type-server: '<white>Type: <yellow>Server'
-  import-type-desc: '<white>Source database type. Click to switch.<newline><gray>SQLite reads a file; Server reads a MySQL, MariaDB or PostgreSQL host (use port 5432 for PostgreSQL).'
+  import-type-sqlite: 'Type: <yellow>SQLite'
+  import-type-server: 'Type: <yellow>Server'
+  import-type-desc: 'Source database type. Click to switch.<newline><gray>SQLite reads a file; Server reads a MySQL, MariaDB or PostgreSQL host (use port 5432 for PostgreSQL).'

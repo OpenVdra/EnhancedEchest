@@ -31,6 +31,9 @@ All notable changes to EnhancedEchest are recorded here, newest first.
   - `CustomEnderChest` must be set to `storage.type: yml` before migrating; its `h2` (default) and `mysql` backends are not read.
   - Safe to re-run: a player's chest #1 is never overwritten once it already holds items.
 
+- Added a second style for the `/eclist` chest list. Set the new `enderchest.list-menu` option to `inventory` for a plain chest GUI that just lists your chests, where clicking a chest opens it right away, instead of the default `dialog` menu with the rename, set-main, icon, and sort buttons.
+  - The inventory list shows up to 28 chests. A player who owns more than 28 chests always gets the `dialog` menu instead, whatever this is set to.
+
 ## 1.0.9 - 2026-07-11
 
 ### Added

@@ -19,6 +19,13 @@ public final class PluginConfig {
     // Ender chest
     private int defaultSize;
 
+    /**
+     * How the {@code /eclist} chest list is presented to players: the Dialog-API menu (with rename /
+     * set-main / icon / sort) or the simple 27-slot inventory chooser. Read live when routing an open, so
+     * volatile for visibility after a {@code /ee reload} mutates it on the main thread.
+     */
+    private volatile ListMenuType listMenuType;
+
     // Chest-management features (global toggles; read live by the dialogs, so volatile for cross-thread
     // visibility after a /ee reload mutates them on the main thread).
     private volatile boolean renameEnabled;
@@ -103,6 +110,7 @@ public final class PluginConfig {
         locale = config.getString("language", "en_US");
 
         defaultSize = sanitizeSize(config.getInt("enderchest.default-size", 54));
+        listMenuType = parseListMenuType(config.getString("enderchest.list-menu", "dialog"));
 
         renameEnabled      = config.getBoolean("enderchest.features.rename", true);
         iconEnabled        = config.getBoolean("enderchest.features.icon", true);
@@ -189,6 +197,29 @@ public final class PluginConfig {
     private static String sanitizeRedisPrefix(String value) {
         String cleaned = value == null ? "" : value.replaceAll("[^A-Za-z0-9_:.\\-]", "");
         return cleaned.isEmpty() ? "echest:" : cleaned;
+    }
+
+    /** How the {@code /eclist} chest list is rendered. */
+    public enum ListMenuType {
+        /** Paper's Dialog API menu, with the full management actions (rename / set-main / icon / sort). */
+        DIALOG,
+        /** A plain 27-slot inventory chooser: clicking a chest opens it; no management actions. */
+        INVENTORY
+    }
+
+    /**
+     * Parses the {@code enderchest.list-menu} value into {@link ListMenuType}. {@code inventory} (also the
+     * aliases {@code gui} / {@code chest}) selects the inventory chooser; anything else — including a blank
+     * or unrecognised value — falls back to {@link ListMenuType#DIALOG}.
+     */
+    static ListMenuType parseListMenuType(String value) {
+        if (value == null) {
+            return ListMenuType.DIALOG;
+        }
+        return switch (value.trim().toLowerCase(Locale.ROOT)) {
+            case "inventory", "gui", "chest" -> ListMenuType.INVENTORY;
+            default -> ListMenuType.DIALOG;
+        };
     }
 
     /**

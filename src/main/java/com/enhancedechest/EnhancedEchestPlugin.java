@@ -9,6 +9,7 @@ import com.enhancedechest.crossserver.RedisCoordinator;
 import com.enhancedechest.expiry.ExpirySweeper;
 import com.enhancedechest.gui.dialog.IconCatalog;
 import com.enhancedechest.lang.LanguageManager;
+import com.enhancedechest.listener.ChestListMenuListener;
 import com.enhancedechest.listener.EnderChestGuiListener;
 import com.enhancedechest.listener.JoinMigrationListener;
 import com.enhancedechest.listener.PlayerQuitListener;
@@ -228,6 +229,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         var pm = getServer().getPluginManager();
         pm.registerEvents(new VanillaEnderChestListener(chestOpener), this);
         pm.registerEvents(new EnderChestGuiListener(sessionManager, scheduler, languageManager, pluginConfig), this);
+        pm.registerEvents(new ChestListMenuListener(chestOpener), this);
         pm.registerEvents(new PlayerQuitListener(sessionManager, scheduler), this);
         pm.registerEvents(new JoinMigrationListener(pluginConfig, migrationService, storage,
                 dbExecutor, getSLF4JLogger(), telemetry), this);

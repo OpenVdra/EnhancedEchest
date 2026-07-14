@@ -18,6 +18,10 @@ EnhancedEchest requires Paper or a Paper-compatible fork (Folia, Purpur). It wil
 The plugin is compiled for Java 21. Make sure your server runs on Java 21 or newer, otherwise it will fail to load.
 :::
 
+::: warning Using the LPX anti-exploit plugin? Update it to 3.8.4 or newer
+EnhancedEchest's chest menus (`/eclist` and the management screens) use Minecraft's built-in Dialog feature. Older versions of [LPX (LPX-AntiPacketExploit)](https://builtbybit.com/resources/lpx-antipacketexploit.15709/) block those dialog packets, so the menus never open. The author fixed this in LPX [3.8.4](https://builtbybit.com/resources/lpx-antipacketexploit.15709/updates#resource-update-261684) ("Fixed dialog not working in certain situations"), so update LPX to 3.8.4 or newer if you run it.
+:::
+
 ## Download
 
 Choose your preferred download source:
@@ -86,3 +90,4 @@ If you run into issues:
 
 1. Check your **console logs** for error messages
 2. Report bugs on **[GitHub Issues](https://github.com/OpenVdra/EnhancedEchest/issues)**
+3. Ask for help on our **[Discord](https://discord.com/invite/FJN7hJKPyb)**

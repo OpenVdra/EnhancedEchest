@@ -91,7 +91,8 @@ export default defineConfig({
                 collapsed: false,
                 items: [
                   { text: 'Commands', link: '/docs/commands' },
-                  { text: 'Permissions', link: '/docs/permissions' }
+                  { text: 'Permissions', link: '/docs/permissions' },
+                  { text: 'Permission Chests', link: '/docs/permission-chests' }
                 ]
               },
               {
@@ -150,7 +151,8 @@ export default defineConfig({
                 collapsed: false,
                 items: [
                   { text: 'Lệnh', link: '/vi/docs/commands' },
-                  { text: 'Quyền', link: '/vi/docs/permissions' }
+                  { text: 'Quyền', link: '/vi/docs/permissions' },
+                  { text: 'Rương Theo Quyền', link: '/vi/docs/permission-chests' }
                 ]
               },
               {

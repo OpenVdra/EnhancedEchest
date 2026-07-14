@@ -10,82 +10,82 @@ enderchest:
 dialog:
 
   # ===== Hộp thoại danh sách (mỗi rương sở hữu là một nút) =====
-  list-title: '<white>Các Rương Ender Của Bạn'
-  list-body: '<white>Chọn một rương để mở hoặc chỉnh sửa.'
+  list-title: 'Các Rương Ender Của Bạn'
+  list-body: 'Chọn một rương để mở hoặc chỉnh sửa.'
   # Khi được tích, bấm vào rương sẽ mở menu chỉnh sửa; khi bỏ tích (mặc định), mở rương trực tiếp.
-  edit-mode: '<white>Chế độ chỉnh sửa (bấm để chỉnh sửa rương)'
-  close: '<red>✖ <white>Đóng'
+  edit-mode: 'Chế độ chỉnh sửa (bấm để chỉnh sửa rương)'
+  close: '<red>✖ Đóng'
   # Chú thích khi rê chuột lên mỗi nút rương. {size} = số ô.
-  slots: '<white>{size} ô'
+  slots: '{size} ô'
   # Thêm vào nhãn của rương chính để danh sách đánh dấu rương mà /ec sẽ mở.
   main-tag: '<gold>★'
   # Ảnh chụp "thời gian còn lại" tĩnh trên các rương sẽ hết hạn. {time} ví dụ "23h 45m".
-  expires-in: '<white>Hết hạn sau {time}'
+  expires-in: 'Hết hạn sau {time}'
 
   # ===== Danh sách xem của quản trị viên (/ee view <player> [list]) =====
   # {player} = chủ rương đang được xem.
-  admin-list-title: '<white>Các Rương Ender Của {player}'
-  admin-list-body: '<white>Chọn một rương để xem.'
+  admin-list-title: 'Các Rương Ender Của {player}'
+  admin-list-body: 'Chọn một rương để xem.'
 
   # ===== Hộp thoại chi tiết của quản trị viên (mỗi rương, /ee view) =====
   # Nút Dọn chỉ hiện với quản trị viên có quyền enhancedechest.admin.clear. Thẻ (Admin) đỏ đánh dấu đây là
   # hành động đặc quyền; nút này mở hộp xác nhận trước khi xóa.
-  admin-clear: '<red>(Admin) <white>Dọn rương'
-  admin-clear-desc: '<white>Xóa vĩnh viễn mọi vật phẩm trong rương này.'
+  admin-clear: '<red>(Admin) Dọn rương'
+  admin-clear-desc: 'Xóa vĩnh viễn mọi vật phẩm trong rương này.'
   # Hộp xác nhận: tiêu đề riêng + nội dung cảnh báo, rồi cặp đồng ý/hủy rõ ràng (✔ xác nhận / ✖ hủy).
-  admin-clear-confirm-title: '<white>Dọn rương này?'
+  admin-clear-confirm-title: 'Dọn rương này?'
   admin-clear-confirm-body: '<gray>Mọi vật phẩm trong rương sẽ bị <red>xóa vĩnh viễn</red>.<newline><gray>Không thể hoàn tác.'
-  admin-clear-confirm: '<green>✔ <white>Dọn rương'
+  admin-clear-confirm: '<green>✔ Dọn rương'
 
   # ===== Hộp thoại chi tiết (một rương duy nhất) =====
   # Văn bản căn giữa dưới tiêu đề. {size} = số ô.
-  detail-body: '<white>{size} ô'
-  open: '<white>Mở'
-  open-desc: '<white>Mở rương này.'
-  set-main: '<gold>★ <white>Đặt làm rương chính'
-  set-main-desc: '<white>Đặt đây làm rương được mở bằng /ec và khi chuột phải vào khối rương ender.'
-  unset-main: '<gray>☆ <white>Bỏ rương chính'
-  unset-main-desc: '<white>Ngừng dùng rương này làm rương chính. /ec sẽ mở lại menu chỉnh sửa.'
-  rename: '<white>Đổi tên'
-  rename-desc: '<white>Đặt tên hiển thị tùy chỉnh cho rương này.'
-  choose-icon: '<white>Chọn biểu tượng'
-  choose-icon-desc: '<white>Chọn một vật phẩm làm biểu tượng cho rương này trong danh sách.'
+  detail-body: '{size} ô'
+  open: 'Mở'
+  open-desc: 'Mở rương này.'
+  set-main: '<gold>★ Đặt làm rương chính'
+  set-main-desc: 'Đặt đây làm rương được mở bằng /ec và khi chuột phải vào khối rương ender.'
+  unset-main: '<gray>☆ Bỏ rương chính'
+  unset-main-desc: 'Ngừng dùng rương này làm rương chính. /ec sẽ mở lại menu chỉnh sửa.'
+  rename: 'Đổi tên'
+  rename-desc: 'Đặt tên hiển thị tùy chỉnh cho rương này.'
+  choose-icon: 'Chọn biểu tượng'
+  choose-icon-desc: 'Chọn một vật phẩm làm biểu tượng cho rương này trong danh sách.'
   # Nút Sắp xếp; chỉ hiện khi enderchest.features.sort được bật trong config.yml.
-  sort: '<white>Sắp xếp'
-  sort-desc: '<white>Gộp các vật phẩm giống nhau thành stack và sắp xếp lại rương theo loại vật phẩm.'
+  sort: 'Sắp xếp'
+  sort-desc: 'Gộp các vật phẩm giống nhau thành stack và sắp xếp lại rương theo loại vật phẩm.'
   # Quay lại hộp thoại trước; dùng lại cho bộ chọn biểu tượng.
-  back: '<white>Quay lại'
+  back: 'Quay lại'
 
   # ===== Hộp thoại đổi tên =====
-  rename-body: '<white>Nhập tên hiển thị mới cho rương này.'
-  name-label: '<white>Tên hiển thị'
-  save-name: '<green>✔ <white>Lưu'
-  cancel: '<red>✖ <white>Hủy'
+  rename-body: 'Nhập tên hiển thị mới cho rương này.'
+  name-label: 'Tên hiển thị'
+  save-name: '<green>✔ Lưu'
+  cancel: '<red>✖ Hủy'
 
   # ===== Hộp thoại chọn biểu tượng =====
-  icon-title: '<white>Chọn Biểu Tượng'
+  icon-title: 'Chọn Biểu Tượng'
   # {count} = số vật phẩm khớp (cuộn danh sách để xem thêm).
-  icon-body: '<white>{count} vật phẩm. Nhập tên rồi nhấn Tìm để lọc; cuộn để xem.'
-  icon-search-label: '<white>Tìm'
-  icon-search: '<white>Tìm'
-  icon-default: '<white>Mặc định'
-  icon-default-desc: '<white>Hiển thị rương này không có biểu tượng.'
+  icon-body: '{count} vật phẩm. Nhập tên rồi nhấn Tìm để lọc; cuộn để xem.'
+  icon-search-label: 'Tìm'
+  icon-search: 'Tìm'
+  icon-default: 'Mặc định'
+  icon-default-desc: 'Hiển thị rương này không có biểu tượng.'
 
   # ===== Hộp thoại nhập (/ee import: sao chép backend cơ sở dữ liệu cũ vào backend đang dùng) =====
-  import-title: '<white>Nhập từ cơ sở dữ liệu khác'
-  import-body: '<gray>Chuyển dữ liệu từ cơ sở dữ liệu cũ sang cơ sở dữ liệu đã đặt trong config. Cơ sở dữ liệu mới phải <white>trống</white> trước khi bắt đầu.'
+  import-title: 'Nhập từ cơ sở dữ liệu khác'
+  import-body: '<gray>Chuyển dữ liệu từ cơ sở dữ liệu cũ sang cơ sở dữ liệu đã đặt trong config. Cơ sở dữ liệu mới phải trống trước khi bắt đầu.'
   # Nhãn các trường.
-  import-sqlite-file: '<white>Tệp SQLite'
-  import-host: '<white>Host (host hoặc host:port)'
-  import-database: '<white>Tên cơ sở dữ liệu'
-  import-username: '<white>Tên đăng nhập'
-  import-password: '<white>Mật khẩu'
+  import-sqlite-file: 'Tệp SQLite'
+  import-host: 'Host (host hoặc host:port)'
+  import-database: 'Tên cơ sở dữ liệu'
+  import-username: 'Tên đăng nhập'
+  import-password: 'Mật khẩu'
   # Các nút.
-  import-run: '<green>✔ <white>Bắt đầu nhập'
-  import-run-desc: '<white>Sao chép mọi rương từ cơ sở dữ liệu nguồn vào cơ sở dữ liệu đang dùng.'
+  import-run: '<green>✔ Bắt đầu nhập'
+  import-run-desc: 'Sao chép mọi rương từ cơ sở dữ liệu nguồn vào cơ sở dữ liệu đang dùng.'
   # Nút chọn loại nguồn (nút trên cùng của cột, trên nút Bắt đầu nhập + Hủy). Nhãn hiển thị loại hiện tại và
   # bấm vào để chuyển loại; chi tiết nằm trong tooltip bên dưới. Chỉ 2 loại: SQLite (một tệp) hoặc Máy chủ
   # (MySQL / MariaDB / PostgreSQL; dùng chung một biểu mẫu).
-  import-type-sqlite: '<white>Loại: <yellow>SQLite'
-  import-type-server: '<white>Loại: <yellow>Máy chủ'
-  import-type-desc: '<white>Loại cơ sở dữ liệu nguồn. Bấm để đổi.<newline><gray>SQLite đọc một tệp; Máy chủ đọc host MySQL, MariaDB hoặc PostgreSQL (dùng cổng 5432 cho PostgreSQL).'
+  import-type-sqlite: 'Loại: <yellow>SQLite'
+  import-type-server: 'Loại: <yellow>Máy chủ'
+  import-type-desc: 'Loại cơ sở dữ liệu nguồn. Bấm để đổi.<newline><gray>SQLite đọc một tệp; Máy chủ đọc host MySQL, MariaDB hoặc PostgreSQL (dùng cổng 5432 cho PostgreSQL).'

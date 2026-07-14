@@ -1,6 +1,7 @@
 package com.enhancedechest.service;
 
 import com.enhancedechest.config.PluginConfig;
+import com.enhancedechest.gui.ChestListMenu;
 import com.enhancedechest.gui.EnderChestHolder;
 import com.enhancedechest.gui.dialog.ChestDialogs;
 import com.enhancedechest.gui.dialog.ChestDialogs.DetailContext;
@@ -16,6 +17,7 @@ import com.enhancedechest.util.DurationFormat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -61,6 +63,7 @@ public final class ChestOpener {
     private final Scheduler scheduler;
     private final Logger logger;
     private final ChestDialogs dialogs;
+    private final ChestListMenu listMenu;
     private final PermissionChestService permService;
     private final ChestSpillService spillService;
     private final PluginConfig config;
@@ -95,6 +98,7 @@ public final class ChestOpener {
         this.importService  = importService;
         this.telemetry      = telemetry;
         this.dialogs        = new ChestDialogs(this, storageGateway, settings, lang, config);
+        this.listMenu       = new ChestListMenu(lang);
     }
 
     /**
@@ -171,6 +175,9 @@ public final class ChestOpener {
                                 : null;
                         if (mainIndex != null) {
                             openChest(player, mainIndex, sourceBlock);
+                        } else if (useInventoryMenu(chests)) {
+                            // Inventory-chooser mode: no edit-mode checkbox to seed, so open it straight away.
+                            openListInventory(player, chests, sourceBlock);
                         } else {
                             // Seed the edit-mode checkbox from the player's saved preference.
                             settings.loadSettingsAsync(uuid).thenAccept(s ->
@@ -309,9 +316,33 @@ public final class ChestOpener {
                                             player.getName());
                                     return;
                                 }
-                                player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock, editInitial));
+                                if (useInventoryMenu(chests)) {
+                                    player.openInventory(listMenu.build(chests, uuid, sourceBlock));
+                                } else {
+                                    player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock, editInitial));
+                                }
                             }))
                     .exceptionally(e -> reportOpenFailure(player, e));
+        });
+    }
+
+    /**
+     * Whether the simple inventory chooser should render this list instead of the Dialog-API menu: the
+     * {@code enderchest.list-menu} mode is {@code inventory} <i>and</i> the player owns few enough chests to
+     * fit the fixed-slot layout ({@link ChestListMenu#MAX_CHESTS}). Anyone with more falls back to the
+     * dialog until the larger-inventory layout is implemented.
+     */
+    private boolean useInventoryMenu(List<ChestSummary> chests) {
+        return config.getListMenuType() == PluginConfig.ListMenuType.INVENTORY
+                && chests.size() <= ChestListMenu.MAX_CHESTS;
+    }
+
+    /** Builds and opens the 27-slot inventory chooser on the player's entity thread. */
+    private void openListInventory(Player player, List<ChestSummary> chests, @Nullable Location sourceBlock) {
+        scheduler.runAtEntity(player, task -> {
+            if (!player.isOnline()) return;
+            Inventory inv = listMenu.build(chests, player.getUniqueId(), sourceBlock);
+            player.openInventory(inv);
         });
     }
 

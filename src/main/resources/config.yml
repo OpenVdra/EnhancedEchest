@@ -11,6 +11,15 @@ enderchest:
   # Override per player with the enhancedechest.default_size.<size> permission (no config; see docs).
   default-size: 54
 
+  # How the /eclist chest list is shown to players (also the list opened by /ec or right-click when a
+  # player has 2+ chests and no main set):
+  #   dialog     - Paper's Dialog API menu (default): includes the Edit-mode actions (rename, set as
+  #                main, choose icon, sort).
+  #   inventory  - a plain chest GUI that only LISTS the chests; clicking a chest icon opens it straight
+  #                away, with no rename / main / icon / sort. Works for players with up to 28 chests;
+  #                anyone with more still gets the dialog menu.
+  list-menu: dialog
+
   # Which chest-management buttons players may use in the "Edit mode" menu (Rename / Choose icon / Sort).
   # These are GLOBAL switches: they apply to every player the same way, not per-player and not per-chest.
   # Turning one off simply hides its button from the menu; existing names/icons are kept, just no longer

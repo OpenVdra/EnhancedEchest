@@ -32,7 +32,16 @@ Slot count of the chest that is auto-created the first time a player ever opens 
 | <code>45</code> | 5 |
 | <code>54</code> | 6 (double chest) |
 
-You can also override the base chest size <strong>per player</strong> with the <code>enhancedechest.default_size.&lt;size&gt;</code> permission (always available, no config needed). See the <a href="/docs/permissions#default-size-permission">Permissions</a> page.
+You can also override the base chest size <strong>per player</strong> with the <code>enhancedechest.default_size.&lt;size&gt;</code> permission (always available, no config needed). See the <a href="/docs/permission-chests#default-size-permission">Permission Chests</a> page.
+
+</ConfigProperty>
+
+<ConfigProperty name="list-menu" value="dialog" type="string">
+How the <code>/eclist</code> chest list is shown to players. This is also the list that <code>/ec</code> and right-click open when a player has 2 or more chests and no main set. Two values:<br><br>
+
+<code>dialog</code> (default): Paper's dialog menu, with the full <strong>Edit mode</strong> actions (rename, set as main, choose icon, sort).<br><br>
+
+<code>inventory</code>: a plain chest GUI that only <strong>lists</strong> the chests. Clicking a chest icon opens it straight away, with no rename, main, icon, or sort. <strong>It works for players with up to 28 chests.</strong> A player who owns more than 28 chests always gets the <code>dialog</code> menu instead, whatever this is set to.
 
 </ConfigProperty>
 
@@ -64,12 +73,12 @@ Whether players may colour their chest names. When <code>true</code>, names acce
 
 <ConfigGroup name="permission-chests">
 <template #info>
-Controls ender chests granted automatically from permissions. See the <a href="/docs/permissions#permission-granted-chests">Permissions</a> page for the node format and behavior.
+Controls ender chests granted automatically from permissions. See the <a href="/docs/permission-chests#permission-granted-chests">Permission Chests</a> page for the node format and behavior.
 </template>
 
 <ConfigProperty name="enabled" value="true" type="boolean">
 When <code>true</code>, players are granted ender chests from <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> permissions. Grants are synced each time a player opens their ender chest; losing a node removes those chests, spilling any items into a recoverable temporary chest. Players always keep their base chest. Setting this to <code>false</code> stops syncing but leaves already-granted chests in place.<br><br>
-See the <a href="/docs/permissions#permission-granted-chests">Permissions</a> page for full details.
+See the <a href="/docs/permission-chests#permission-granted-chests">Permission Chests</a> page for full details.
 </ConfigProperty>
 
 </ConfigGroup>
@@ -245,6 +254,11 @@ enderchest:
   # Must be a multiple of 9, between 9 and 54.
   # Per-player override is available via the enhancedechest.default_size.<size> permission (no config).
   default-size: 54
+
+  # How /eclist is shown: "dialog" (default, full Edit-mode menu) or "inventory" (a plain chest GUI
+  # that only lists chests; click to open). The inventory menu grows 27 -> 36 -> 45 -> 54 slots and
+  # holds up to 28 chests; players with more than 28 chests always get the dialog menu.
+  list-menu: dialog
 
   # Server-wide switches for the "Edit mode" buttons (Rename / Choose icon / Sort).
   features:

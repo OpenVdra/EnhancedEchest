@@ -40,4 +40,6 @@ features:
     link: https://github.com/OpenVdra/EnhancedEchest
 ---
 
+<UsageStats />
+
 <Contributors />

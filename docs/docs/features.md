@@ -14,8 +14,6 @@ Here is an overview of everything **EnhancedEchest** brings to your Minecraft se
 
 <DocCard icon="Globe" title="Localization" link="#localization" desc="All player-facing text is editable and translatable." />
 
-<DocCard icon="BarChart2" title="Usage Statistics" link="#usage-statistics" desc="Anonymous usage data reported to bStats." />
-
 </CardGrid>
 
 ## Larger Ender Chests {#larger-ender-chests}
@@ -43,7 +41,7 @@ The default size for a player's first chest is set with <code>enderchest.default
 - Valid sizes: <code>9</code>, <code>18</code>, <code>27</code>, <code>36</code>, <code>45</code>, <code>54</code>
 - Invalid values are rounded to the nearest valid size
 - Defaults to <code>54</code> (a full double chest)
-- Per-player override by permission, see the <a href="/docs/permissions#default-size-permission">Permissions</a> page
+- Per-player override by permission, see the <a href="/docs/permission-chests#default-size-permission">Permission Chests</a> page
 
 </FeatureCard>
 
@@ -71,15 +69,13 @@ One exception: while a player has a <strong>temporary chest</strong> holding spi
 </FeatureCard>
 
 <FeatureCard icon="Palette" title="Customize Each Chest">
-Players personalize their chests straight from the in-game menu, no commands needed:
+Personalize a chest from the in-game menu, no commands needed:
 
-- <strong>Rename</strong>: give the chest a display name, optionally coloured with <code>&amp;</code>, hex, or <a href="https://docs.advntr.dev/minimessage/format.html" target="_blank">MiniMessage</a> codes
-- <strong>Choose an icon</strong>: pick any item to represent it in the list, or reset to the default
-- <strong>Sort</strong>: merge stacks and reorder by item type in one click (off by default)
+- <strong>Rename</strong>: give it a display name, with optional colours
+- <strong>Choose an icon</strong>: pick any item to show in the list
+- <strong>Sort</strong>: merge stacks and reorder by type in one click
 
-Each is a server-wide toggle under <code>enderchest.features</code>. Name colours can be turned off and specific words blacklisted, see the <a href="/docs/configuration">Configuration</a> page.
-
-A few complex blocks, like chests, doors, or stairs, cannot be used as an icon because they have no simple picture to show on a button. Item names in the picker always match your own Minecraft client language automatically. Searching by name currently works best in English or Vietnamese; other client languages fall back to matching the English name. See <a href="/docs/language#icon-picker-item-names">Language</a> for details.
+Each is a server-wide toggle under <code>enderchest.features</code>. See [Configuration](/docs/configuration).
 
 </FeatureCard>
 
@@ -88,7 +84,7 @@ Admins can add, resize, and delete chests for any player with <code>/ee add</cod
 </FeatureCard>
 
 <FeatureCard icon="Key" title="Permission-Granted Chests">
-Hand out chests by rank instead of by command. The permission <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> grants that many chests at that size. Multiple nodes stack, grants sync on open, and removing a node removes those chests (spilling any items to a recoverable temporary chest). The player's base chest is always kept. See the <a href="/docs/permissions#permission-granted-chests">Permissions</a> page.
+Hand out chests by rank instead of by command. The permission <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> grants that many chests at that size. Multiple nodes stack, grants sync on open, and removing a node removes those chests (spilling any items to a recoverable temporary chest). The player's base chest is always kept. See the <a href="/docs/permission-chests#permission-granted-chests">Permission Chests</a> page.
 </FeatureCard>
 
 <FeatureCard icon="Eye" title="View Other Players' Chests">
@@ -139,13 +135,3 @@ Keep your Geyser build reasonably up to date for the smoothest dialog conversion
 ## Localization {#localization}
 
 All player-facing text lives in editable language files. Ship a translation by copying the <code>en_US</code> folder, translating it, and pointing <code>language</code> at your new locale. See the [Language](/docs/language) page.
-
-## Usage Statistics {#usage-statistics}
-
-EnhancedEchest reports anonymous usage data to [bStats](https://bstats.org/plugin/bukkit/EnhancedEchest/32142). The collection is anonymous and can be turned off globally in `plugins/bStats/config.yml`.
-
-<p align="center">
-  <a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142" target="_blank" rel="noreferrer">
-    <img src="https://bstats.org/signatures/bukkit/EnhancedEchest.svg" alt="EnhancedEchest bStats charts" style="max-width: 100%;">
-  </a>
-</p>
