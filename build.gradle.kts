@@ -62,7 +62,7 @@ dependencies {
 
     // Test-only: JUnit 5 + a real sqlite driver (compileOnly for the plugin, Paper bundles it at
     // runtime) + an slf4j binding so CachedStorage's logger has somewhere to print.
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.slf4j:slf4j-simple:2.0.18")
     testRuntimeOnly("org.xerial:sqlite-jdbc:3.53.2.0")
