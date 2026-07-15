@@ -152,8 +152,15 @@ public final class ChestListMenu {
         return item;
     }
 
-    /** The chest's chosen icon as an item, or an ender chest when it has none (or the icon isn't an item). */
+    /**
+     * The chest's chosen icon as an item. Temp (overflow) chests always render as a copper chest so they
+     * read as distinct from real chests; otherwise the player-chosen icon, or an ender chest when it has
+     * none (or the icon isn't an item).
+     */
     private static ItemStack baseItem(ChestSummary chest) {
+        if (chest.kind() == ChestKind.TEMP) {
+            return ItemStack.of(Material.COPPER_CHEST);
+        }
         ItemStack icon = IconCatalog.item(chest.icon());
         return icon != null ? icon : ItemStack.of(Material.ENDER_CHEST);
     }

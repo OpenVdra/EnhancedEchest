@@ -2,6 +2,12 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.0.11 - 2026-07-15
+
+### Changed
+
+- In the `inventory` style of the `/eclist` chest list, temporary overflow chests now show as a copper chest instead of an ender chest, so they stand out from your normal chests at a glance.
+
 ## 1.0.10 - 2026-07-12
 
 ### Changed
