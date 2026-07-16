@@ -50,7 +50,7 @@ dependencies {
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.9")   // compatible with MySQL 5.7+ and 8.x
     shade("org.postgresql:postgresql:42.7.13")
     shade("org.bstats:bstats-bukkit:3.2.1")
-    shade("dev.faststats.metrics:bukkit:0.27.2")
+    shade("dev.faststats.metrics:bukkit:0.28.0")
     // Redis client for the cross-server owner-lock coordination (cross-server.enabled)
     shade("redis.clients:jedis:7.5.3")
 
