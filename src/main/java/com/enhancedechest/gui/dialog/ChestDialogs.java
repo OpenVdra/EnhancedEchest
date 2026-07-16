@@ -141,7 +141,7 @@ public final class ChestDialogs {
      *                    or null when opened by command; threaded into each chest's open/detail
      * @param editInitial starting state of the edit-mode checkbox (false for a fresh open)
      */
-    public Dialog listDialog(List<ChestSummary> chests, boolean canSetMain,
+    public Dialog listDialog(Locale locale, List<ChestSummary> chests, boolean canSetMain,
                              @Nullable Location sourceBlock, boolean editInitial) {
         // Temporary chests always sort to the top so players notice them (they expire); within each
         // group the natural index order is preserved.
@@ -153,14 +153,14 @@ public final class ChestDialogs {
         List<ActionButton> buttons = new ArrayList<>(ordered.size());
         for (ChestSummary chest : ordered) {
             int index = chest.index();
-            Component label = withIcon(chest, lang.getChestLabel(index, chest.customName(), chest.kind()));
+            Component label = withIcon(chest, lang.getChestLabel(locale, index, chest.customName(), chest.kind()));
             if (chest.primary()) {
-                label = label.append(Component.text(" ")).append(lang.getGui("dialog.main-tag"));
+                label = label.append(Component.text(" ")).append(lang.getGui(locale, "dialog.main-tag"));
             }
             // Branch on the edit-mode checkbox at click time. Edit off: open the chest directly
             // (opening an inventory dismisses the dialog, so its recentre is moot). Edit on: push the
             // detail dialog from the player's thread, source block preserved for its Open animation.
-            buttons.add(ActionButton.create(label, listTooltip(chest), BUTTON_WIDTH,
+            buttons.add(ActionButton.create(label, listTooltip(locale, chest), BUTTON_WIDTH,
                     click((view, audience) -> {
                         if (!(audience instanceof Player p)) return;
                         // The checkbox toggles client-side and is only readable here, on a click. This
@@ -188,7 +188,7 @@ public final class ChestDialogs {
         // clicking a chest, and the client-side checkbox is only readable on an action click — so
         // without this, toggling edit mode then closing would never save. The exit action still
         // dismisses the dialog afterwards. (Escape can't be captured, so it doesn't persist.)
-        ActionButton close = ActionButton.create(lang.getGui("dialog.close"), null, BUTTON_WIDTH,
+        ActionButton close = ActionButton.create(lang.getGui(locale, "dialog.close"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
                     boolean editing = Boolean.TRUE.equals(view.getBoolean(EDIT_MODE_INPUT));
@@ -199,13 +199,13 @@ public final class ChestDialogs {
 
         // In-dialog toggle: a checkbox the client flips locally, so switching modes never reopens the
         // dialog (and so never recentres the cursor). Rendered in the body, above the chest buttons.
-        DialogInput editMode = DialogInput.bool(EDIT_MODE_INPUT, lang.getGui("dialog.edit-mode"))
+        DialogInput editMode = DialogInput.bool(EDIT_MODE_INPUT, lang.getGui(locale, "dialog.edit-mode"))
                 .initial(editInitial)
                 .build();
 
         return Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(lang.getGui("dialog.list-title"))
-                        .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.list-body"), BODY_WIDTH)))
+                .base(DialogBase.builder(lang.getGui(locale, "dialog.list-title"))
+                        .body(List.of(DialogBody.plainMessage(lang.getGui(locale, "dialog.list-body"), BODY_WIDTH)))
                         .inputs(List.of(editMode))
                         .build())
                 .type(DialogType.multiAction(buttons, close, columnsFor(ordered.size()))));
@@ -221,7 +221,7 @@ public final class ChestDialogs {
      * @param targetName display name of the owner whose chests these are (shown in the title)
      * @param target     UUID of the owner; passed to {@code adminOpen} when a button is clicked
      */
-    public Dialog adminViewListDialog(String targetName, UUID target, List<ChestSummary> chests) {
+    public Dialog adminViewListDialog(Locale locale, String targetName, UUID target, List<ChestSummary> chests) {
         // Same ordering as the player list: temp (expiring) chests first, then natural index order.
         List<ChestSummary> ordered = new ArrayList<>(chests);
         ordered.sort(Comparator
@@ -231,26 +231,26 @@ public final class ChestDialogs {
         List<ActionButton> buttons = new ArrayList<>(ordered.size());
         for (ChestSummary chest : ordered) {
             int index = chest.index();
-            Component label = withIcon(chest, lang.getChestLabel(index, chest.customName(), chest.kind()));
+            Component label = withIcon(chest, lang.getChestLabel(locale, index, chest.customName(), chest.kind()));
             if (chest.primary()) {
-                label = label.append(Component.text(" ")).append(lang.getGui("dialog.main-tag"));
+                label = label.append(Component.text(" ")).append(lang.getGui(locale, "dialog.main-tag"));
             }
             // Clicking a chest opens the admin per-chest detail dialog (Open / Clear chest / Back),
             // rather than opening the inventory straight away — that detail dialog is where the
             // admin-only Clear button lives.
-            buttons.add(ActionButton.create(label, listTooltip(chest), BUTTON_WIDTH,
+            buttons.add(ActionButton.create(label, listTooltip(locale, chest), BUTTON_WIDTH,
                     click((view, audience) -> {
                         if (audience instanceof Player p) opener.openAdminDetail(p, targetName, target, index);
                     })));
         }
 
         // Exit button is a plain close (no state to persist, unlike the player list's edit-mode checkbox).
-        ActionButton close = ActionButton.create(lang.getGui("dialog.close"), null, BUTTON_WIDTH,
+        ActionButton close = ActionButton.create(lang.getGui(locale, "dialog.close"), null, BUTTON_WIDTH,
                 click((view, audience) -> { /* dismiss only */ }));
 
         return Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(lang.getGui("dialog.admin-list-title", "player", targetName))
-                        .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.admin-list-body"), BODY_WIDTH)))
+                .base(DialogBase.builder(lang.getGui(locale, "dialog.admin-list-title", "player", targetName))
+                        .body(List.of(DialogBody.plainMessage(lang.getGui(locale, "dialog.admin-list-body"), BODY_WIDTH)))
                         .build())
                 .type(DialogType.multiAction(buttons, close, columnsFor(ordered.size()))));
     }
@@ -260,27 +260,27 @@ public final class ChestDialogs {
      * tagged {@code (Admin)}) that performs the wipe, and Cancel that returns to the detail dialog. The
      * wipe is permanent, so it is never done on a single click.
      */
-    public Dialog adminClearConfirmDialog(String targetName, UUID target, ChestSummary chest) {
+    public Dialog adminClearConfirmDialog(Locale locale, String targetName, UUID target, ChestSummary chest) {
         int index = chest.index();
 
-        ActionButton confirm = ActionButton.create(lang.getGui("dialog.admin-clear-confirm"), null, BUTTON_WIDTH,
+        ActionButton confirm = ActionButton.create(lang.getGui(locale, "dialog.admin-clear-confirm"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (audience instanceof Player p) opener.adminClear(p, targetName, target, index);
                 }));
-        ActionButton cancel = ActionButton.create(lang.getGui("dialog.cancel"), null, BUTTON_WIDTH,
+        ActionButton cancel = ActionButton.create(lang.getGui(locale, "dialog.cancel"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (audience instanceof Player p) opener.openAdminDetail(p, targetName, target, index);
                 }));
 
         // A dedicated question title (not the chest label) so the dialog reads as a confirmation; the
         // chest body names which chest (plain label, no icon sprite), and Cancel is the safe default.
-        Component title = lang.getGui("dialog.admin-clear-confirm-title");
+        Component title = lang.getGui(locale, "dialog.admin-clear-confirm-title");
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(title)
                         .body(List.of(
                                 DialogBody.plainMessage(
-                                        lang.getChestLabel(index, chest.customName(), chest.kind()), BODY_WIDTH),
-                                DialogBody.plainMessage(lang.getGui("dialog.admin-clear-confirm-body"), BODY_WIDTH)))
+                                        lang.getChestLabel(locale, index, chest.customName(), chest.kind()), BODY_WIDTH),
+                                DialogBody.plainMessage(lang.getGui(locale, "dialog.admin-clear-confirm-body"), BODY_WIDTH)))
                         .build())
                 .type(DialogType.multiAction(List.of(confirm, cancel), null, 1)));
     }
@@ -308,13 +308,14 @@ public final class ChestDialogs {
      */
     public Dialog detailDialog(ChestSummary chest, DetailContext ctx) {
         int index = chest.index();
+        Locale locale = ctx.locale();
         boolean temp = chest.kind() == ChestKind.TEMP;
         UUID owner = ctx.owner();
         List<ActionButton> buttons = new ArrayList<>(6);
 
         // Open first — the primary action, and the most common reason to be here. The owner opens their own
         // chest (with the lid animation); an admin joins the target's shared session via adminOpen.
-        buttons.add(ActionButton.create(lang.getGui("dialog.open"), lang.getGui("dialog.open-desc"), BUTTON_WIDTH,
+        buttons.add(ActionButton.create(lang.getGui(locale, "dialog.open"), lang.getGui(locale, "dialog.open-desc"), BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
                     if (ctx.self()) opener.openChest(p, index, ctx.sourceBlock());
@@ -326,14 +327,14 @@ public final class ChestDialogs {
             // Set as main / Unset main — owner-only (a main only matters for the owner's /ec). Highest-impact
             // toggle, so it sits right after Open. Mutates data, so it re-queries and is re-pushed.
             if (ctx.canSetMain() && !chest.primary()) {
-                buttons.add(ActionButton.create(lang.getGui("dialog.set-main"), lang.getGui("dialog.set-main-desc"),
+                buttons.add(ActionButton.create(lang.getGui(locale, "dialog.set-main"), lang.getGui(locale, "dialog.set-main-desc"),
                         BUTTON_WIDTH, click((view, audience) -> {
                             if (!(audience instanceof Player p)) return;
                             storageGateway.setPrimaryAsync(owner, index)
                                     .thenRun(() -> opener.openDetailDialog(p, ctx, index));
                         })));
             } else if (ctx.canSetMain() && chest.primary()) {
-                buttons.add(ActionButton.create(lang.getGui("dialog.unset-main"), lang.getGui("dialog.unset-main-desc"),
+                buttons.add(ActionButton.create(lang.getGui(locale, "dialog.unset-main"), lang.getGui(locale, "dialog.unset-main-desc"),
                         BUTTON_WIDTH, click((view, audience) -> {
                             if (!(audience instanceof Player p)) return;
                             storageGateway.clearPrimaryAsync(owner)
@@ -345,15 +346,15 @@ public final class ChestDialogs {
             // Rename / Choose icon forward in-place (client-side show_dialog) so they never recentre the
             // cursor; Sort is a server action (it re-reads/re-writes the chest, then re-pushes the menu).
             if (ctx.canEdit() && config.isRenameEnabled()) {
-                buttons.add(ActionButton.create(lang.getGui("dialog.rename"), lang.getGui("dialog.rename-desc"),
+                buttons.add(ActionButton.create(lang.getGui(locale, "dialog.rename"), lang.getGui(locale, "dialog.rename-desc"),
                         BUTTON_WIDTH, DialogAction.staticAction(ClickEvent.showDialog(renameDialog(chest, ctx)))));
             }
             if (ctx.canEdit() && config.isIconEnabled()) {
-                buttons.add(ActionButton.create(lang.getGui("dialog.choose-icon"), lang.getGui("dialog.choose-icon-desc"),
+                buttons.add(ActionButton.create(lang.getGui(locale, "dialog.choose-icon"), lang.getGui(locale, "dialog.choose-icon-desc"),
                         BUTTON_WIDTH, DialogAction.staticAction(ClickEvent.showDialog(iconPickerDialog(chest, ctx, "")))));
             }
             if (ctx.canEdit() && config.isSortEnabled()) {
-                buttons.add(ActionButton.create(lang.getGui("dialog.sort"), lang.getGui("dialog.sort-desc"),
+                buttons.add(ActionButton.create(lang.getGui(locale, "dialog.sort"), lang.getGui(locale, "dialog.sort-desc"),
                         BUTTON_WIDTH, click((view, audience) -> {
                             if (audience instanceof Player p) opener.sortChest(p, ctx, index);
                         })));
@@ -363,7 +364,7 @@ public final class ChestDialogs {
         // Admin-only Clear: a red (Admin)-tagged button routing through a confirmation before wiping. Shown
         // for any chest kind (overflow temp chests can be cleared too), gated on the clear permission.
         if (ctx.canClear()) {
-            buttons.add(ActionButton.create(lang.getGui("dialog.admin-clear"), lang.getGui("dialog.admin-clear-desc"),
+            buttons.add(ActionButton.create(lang.getGui(locale, "dialog.admin-clear"), lang.getGui(locale, "dialog.admin-clear-desc"),
                     BUTTON_WIDTH, click((view, audience) -> {
                         if (audience instanceof Player p) {
                             opener.openAdminClearConfirm(p, ctx.ownerName(), owner, index);
@@ -372,17 +373,17 @@ public final class ChestDialogs {
         }
 
         // Back: the owner returns to their list in edit mode; an admin returns to the admin view list.
-        buttons.add(ActionButton.create(lang.getGui("dialog.back"), null, BUTTON_WIDTH,
+        buttons.add(ActionButton.create(lang.getGui(locale, "dialog.back"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
                     if (ctx.self()) opener.openListDialog(p, true, ctx.sourceBlock());
                     else opener.openAdminViewList(p, ctx.ownerName(), owner);
                 })));
 
-        Component title = withIcon(chest, lang.getChestLabel(index, chest.customName(), chest.kind()));
+        Component title = withIcon(chest, lang.getChestLabel(locale, index, chest.customName(), chest.kind()));
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(title)
-                        .body(List.of(detailBody(chest)))
+                        .body(List.of(detailBody(locale, chest)))
                         .build())
                 .type(DialogType.multiAction(buttons, null, 1)));
     }
@@ -402,13 +403,14 @@ public final class ChestDialogs {
      */
     public Dialog iconPickerDialog(ChestSummary chest, DetailContext ctx, String filter) {
         int index = chest.index();
+        Locale locale = ctx.locale();
         UUID owner = ctx.owner();
-        List<IconCatalog.Entry> results = IconCatalog.search(filter, ctx.locale());
+        List<IconCatalog.Entry> results = IconCatalog.search(filter, locale);
 
         List<ActionButton> buttons = new ArrayList<>(results.size() + 2);
 
         // Search: re-show the list filtered by the freshly typed text (an explicit, server-pushed action).
-        buttons.add(ActionButton.create(lang.getGui("dialog.icon-search"), null, ICON_BUTTON_WIDTH,
+        buttons.add(ActionButton.create(lang.getGui(locale, "dialog.icon-search"), null, ICON_BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
                     String typed = view.getText(ICON_SEARCH_INPUT);
@@ -418,7 +420,7 @@ public final class ChestDialogs {
                     });
                 })));
         // Default: clear the icon back to the ender-chest default.
-        buttons.add(ActionButton.create(lang.getGui("dialog.icon-default"), lang.getGui("dialog.icon-default-desc"),
+        buttons.add(ActionButton.create(lang.getGui(locale, "dialog.icon-default"), lang.getGui(locale, "dialog.icon-default-desc"),
                 ICON_BUTTON_WIDTH, click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
                     storageGateway.setIconAsync(owner, index, null)
@@ -436,19 +438,19 @@ public final class ChestDialogs {
                     })));
         }
 
-        DialogInput search = DialogInput.text(ICON_SEARCH_INPUT, lang.getGui("dialog.icon-search-label"))
+        DialogInput search = DialogInput.text(ICON_SEARCH_INPUT, lang.getGui(locale, "dialog.icon-search-label"))
                 .initial(filter)
                 .maxLength(ICON_SEARCH_MAX_LENGTH)
                 .build();
 
-        Component body = lang.getGui("dialog.icon-body", "count", Integer.toString(results.size()));
+        Component body = lang.getGui(locale, "dialog.icon-body", "count", Integer.toString(results.size()));
 
-        ActionButton back = ActionButton.create(lang.getGui("dialog.back"), null, ICON_BUTTON_WIDTH,
+        ActionButton back = ActionButton.create(lang.getGui(locale, "dialog.back"), null, ICON_BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (audience instanceof Player p) opener.openDetailDialog(p, ctx, index);
                 }));
 
-        Component title = lang.getGui("dialog.icon-title");
+        Component title = lang.getGui(locale, "dialog.icon-title");
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(title)
                         .body(List.of(DialogBody.plainMessage(body, BODY_WIDTH)))
@@ -469,15 +471,16 @@ public final class ChestDialogs {
     /** Dedicated rename dialog: a single text input plus Save / Cancel. Targets {@code ctx.owner()}. */
     public Dialog renameDialog(ChestSummary chest, DetailContext ctx) {
         int index = chest.index();
+        Locale locale = ctx.locale();
         UUID owner = ctx.owner();
         String current = chest.customName() != null ? chest.customName() : "";
 
-        DialogInput nameInput = DialogInput.text("name", lang.getGui("dialog.name-label"))
+        DialogInput nameInput = DialogInput.text("name", lang.getGui(locale, "dialog.name-label"))
                 .initial(current)
                 .maxLength(MAX_NAME_LENGTH)
                 .build();
 
-        ActionButton save = ActionButton.create(lang.getGui("dialog.save-name"), null, BUTTON_WIDTH,
+        ActionButton save = ActionButton.create(lang.getGui(locale, "dialog.save-name"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
                     String typed = view.getText("name");
@@ -496,15 +499,15 @@ public final class ChestDialogs {
                             .thenRun(() -> opener.openDetailDialog(p, ctx, index));
                 }));
 
-        ActionButton cancel = ActionButton.create(lang.getGui("dialog.cancel"), null, BUTTON_WIDTH,
+        ActionButton cancel = ActionButton.create(lang.getGui(locale, "dialog.cancel"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (audience instanceof Player p) opener.openDetailDialog(p, ctx, index);
                 }));
 
-        Component title = lang.getChestLabel(index, chest.customName(), chest.kind());
+        Component title = lang.getChestLabel(locale, index, chest.customName(), chest.kind());
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(title)
-                        .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.rename-body"), BODY_WIDTH)))
+                        .body(List.of(DialogBody.plainMessage(lang.getGui(locale, "dialog.rename-body"), BODY_WIDTH)))
                         .inputs(List.of(nameInput))
                         .build())
                 .type(DialogType.multiAction(List.of(save, cancel), null, 1)));
@@ -513,8 +516,8 @@ public final class ChestDialogs {
     /**
      * DB→DB import dialog ({@code /ee import}), no-arg entry point — opens the form with SQLite selected.
      */
-    public Dialog importDialog() {
-        return importDialog(defaultImportSpec());
+    public Dialog importDialog(Locale locale) {
+        return importDialog(locale, defaultImportSpec());
     }
 
     /**
@@ -529,40 +532,40 @@ public final class ChestDialogs {
      * <p>The password is a plain text input, so it is visible on screen while typing — documented in the
      * database docs, so the dialog itself does not repeat the warning.
      */
-    public Dialog importDialog(SourceSpec spec) {
+    public Dialog importDialog(Locale locale, SourceSpec spec) {
         String typeId = normalizeTypeId(spec.type());
         boolean server = !SourceSpec.family(typeId).equals("sqlite");
 
         // Only the selected type's fields are shown, which keeps the form short.
         List<DialogInput> inputs = new ArrayList<>();
         if (!server) {
-            inputs.add(importText(IMPORT_SQLITE_FILE_INPUT, "dialog.import-sqlite-file",
+            inputs.add(importText(locale, IMPORT_SQLITE_FILE_INPUT, "dialog.import-sqlite-file-label",
                     blankOr(spec.sqliteFile(), "enderchests.db")));
         } else {
-            inputs.add(importText(IMPORT_HOSTPORT_INPUT, "dialog.import-host", hostPortInitial(spec)));
-            inputs.add(importText(IMPORT_DATABASE_INPUT, "dialog.import-database",
+            inputs.add(importText(locale, IMPORT_HOSTPORT_INPUT, "dialog.import-host-label", hostPortInitial(spec)));
+            inputs.add(importText(locale, IMPORT_DATABASE_INPUT, "dialog.import-database-label",
                     blankOr(spec.database(), "enhancedechest")));
-            inputs.add(importText(IMPORT_USERNAME_INPUT, "dialog.import-username",
+            inputs.add(importText(locale, IMPORT_USERNAME_INPUT, "dialog.import-username-label",
                     blankOr(spec.username(), "root")));
-            inputs.add(importText(IMPORT_PASSWORD_INPUT, "dialog.import-password", orEmpty(spec.password())));
+            inputs.add(importText(locale, IMPORT_PASSWORD_INPUT, "dialog.import-password-label", orEmpty(spec.password())));
         }
 
         // Buttons stack in a single full-width column (columns = 1): the type toggle on top, then Start
         // import and Cancel. The type button's own label already flips on click (tooltip says so), so no
         // separate "Switch" button is needed — this keeps the dialog narrow and the buttons aligned.
-        ActionButton typeButton = toggleTypeButton(
-                lang.getGui(server ? "dialog.import-type-server" : "dialog.import-type-sqlite"), server, spec);
-        ActionButton start = ActionButton.create(lang.getGui("dialog.import-run"), lang.getGui("dialog.import-run-desc"),
+        ActionButton typeButton = toggleTypeButton(locale,
+                lang.getGui(locale, server ? "dialog.import-type-server" : "dialog.import-type-sqlite"), server, spec);
+        ActionButton start = ActionButton.create(lang.getGui(locale, "dialog.import-run"), lang.getGui(locale, "dialog.import-run-desc"),
                 IMPORT_BUTTON_WIDTH, click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
                     opener.performImport(p, readForm(view, server, spec));
                 }));
-        ActionButton cancel = ActionButton.create(lang.getGui("dialog.cancel"), null, IMPORT_BUTTON_WIDTH,
+        ActionButton cancel = ActionButton.create(lang.getGui(locale, "dialog.cancel"), null, IMPORT_BUTTON_WIDTH,
                 click((view, audience) -> { /* dismiss only */ }));
 
         return Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(lang.getGui("dialog.import-title"))
-                        .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.import-body"), IMPORT_INPUT_WIDTH)))
+                .base(DialogBase.builder(lang.getGui(locale, "dialog.import-title"))
+                        .body(List.of(DialogBody.plainMessage(lang.getGui(locale, "dialog.import-body"), IMPORT_INPUT_WIDTH)))
                         .inputs(inputs)
                         .build())
                 .type(DialogType.multiAction(List.of(typeButton, start, cancel), null, 1)));
@@ -580,8 +583,8 @@ public final class ChestDialogs {
      * Entering server mode defaults to MySQL; the concrete engine is resolved from the port on submit
      * (see {@link #readForm}). {@code label} is the button's text; the explanation is in its tooltip.
      */
-    private ActionButton toggleTypeButton(Component label, boolean server, SourceSpec spec) {
-        Component tooltip = lang.getGui("dialog.import-type-desc");
+    private ActionButton toggleTypeButton(Locale locale, Component label, boolean server, SourceSpec spec) {
+        Component tooltip = lang.getGui(locale, "dialog.import-type-desc");
         return ActionButton.create(label, tooltip, IMPORT_BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
@@ -591,14 +594,14 @@ public final class ChestDialogs {
                     SourceSpec switched = new SourceSpec(nextType, current.sqliteFile(), current.host(),
                             current.port(), current.database(), current.username(), current.password());
                     opener.runForPlayer(p, () -> {
-                        if (p.isOnline()) p.showDialog(importDialog(switched));
+                        if (p.isOnline()) p.showDialog(importDialog(p.locale(), switched));
                     });
                 }));
     }
 
     /** Builds one import-form text input (label from gui.yml) with the given initial value. */
-    private DialogInput importText(String key, String labelKey, String initial) {
-        return DialogInput.text(key, lang.getGui(labelKey))
+    private DialogInput importText(Locale locale, String key, String labelKey, String initial) {
+        return DialogInput.text(key, lang.getGui(locale, labelKey))
                 .width(IMPORT_INPUT_WIDTH)
                 .initial(initial)
                 .maxLength(IMPORT_FIELD_MAX_LENGTH)
@@ -684,9 +687,9 @@ public final class ChestDialogs {
      * chests. The chest's chosen icon is shown in the title (see {@link #withIcon}), so the body stays a
      * clean centred message rather than an item body whose icon floats off to one side.
      */
-    private DialogBody detailBody(ChestSummary chest) {
-        Component info = lang.getGui("dialog.detail-body", "size", Integer.toString(chest.size()));
-        Component expiry = expiryTooltip(chest);
+    private DialogBody detailBody(Locale locale, ChestSummary chest) {
+        Component info = lang.getGui(locale, "dialog.detail-body", "size", Integer.toString(chest.size()));
+        Component expiry = expiryTooltip(locale, chest);
         if (expiry != null) {
             info = info.appendNewline().append(expiry);
         }
@@ -694,9 +697,9 @@ public final class ChestDialogs {
     }
 
     /** List-button tooltip: slot count, plus a static "expires in" snapshot for expiring chests. */
-    private Component listTooltip(ChestSummary chest) {
-        Component tip = lang.getGui("dialog.slots", "size", Integer.toString(chest.size()));
-        Component expiry = expiryTooltip(chest);
+    private Component listTooltip(Locale locale, ChestSummary chest) {
+        Component tip = lang.getGui(locale, "dialog.slots", "size", Integer.toString(chest.size()));
+        Component expiry = expiryTooltip(locale, chest);
         return expiry == null ? tip : tip.appendNewline().append(expiry);
     }
 
@@ -704,12 +707,12 @@ public final class ChestDialogs {
      * Static "expires in &lt;time&gt;" snapshot recomputed each time the dialog is built (a live
      * ticking countdown is impossible with the static Dialog API). Null for chests that never expire.
      */
-    private @Nullable Component expiryTooltip(ChestSummary chest) {
+    private @Nullable Component expiryTooltip(Locale locale, ChestSummary chest) {
         if (chest.expiresAt() == null) {
             return null;
         }
         String remaining = DurationFormat.formatRemaining(chest.expiresAt() - System.currentTimeMillis());
-        return lang.getGui("dialog.expires-in", "time", remaining);
+        return lang.getGui(locale, "dialog.expires-in", "time", remaining);
     }
 
     private static DialogAction click(BiConsumer<io.papermc.paper.dialog.DialogResponseView,

@@ -10,8 +10,14 @@ After editing `config.yml`, run `/ee reload` in-game or from the console to appl
 
 <ConfigProperty name="language" value="en_US" type="string">
 
-Language folder to load from <code>plugins/EnhancedEchest/language/</code>. The plugin ships with <code>en_US</code> (English). To add a translation, copy the <code>en_US</code> folder, rename it, translate the files inside, and set this option to the new folder name.<br><br>
+Language folder to load from <code>plugins/EnhancedEchest/language/</code>. The plugin ships with <code>en_US</code> (English) and <code>vi_VN</code> (Tiếng Việt). With <code>language-auto-detect</code> on, this is the <strong>fallback</strong> for clients whose language isn't translated.<br><br>
 See the <a href="/docs/language">Language</a> page for the full list of message keys.
+
+</ConfigProperty>
+
+<ConfigProperty name="language-auto-detect" value="true" type="boolean">
+
+When on (default), each player sees messages and menus in <strong>their own Minecraft client language</strong> if a matching translation exists (bundled, or added under <code>language/</code>), falling back to <code>language</code> above otherwise. Turn off to show every player the single <code>language</code> locale.
 
 </ConfigProperty>
 
@@ -248,6 +254,7 @@ When <code>true</code>, any player who has not yet been migrated has their vanil
 # EnhancedEchest configuration
 
 language: en_US
+language-auto-detect: true
 
 enderchest:
   # Slot count of the chest auto-created the first time a player opens their ender chest.

@@ -97,5 +97,6 @@ admin:
 
 update:
   available: '{prefix}&fĐã có bản cập nhật mới. Bạn đang dùng {current}, bản mới nhất là {latest}.'
-  # Giữ ở dạng MiniMessage để URL tải về vẫn bấm được (mã '&' cũ không tạo được sự kiện bấm).
-  download: '{prefix}<gray>Tải về: <click:open_url:{url}><aqua>{url}</aqua></click>'
+  # {url} được cấp sẵn dạng component bấm được từ code, nên để ở vị trí văn bản
+  # (placeholder nằm trong thuộc tính <click:...> sẽ không được thay theo từng người xem).
+  download: '{prefix}<gray>Tải về: {url}'

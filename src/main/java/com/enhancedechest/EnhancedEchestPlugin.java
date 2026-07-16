@@ -41,6 +41,7 @@ import com.enhancedechest.update.UpdateChecker;
 import com.enhancedechest.update.UpdateNotifyListener;
 import com.enhancedechest.util.DurationFormat;
 import lombok.Getter;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -150,6 +151,10 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         }
 
         languageManager = new LanguageManager(this, pluginConfig, pluginConfig.getLocale());
+        // Register once on the GlobalTranslator so every Component we send (chat, inventory titles,
+        // dialogs, item names) is rendered against each recipient client's own locale. Removed in
+        // onDisable so a /reload doesn't leave a stale source behind. Reloads only refresh its contents.
+        GlobalTranslator.translator().addSource(languageManager.translator());
 
         // Service layer, wired bottom-up: the shared async pool, then the storage/settings wrappers
         // over it, then the dupe-safe session registry, then the item-moving and open-routing layers.
@@ -256,6 +261,12 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // First, and unconditionally: detach our translation source from the JVM-wide GlobalTranslator
+        // singleton. Doing it up front (translation isn't needed during shutdown) means a failure in any
+        // later step below can't leak the source — which would otherwise double-register on re-enable.
+        if (languageManager != null) {
+            GlobalTranslator.translator().removeSource(languageManager.translator());
+        }
         if (metrics != null) {
             metrics.shutdown();
         }

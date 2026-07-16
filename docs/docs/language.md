@@ -6,7 +6,24 @@ All player-facing text in EnhancedEchest lives in editable language files, so yo
 plugins/EnhancedEchest/language/<locale>/
 ```
 
-The active locale is set by the `language` option in [`config.yml`](/docs/configuration) (default: `en_US`). The plugin ships with `en_US` (English) and `vi_VN` (Tiếng Việt).
+The plugin ships with `en_US` (English) and `vi_VN` (Tiếng Việt).
+
+## Automatic Per-Player Language
+
+By default each player sees messages and menus in **their own Minecraft client language**, as long as a matching translation is available (bundled, or added by you). A player using the game in Vietnamese sees Vietnamese; a player using English sees English — at the same time, on the same server. Changing the language in Minecraft's Options and reopening a menu updates it, no relog needed.
+
+This is controlled by two options in [`config.yml`](/docs/configuration):
+
+```yaml
+# Fallback language for clients whose language has no translation.
+language: en_US
+# Auto-detect each player's client language (default). Turn off to show everyone the 'language' above.
+language-auto-detect: true
+```
+
+- A client whose language **has** a translation → that language.
+- A client whose language has **no** translation → the `language` fallback above.
+- With `language-auto-detect: false` → every player sees the single `language` locale, regardless of their client.
 
 ## Files
 
@@ -61,8 +78,9 @@ enderchest:
 1. Copy the `en_US` folder inside `language/`
 2. Rename the copy to your locale (for example `de_DE` or `fr_FR`)
 3. Translate the text inside `messages.yml` and `gui.yml`
-4. Set `language: <your-locale>` in `config.yml`
-5. Run `/ee reload`
+4. Run `/ee reload`
+
+With auto-detect on (the default), players using that language now see it automatically — no need to change `language`. Set `language: <your-locale>` only if you want it to also be the **fallback** for clients whose language you haven't translated (or if you keep auto-detect off).
 
 ## Icon Picker Item Names {#icon-picker-item-names}
 

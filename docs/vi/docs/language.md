@@ -6,7 +6,24 @@ Mọi văn bản hiển thị cho người chơi trong EnhancedEchest nằm tron
 plugins/EnhancedEchest/language/<locale>/
 ```
 
-Locale đang dùng được đặt bởi tùy chọn `language` trong [`config.yml`](/vi/docs/configuration) (mặc định: `en_US`). Plugin đi kèm `en_US` (English) và `vi_VN` (Tiếng Việt).
+Plugin đi kèm `en_US` (English) và `vi_VN` (Tiếng Việt).
+
+## Tự Động Theo Ngôn Ngữ Từng Người Chơi
+
+Mặc định, mỗi người chơi thấy tin nhắn và menu theo **ngôn ngữ máy khách Minecraft của chính họ**, miễn là có bản dịch tương ứng (đóng gói sẵn, hoặc do bạn thêm). Người dùng game tiếng Việt thấy tiếng Việt; người dùng tiếng Anh thấy tiếng Anh — cùng lúc, trên cùng một server. Đổi ngôn ngữ trong Options của Minecraft rồi mở lại menu sẽ cập nhật, không cần thoát ra vào lại.
+
+Điều này do hai tùy chọn trong [`config.yml`](/vi/docs/configuration) điều khiển:
+
+```yaml
+# Ngôn ngữ dự phòng cho máy khách có ngôn ngữ chưa được dịch.
+language: en_US
+# Tự động phát hiện ngôn ngữ máy khách của từng người chơi (mặc định). Tắt để hiện 'language' ở trên cho mọi người.
+language-auto-detect: true
+```
+
+- Máy khách có ngôn ngữ **đã** được dịch → hiện ngôn ngữ đó.
+- Máy khách có ngôn ngữ **chưa** được dịch → dùng `language` dự phòng ở trên.
+- Với `language-auto-detect: false` → mọi người chơi thấy đúng một locale `language`, bất kể máy khách của họ.
 
 ## Các File
 
@@ -59,8 +76,9 @@ enderchest:
 1. Sao chép thư mục `en_US` bên trong `language/`
 2. Đổi tên bản sao thành locale của bạn (ví dụ `de_DE` hoặc `fr_FR`)
 3. Dịch văn bản bên trong `messages.yml` và `gui.yml`
-4. Đặt `language: <locale-của-bạn>` trong `config.yml`
-5. Chạy `/ee reload`
+4. Chạy `/ee reload`
+
+Với auto-detect bật (mặc định), người chơi dùng ngôn ngữ đó sẽ tự động thấy bản dịch — không cần đổi `language`. Chỉ đặt `language: <locale-của-bạn>` nếu bạn muốn nó cũng là bản **dự phòng** cho các máy khách có ngôn ngữ bạn chưa dịch (hoặc khi bạn tắt auto-detect).
 
 ## Tên Vật Phẩm Trong Bộ Chọn Biểu Tượng {#icon-picker-item-names}
 

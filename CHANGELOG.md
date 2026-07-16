@@ -2,11 +2,24 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
-## 1.0.11 - 2026-07-15
+## 1.0.11 - 2026-07-16
+
+### Added
+
+- **Automatic per-player language.** Messages and menus now show in each player's own Minecraft client language, so English and Vietnamese players on the same server each read it in their own language at the same time. On by default; turn it off with the new `language-auto-detect` setting to show everyone a single language instead.
+  - Clients whose language is not translated fall back to the `language` locale in `config.yml`.
+  - On upgrade, existing installs start auto-detecting automatically: set `language-auto-detect: false` to keep the previous behavior of showing every player the single `language` locale.
+  - A translation you add under `language/` is now served to matching clients on its own, without having to point `language` at it.
 
 ### Changed
 
 - In the `inventory` style of the `/eclist` chest list, temporary overflow chests now show as a copper chest instead of an ender chest, so they stand out from your normal chests at a glance.
+- In the `inventory` style of the `/eclist` chest list, time-limited chests (a normal chest granted with an expiry) now show as a plain chest instead of an ender chest, so you can tell at a glance which of your chests will expire. A chest you have given a custom icon still shows that icon.
+- Renamed the five import-dialog field labels in `gui.yml` to end in `-label` (for example `dialog.import-host` is now `dialog.import-host-label`), so every input label is named consistently. Existing installs upgrade automatically on startup; only a fully custom `language/` folder needs these keys renamed by hand to stay translated.
+
+### Fixed
+
+- Fixed the chest descriptions (slot count and expiry time) in the `inventory` style of the `/eclist` chest list showing in purple; they now use a neutral grey.
 
 ## 1.0.10 - 2026-07-12
 

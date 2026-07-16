@@ -3,7 +3,13 @@
 # Language locale to load from language/<locale>/
 # Bundled locales: en_US (English), vi_VN (Tiếng Việt).
 # Add your own by copying a folder under language/ and translating it.
+# With language-auto-detect on (below), this is the fallback for clients whose language isn't bundled.
 language: en_US
+
+# When on, each player sees messages and menus in THEIR Minecraft client language, if a matching
+# translation exists (bundled, or added under language/). Clients with no matching translation fall
+# back to the 'language' locale above. Turn off to show every player that single locale instead.
+language-auto-detect: true
 
 enderchest:
   # Slot count of the chest auto-created the first time a player ever opens their ender chest.

@@ -31,6 +31,12 @@ public final class ConfigMigrations {
 
     /** Renames applied to {@code language/<locale>/gui.yml}. */
     public static final List<YamlMigrator.Rename> GUI = List.of(
-            // -- 1.x.x renames go here --
+            // 1.0.11: import dialog field labels gained the -label suffix, matching name-label /
+            // icon-search-label, so every input-label key is named consistently.
+            new YamlMigrator.Rename("dialog.import-sqlite-file", "dialog.import-sqlite-file-label"),
+            new YamlMigrator.Rename("dialog.import-host",        "dialog.import-host-label"),
+            new YamlMigrator.Rename("dialog.import-database",    "dialog.import-database-label"),
+            new YamlMigrator.Rename("dialog.import-username",    "dialog.import-username-label"),
+            new YamlMigrator.Rename("dialog.import-password",    "dialog.import-password-label")
     );
 }

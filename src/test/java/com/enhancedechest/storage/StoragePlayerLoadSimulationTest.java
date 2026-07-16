@@ -40,6 +40,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * random (often offline) players, and a background autosave (flush + idle eviction) exactly like
  * {@code AutosaveService}.
  *
+ * <p>Each player owns a <b>random number of chests</b> drawn from a realistic skewed distribution
+ * (most just the base chest, a long tail hoarding dozens), materialized on first join with random sizes
+ * (a fraction temporary/expiring). Sessions then open a <i>random</i> owned chest (main or list-picked),
+ * and grow/shrink the set via create/delete churn — so residency sees a lifelike mix of light and heavy
+ * owners rather than everyone holding exactly one chest. The distribution is printed in the report.
+ *
  * <p>Being in the {@code storage} package it can reach the package-private helper classes; it uses
  * reflection to sample the private residency/dirty structures over time. It asserts three things:
  * <ol>
@@ -92,8 +98,17 @@ class StoragePlayerLoadSimulationTest {
     void simulate() throws Exception {
         Logger log = LoggerFactory.getLogger("stress-sim");
         Path dir = Files.createTempDirectory("echest-stress");
+        // Each player is assigned a random number of ender chests up front, drawn from a realistic
+        // skewed distribution (most players own just the base chest, a long tail hoards many). This is
+        // materialized on that player's first join, so the residency cache sees a lifelike mix of light
+        // and heavy owners rather than everyone holding exactly one chest.
         UUID[] universe = new UUID[PLAYER_UNIVERSE];
-        for (int i = 0; i < PLAYER_UNIVERSE; i++) universe[i] = UUID.randomUUID();
+        int[] chestTarget = new int[PLAYER_UNIVERSE];
+        ThreadLocalRandom setupRnd = ThreadLocalRandom.current();
+        for (int i = 0; i < PLAYER_UNIVERSE; i++) {
+            universe[i] = UUID.randomUUID();
+            chestTarget[i] = rollChestTarget(setupRnd);
+        }
 
         CachedStorage storage = new CachedStorage(new SqliteStorage(dir, "stress.db", "echest_"), log, Telemetry.NOOP);
         storage.init();
@@ -137,7 +152,7 @@ class StoragePlayerLoadSimulationTest {
 
         long wall0 = System.nanoTime();
         for (int i = 0; i < WORKER_THREADS; i++) {
-            workers.submit(() -> { try { playerLoop(storage, universe, deadline, sessions); } finally { done.countDown(); } });
+            workers.submit(() -> { try { playerLoop(storage, universe, chestTarget, deadline, sessions); } finally { done.countDown(); } });
         }
         for (int i = 0; i < ADMIN_THREADS; i++) {
             admins.submit(() -> { try { adminLoop(storage, universe, deadline, adminOps); } finally { done.countDown(); } });
@@ -171,7 +186,7 @@ class StoragePlayerLoadSimulationTest {
 
         String report = buildReport(wallNanos, sessions.sum(), adminOps.sum(), flushedRows.get(), evicted.get(),
                 baselineUsed, peakUsed, finalUsed, residentEnd, chestsEnd, dirtyChEnd, dirtyPlEnd,
-                loadingEnd, pinnedEnd, dbChests);
+                loadingEnd, pinnedEnd, dbChests, chestProfile(chestTarget, dbChests));
         System.out.println(report);
         writeReport(report);
 
@@ -190,31 +205,63 @@ class StoragePlayerLoadSimulationTest {
     }
 
     // ---- one player's join → play → quit session, looped until the deadline ----
-    private void playerLoop(CachedStorage s, UUID[] universe, long deadline, LongAdder sessions) {
+    private void playerLoop(CachedStorage s, UUID[] universe, int[] chestTarget, long deadline, LongAdder sessions) {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
         while (System.currentTimeMillis() < deadline) {
-            UUID p = claim(universe, rnd);
-            if (p == null) { sleep(1); continue; }              // server "full" on distinct players — retry
+            int slot = claim(universe, rnd);
+            if (slot < 0) { sleep(1); continue; }               // server "full" on distinct players — retry
+            UUID p = universe[slot];
+            int target = chestTarget[slot];
             try {
                 run("join.pin", () -> s.pin(p));
                 call("join.loadSettings", () -> s.loadSettings(p));   // the real join prefetch (materializes owner)
                 List<ChestSummary> chests = call("listChests", () -> s.listChests(p));
                 if (chests == null || chests.isEmpty()) {
+                    // First-ever join: materialize this player's randomly-sized chest set — the base chest
+                    // plus (target-1) more with random sizes, a fraction of them temporary (with an expiry).
                     call("createChest.bootstrap", () -> s.createChest(p, 54));
                     run("upsertPlayerName", () -> s.upsertPlayerName(p, "Player-" + Integer.toHexString(p.hashCode())));
+                    for (int k = 1; k < target; k++) {
+                        Long expiry = rnd.nextInt(6) == 0 ? System.currentTimeMillis() + rnd.nextInt(1, 250) : null;
+                        call("createChest.bootstrap", () -> s.createChest(p, randomSize(rnd), expiry));
+                    }
+                    chests = call("listChests", () -> s.listChests(p));
                 }
+
+                // The player's live set of chest indices; the base (lowest index) is kept inviolable, like
+                // the real plugin — deletes only ever target a non-base chest.
+                List<Integer> owned = new ArrayList<>();
+                if (chests != null) for (ChestSummary cs : chests) owned.add(cs.index());
+                if (owned.isEmpty()) owned.add(1);
+                owned.sort(null);
+
                 int cycles = rnd.nextInt(2, 12);
                 for (int c = 0; c < cycles; c++) {
-                    Integer primary = call("getPrimaryIndex", () -> s.getPrimaryIndex(p));
-                    int idx = (primary == null || primary < 1) ? 1 : primary;
+                    // Model both open paths: ~25% open the "main" chest (like /ec reads getPrimaryIndex),
+                    // otherwise pick a random owned chest (like choosing one from the /eclist dialog).
+                    int idx;
+                    if (rnd.nextInt(4) == 0) {
+                        Integer primary = call("getPrimaryIndex", () -> s.getPrimaryIndex(p));
+                        idx = (primary == null || !owned.contains(primary)) ? owned.get(0) : primary;
+                    } else {
+                        idx = owned.get(rnd.nextInt(owned.size()));
+                    }
                     call("loadChest", () -> s.loadChest(p, idx));
                     run("saveChest", () -> s.saveChest(p, idx, blob(rnd)));
                     double roll = rnd.nextDouble();
-                    if (roll < 0.05)      run("createChest", () -> s.createChest(p, 27));
-                    else if (roll < 0.10) run("renameChest", () -> s.renameChest(p, idx, "v" + rnd.nextInt(1000)));
-                    else if (roll < 0.14) run("resizeChest", () -> s.resizeChest(p, idx, 9 * rnd.nextInt(1, 7)));
-                    else if (roll < 0.17) run("setPrimary",  () -> s.setPrimary(p, idx));
-                    else if (roll < 0.20) run("setEditMode", () -> s.setEditMode(p, rnd.nextBoolean()));
+                    // Create/delete churn oscillates around this player's random target, so the per-player
+                    // count stays near its assigned value all run long (rather than drifting upward).
+                    if (roll < 0.06 && owned.size() < target) {      // grow toward target
+                        Integer ni = call("createChest", () -> s.createChest(p, randomSize(rnd)));
+                        if (ni != null) owned.add(ni);
+                    } else if (roll < 0.12 && owned.size() > 1) {     // shrink: delete a non-base chest
+                        int victim = owned.get(1 + rnd.nextInt(owned.size() - 1));
+                        run("deleteChest", () -> s.deleteChest(p, victim));
+                        owned.remove(Integer.valueOf(victim));
+                    } else if (roll < 0.15) run("renameChest", () -> s.renameChest(p, idx, "v" + rnd.nextInt(1000)));
+                    else if (roll < 0.18) run("resizeChest", () -> s.resizeChest(p, idx, randomSize(rnd)));
+                    else if (roll < 0.21) run("setPrimary",  () -> s.setPrimary(p, idx));
+                    else if (roll < 0.24) run("setEditMode", () -> s.setEditMode(p, rnd.nextBoolean()));
                     if (rnd.nextInt(3) == 0) sleep(rnd.nextInt(1, 4));   // think time so sessions interleave
                 }
                 sessions.increment();
@@ -243,13 +290,13 @@ class StoragePlayerLoadSimulationTest {
         }
     }
 
-    /** Atomically claim a distinct offline player, or null after a few misses. */
-    private UUID claim(UUID[] universe, ThreadLocalRandom rnd) {
+    /** Atomically claim a distinct offline player, returning its universe slot, or -1 after a few misses. */
+    private int claim(UUID[] universe, ThreadLocalRandom rnd) {
         for (int tries = 0; tries < 6; tries++) {
-            UUID p = universe[rnd.nextInt(universe.length)];
-            if (online.putIfAbsent(p, Boolean.TRUE) == null) return p;
+            int slot = rnd.nextInt(universe.length);
+            if (online.putIfAbsent(universe[slot], Boolean.TRUE) == null) return slot;
         }
-        return null;
+        return -1;
     }
 
     // ---- timing wrappers (capture every throwable, keep the sim running) ----
@@ -283,7 +330,7 @@ class StoragePlayerLoadSimulationTest {
     private String buildReport(long wallNanos, long sessions, long adminOps, long flushedRows, long evicted,
                                long baselineUsed, long peakUsed, long finalUsed,
                                int residentEnd, int chestsEnd, int dirtyChEnd, int dirtyPlEnd,
-                               int loadingEnd, int pinnedEnd, long dbChests) {
+                               int loadingEnd, int pinnedEnd, long dbChests, String chestProfile) {
         long totalOps = ops.values().stream().mapToLong(o -> o.count.sum()).sum();
         double wallSec = wallNanos / 1e9;
         StringBuilder r = new StringBuilder();
@@ -294,6 +341,8 @@ class StoragePlayerLoadSimulationTest {
                 sessions, adminOps, totalOps, totalOps / wallSec));
         r.append(String.format("autosave flushedRows=%d  evictedOwners=%d  finalDbChests=%d%n",
                 flushedRows, evicted, dbChests));
+
+        r.append(chestProfile);
 
         r.append("\n-- per-op latency (count / avg / max, ms) --\n");
         ops.entrySet().stream()
@@ -362,6 +411,38 @@ class StoragePlayerLoadSimulationTest {
     }
 
     // ---- helpers ----
+    /** A realistic, skewed per-player chest count: most own just the base chest, a long tail hoards many. */
+    private static int rollChestTarget(ThreadLocalRandom rnd) {
+        double r = rnd.nextDouble();
+        if (r < 0.50) return 1;                   // 50%: just the base chest
+        if (r < 0.78) return rnd.nextInt(2, 4);   // 28%: 2–3
+        if (r < 0.93) return rnd.nextInt(4, 9);   // 15%: 4–8
+        if (r < 0.99) return rnd.nextInt(9, 21);  //  6%: 9–20
+        return rnd.nextInt(21, 41);               //  1%: 21–40 (hoarders)
+    }
+
+    /** A valid ender-chest size: a multiple of 9 in [9, 54]. */
+    private static int randomSize(ThreadLocalRandom rnd) { return 9 * rnd.nextInt(1, 7); }
+
+    /** A report block making the random per-player chest distribution visible. */
+    private static String chestProfile(int[] target, long dbChests) {
+        int n = target.length, min = Integer.MAX_VALUE, max = 0;
+        long sum = 0;
+        int[] b = new int[5];
+        for (int t : target) {
+            sum += t;
+            min = Math.min(min, t);
+            max = Math.max(max, t);
+            if (t == 1) b[0]++; else if (t <= 3) b[1]++; else if (t <= 8) b[2]++; else if (t <= 20) b[3]++; else b[4]++;
+        }
+        return String.format(
+                "%n-- chest-count profile (random per player, assigned at setup) --%n"
+              + "  target chests/player : min=%d  avg=%.2f  max=%d%n"
+              + "  distribution         : 1=%d  2-3=%d  4-8=%d  9-20=%d  21+=%d%n"
+              + "  chests now in DB      : %d%n",
+                min, (double) sum / n, max, b[0], b[1], b[2], b[3], b[4], dbChests);
+    }
+
     private static byte[] blob(ThreadLocalRandom rnd) { byte[] b = new byte[rnd.nextInt(200, 2000)]; rnd.nextBytes(b); return b; }
     private static void sleep(long ms) { try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); } }
     private static long usedHeap() { Runtime rt = Runtime.getRuntime(); return rt.totalMemory() - rt.freeMemory(); }

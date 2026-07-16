@@ -96,9 +96,29 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   [architecture/concurrency-and-dupe-safety.md](architecture/concurrency-and-dupe-safety.md).
 - **Commands** are registered with Paper Brigadier in `EnhancedEchestBootstrap` (LifecycleEvents.COMMANDS),
   not in `plugin.yml`. Permissions default to `op`.
-- **Messages:** `LanguageManager.parse()` auto-detects format per string — contains `<` → MiniMessage,
-  otherwise legacy `&` codes (with `&#RRGGBB` hex). Default locale files use legacy `&` codes; the
-  clickable update link stays MiniMessage. Keys live in `language/<locale>/{messages,gui}.yml`.
+- **Messages / per-viewer localization:** `LanguageManager` loads **every** bundled locale
+  (`en_US`, `vi_VN`) plus any operator-added `language/<locale>/` folder, and at load normalizes each
+  string to one MiniMessage string (format auto-detected per string — `<` → MiniMessage, else legacy `&`
+  with `&#RRGGBB` hex; `{prefix}` inlined; `{placeholder}` → `<placeholder>` argument tags). `get()`/
+  `getGui()`/`getChestTitle()`/`getChestLabel()` return locale-free `Component.translatable(...)` (keys
+  `enhancedechest.msg.*` / `enhancedechest.gui.*`); the actual text is resolved by
+  `EnhancedEchestTranslator` (a `MiniMessageTranslator` registered **once** on Adventure's
+  `GlobalTranslator` in `EnhancedEchestPlugin` enable/disable) against **each recipient client's own
+  locale** at send time. Fallback chain: exact → same-language → `language:` (config) → `en_US`. Gated by
+  `language-auto-detect` (default on); off ⇒ everyone sees `language:` (legacy single-locale behavior).
+  Substitutions pass as `Argument.string`/`Argument.component` (inserted literally, **not** re-parsed —
+  a chest name can't inject formatting). Values needing a click/format (the update link) use
+  `getRich(...)` — a placeholder inside a `<click:...>` attribute is **not** substituted per-viewer.
+  Keys live in `language/<locale>/{messages,gui}.yml`; add a bundled locale to `BUNDLED_LOCALES`.
+  - **Which surfaces auto-render (load-bearing):** Paper runs the `GlobalTranslator` per-viewer only for
+    **chat** (`sendMessage`) and **inventory window titles** (`createInventory` title) — those keep the
+    deferred `Component.translatable` and need no `Locale`. Paper does **NOT** render the **Dialog API**
+    (`ChestDialogs`) or inventory **item** names/lore (`ChestListMenu`), so a raw translatable there
+    reaches the client as its literal key. For those, render eagerly with the viewer's locale via the
+    `get(Locale,…)`/`getGui(Locale,…)`/`getChestLabel(Locale,…)` overloads (which wrap
+    `GlobalTranslator.render`); every `ChestDialogs`/`ChestListMenu` builder threads `player.locale()`
+    (the detail/rename/icon dialogs get it from `DetailContext.locale()`). Don't drop those `Locale`
+    args back to the deferred form — it reintroduces the raw-key bug.
 - **Config / language migrations:** `ConfigMigrations` + `YamlMigrator` rename keys on load so existing
   installs upgrade cleanly. Add a rename rule there rather than silently changing a key name.
 - **Telemetry (FastStats):** `com.enhancedechest.telemetry.Telemetry` is the only telemetry type the rest

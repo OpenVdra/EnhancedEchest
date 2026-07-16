@@ -97,5 +97,6 @@ admin:
 
 update:
   available: '{prefix}&fA new update is available. You are on {current}, and the latest is {latest}.'
-  # Kept in MiniMessage so the download URL stays clickable (legacy '&' cannot do click events).
-  download: '{prefix}<gray>Download: <click:open_url:{url}><aqua>{url}</aqua></click>'
+  # {url} is supplied as a ready-made clickable component from code, so keep it in text position
+  # (a placeholder inside a <click:...> attribute is not substituted per-viewer).
+  download: '{prefix}<gray>Download: {url}'

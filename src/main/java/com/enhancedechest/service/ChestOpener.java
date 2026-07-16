@@ -183,7 +183,7 @@ public final class ChestOpener {
                             settings.loadSettingsAsync(uuid).thenAccept(s ->
                                     scheduler.runAtEntity(player, task -> {
                                         if (player.isOnline()) player.showDialog(
-                                                dialogs.listDialog(chests, canSetMain, sourceBlock, s.editMode()));
+                                                dialogs.listDialog(player.locale(), chests, canSetMain, sourceBlock, s.editMode()));
                                     }));
                         }
                     })
@@ -317,9 +317,9 @@ public final class ChestOpener {
                                     return;
                                 }
                                 if (useInventoryMenu(chests)) {
-                                    player.openInventory(listMenu.build(chests, uuid, sourceBlock));
+                                    player.openInventory(listMenu.build(player.locale(), chests, uuid, sourceBlock));
                                 } else {
-                                    player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock, editInitial));
+                                    player.showDialog(dialogs.listDialog(player.locale(), chests, canSetMain, sourceBlock, editInitial));
                                 }
                             }))
                     .exceptionally(e -> reportOpenFailure(player, e));
@@ -341,7 +341,7 @@ public final class ChestOpener {
     private void openListInventory(Player player, List<ChestSummary> chests, @Nullable Location sourceBlock) {
         scheduler.runAtEntity(player, task -> {
             if (!player.isOnline()) return;
-            Inventory inv = listMenu.build(chests, player.getUniqueId(), sourceBlock);
+            Inventory inv = listMenu.build(player.locale(), chests, player.getUniqueId(), sourceBlock);
             player.openInventory(inv);
         });
     }
@@ -398,7 +398,7 @@ public final class ChestOpener {
      */
     public void showAdminViewList(Player admin, String targetName, UUID target, List<ChestSummary> chests) {
         scheduler.runAtEntity(admin, t -> {
-            if (admin.isOnline()) admin.showDialog(dialogs.adminViewListDialog(targetName, target, chests));
+            if (admin.isOnline()) admin.showDialog(dialogs.adminViewListDialog(admin.locale(), targetName, target, chests));
         });
     }
 
@@ -411,7 +411,7 @@ public final class ChestOpener {
                         admin.sendMessage(lang.get("admin.view-no-chests", "player", targetName));
                         return;
                     }
-                    admin.showDialog(dialogs.adminViewListDialog(targetName, target, chests));
+                    admin.showDialog(dialogs.adminViewListDialog(admin.locale(), targetName, target, chests));
                 })).exceptionally(e -> reportOpenFailure(admin, e));
     }
 
@@ -441,7 +441,7 @@ public final class ChestOpener {
                 scheduler.runAtEntity(admin, task -> {
                     if (!admin.isOnline()) return;
                     chests.stream().filter(c -> c.index() == index).findFirst().ifPresentOrElse(
-                            c -> admin.showDialog(dialogs.adminClearConfirmDialog(targetName, target, c)),
+                            c -> admin.showDialog(dialogs.adminClearConfirmDialog(admin.locale(), targetName, target, c)),
                             () -> admin.sendMessage(lang.get("chest.not-found")));
                 })).exceptionally(e -> reportOpenFailure(admin, e));
     }
@@ -573,7 +573,7 @@ public final class ChestOpener {
     /** Shows the DB→DB import dialog (source connection form) to the admin. */
     public void showImportDialog(Player admin) {
         scheduler.runAtEntity(admin, t -> {
-            if (admin.isOnline()) admin.showDialog(dialogs.importDialog());
+            if (admin.isOnline()) admin.showDialog(dialogs.importDialog(admin.locale()));
         });
     }
 

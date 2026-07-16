@@ -14,7 +14,14 @@ import java.util.Locale;
 public final class PluginConfig {
 
     // Language
+    /** Fallback locale ({@code language:}); used when auto-detect is off, or a client's language isn't bundled. */
     private String locale;
+    /**
+     * When on (default), each player sees messages/menus in their own Minecraft client language if a
+     * matching translation is bundled (or dropped under {@code language/}); otherwise everyone sees
+     * {@link #locale}. Read live by {@link com.enhancedechest.lang.EnhancedEchestTranslator}, so volatile.
+     */
+    private volatile boolean autoDetectLanguage;
 
     // Ender chest
     private int defaultSize;
@@ -108,6 +115,7 @@ public final class PluginConfig {
 
     public void reload(FileConfiguration config) {
         locale = config.getString("language", "en_US");
+        autoDetectLanguage = config.getBoolean("language-auto-detect", true);
 
         defaultSize = sanitizeSize(config.getInt("enderchest.default-size", 54));
         listMenuType = parseListMenuType(config.getString("enderchest.list-menu", "dialog"));

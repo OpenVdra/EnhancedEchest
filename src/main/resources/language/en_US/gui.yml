@@ -74,12 +74,12 @@ dialog:
   # ===== Import dialog (/ee import: copy an old database backend into the active one) =====
   import-title: 'Import from another database'
   import-body: '<gray>Move data from your old database to the one set in config. The new database must be empty before you start.'
-  # Field labels.
-  import-sqlite-file: 'SQLite file'
-  import-host: 'Host (host or host:port)'
-  import-database: 'Database name'
-  import-username: 'Username'
-  import-password: 'Password'
+  # Field labels (each is the label shown above a text input, matching the -label suffix used elsewhere).
+  import-sqlite-file-label: 'SQLite file'
+  import-host-label: 'Host (host or host:port)'
+  import-database-label: 'Database name'
+  import-username-label: 'Username'
+  import-password-label: 'Password'
   # Buttons.
   import-run: '<green>✔ Start import'
   import-run-desc: 'Copy every chest from the source database into the active one.'

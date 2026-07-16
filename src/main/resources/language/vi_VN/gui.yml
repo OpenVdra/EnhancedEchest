@@ -74,12 +74,12 @@ dialog:
   # ===== Hộp thoại nhập (/ee import: sao chép backend cơ sở dữ liệu cũ vào backend đang dùng) =====
   import-title: 'Nhập từ cơ sở dữ liệu khác'
   import-body: '<gray>Chuyển dữ liệu từ cơ sở dữ liệu cũ sang cơ sở dữ liệu đã đặt trong config. Cơ sở dữ liệu mới phải trống trước khi bắt đầu.'
-  # Nhãn các trường.
-  import-sqlite-file: 'Tệp SQLite'
-  import-host: 'Host (host hoặc host:port)'
-  import-database: 'Tên cơ sở dữ liệu'
-  import-username: 'Tên đăng nhập'
-  import-password: 'Mật khẩu'
+  # Nhãn các trường (mỗi nhãn hiển thị phía trên một ô nhập, khớp hậu tố -label dùng ở nơi khác).
+  import-sqlite-file-label: 'Tệp SQLite'
+  import-host-label: 'Host (host hoặc host:port)'
+  import-database-label: 'Tên cơ sở dữ liệu'
+  import-username-label: 'Tên đăng nhập'
+  import-password-label: 'Mật khẩu'
   # Các nút.
   import-run: '<green>✔ Bắt đầu nhập'
   import-run-desc: 'Sao chép mọi rương từ cơ sở dữ liệu nguồn vào cơ sở dữ liệu đang dùng.'

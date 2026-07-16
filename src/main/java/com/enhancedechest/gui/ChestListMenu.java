@@ -6,6 +6,7 @@ import com.enhancedechest.model.ChestKind;
 import com.enhancedechest.model.ChestSummary;
 import com.enhancedechest.util.DurationFormat;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -78,7 +79,7 @@ public final class ChestListMenu {
      *
      * @param sourceBlock ender chest block the menu was opened from (for the lid animation on open), or null
      */
-    public Inventory build(List<ChestSummary> chests, UUID owner, @Nullable Location sourceBlock) {
+    public Inventory build(java.util.Locale locale, List<ChestSummary> chests, UUID owner, @Nullable Location sourceBlock) {
         List<ChestSummary> ordered = new ArrayList<>(chests);
         ordered.sort(Comparator
                 .comparingInt((ChestSummary c) -> c.kind() == ChestKind.TEMP ? 0 : 1)
@@ -89,13 +90,13 @@ public final class ChestListMenu {
 
         Map<Integer, Integer> slotIndex = new HashMap<>();
         ChestListHolder holder = new ChestListHolder(owner, sourceBlock, slotIndex);
-        Inventory inv = Bukkit.createInventory(holder, rows * COLUMNS, lang.getGui("dialog.list-title"));
+        Inventory inv = Bukkit.createInventory(holder, rows * COLUMNS, lang.getGui(locale, "dialog.list-title"));
 
         int count = Math.min(ordered.size(), slots.length);
         for (int i = 0; i < count; i++) {
             ChestSummary chest = ordered.get(i);
             int slot = slots[i];
-            inv.setItem(slot, iconFor(chest));
+            inv.setItem(slot, iconFor(locale, chest));
             slotIndex.put(slot, chest.index());
         }
         return inv;
@@ -129,22 +130,22 @@ public final class ChestListMenu {
     }
 
     /** One chest's display item: its chosen icon (or an ender chest), named and described from gui.yml. */
-    private ItemStack iconFor(ChestSummary chest) {
+    private ItemStack iconFor(java.util.Locale locale, ChestSummary chest) {
         ItemStack item = baseItem(chest);
         ItemMeta meta = item.getItemMeta();
 
         // Reuse the dialog's label (numbered / custom name / red temp title) and its gold main tag.
-        Component name = lang.getChestLabel(chest.index(), chest.customName(), chest.kind());
+        Component name = lang.getChestLabel(locale, chest.index(), chest.customName(), chest.kind());
         if (chest.primary()) {
-            name = name.append(Component.text(" ")).append(lang.getGui("dialog.main-tag"));
+            name = name.append(Component.text(" ")).append(lang.getGui(locale, "dialog.main-tag"));
         }
         meta.displayName(noItalic(name));
 
         List<Component> lore = new ArrayList<>(2);
-        lore.add(noItalic(lang.getGui("dialog.slots", "size", Integer.toString(chest.size()))));
+        lore.add(loreLine(lang.getGui(locale, "dialog.slots", "size", Integer.toString(chest.size()))));
         if (chest.expiresAt() != null) {
             String remaining = DurationFormat.formatRemaining(chest.expiresAt() - System.currentTimeMillis());
-            lore.add(noItalic(lang.getGui("dialog.expires-in", "time", remaining)));
+            lore.add(loreLine(lang.getGui(locale, "dialog.expires-in", "time", remaining)));
         }
         meta.lore(lore);
 
@@ -154,15 +155,32 @@ public final class ChestListMenu {
 
     /**
      * The chest's chosen icon as an item. Temp (overflow) chests always render as a copper chest so they
-     * read as distinct from real chests; otherwise the player-chosen icon, or an ender chest when it has
-     * none (or the icon isn't an item).
+     * read as distinct from real chests. Otherwise the player-chosen icon wins; failing that, a chest that
+     * carries an expiry (a time-limited normal chest granted with a duration) renders as a plain chest so
+     * it reads as distinct from a permanent ender chest, and a non-expiring chest falls back to the ender
+     * chest icon.
      */
     private static ItemStack baseItem(ChestSummary chest) {
         if (chest.kind() == ChestKind.TEMP) {
             return ItemStack.of(Material.COPPER_CHEST);
         }
         ItemStack icon = IconCatalog.item(chest.icon());
-        return icon != null ? icon : ItemStack.of(Material.ENDER_CHEST);
+        if (icon != null) {
+            return icon;
+        }
+        if (chest.expiresAt() != null) {
+            return ItemStack.of(Material.CHEST);
+        }
+        return ItemStack.of(Material.ENDER_CHEST);
+    }
+
+    /**
+     * Formats a lore line: clears the default italic styling and pins a neutral grey colour so the text
+     * doesn't inherit Minecraft's default purple lore colour. {@code colorIfAbsent} leaves any explicit
+     * colour from {@code gui.yml} untouched, so this only affects lines that set none.
+     */
+    private static Component loreLine(Component component) {
+        return noItalic(component).colorIfAbsent(NamedTextColor.GRAY);
     }
 
     /** Clears the default italic styling Minecraft applies to item names/lore, so labels read cleanly. */
