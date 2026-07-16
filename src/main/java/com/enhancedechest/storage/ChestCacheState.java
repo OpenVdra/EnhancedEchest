@@ -76,8 +76,13 @@ final class ChestCacheState {
     /** Per-owner chest rows, ordered by index (TreeMap keeps list/next-free-index ops trivial). */
     private final Map<UUID, TreeMap<Integer, ChestRow>> chests = new HashMap<>();
     private final Map<UUID, PlayerRow> players = new HashMap<>();
-    /** Chest keys changed since the last flush; row presence at flush time decides upsert vs delete. */
-    private final Set<ChestId> dirtyChests = new HashSet<>();
+    /**
+     * Chest indices changed since the last flush, keyed by owner (an owner is never mapped to an
+     * empty set); row presence at flush time decides upsert vs delete. Keying by owner makes the
+     * per-quit {@link #isClean} check O(1) and the quit-path group drain in {@link #collectDirty}
+     * proportional to the drained owners, instead of both scanning every dirty key.
+     */
+    private final Map<UUID, Set<Integer>> dirtyChests = new HashMap<>();
     private final Set<UUID> dirtyPlayers = new HashSet<>();
 
     // ---- lookups ----
@@ -123,7 +128,7 @@ final class ChestCacheState {
     // ---- mutations ----
 
     void markChestDirty(UUID owner, int index) {
-        dirtyChests.add(new ChestId(owner, index));
+        dirtyChests.computeIfAbsent(owner, k -> new HashSet<>()).add(index);
     }
 
     void markPlayerDirty(UUID owner) {
@@ -233,24 +238,7 @@ final class ChestCacheState {
 
     /** True when no dirty row belongs to {@code owner}. */
     boolean isClean(UUID owner) {
-        if (dirtyPlayers.contains(owner)) {
-            return false;
-        }
-        for (ChestId id : dirtyChests) {
-            if (id.owner().equals(owner)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /** Every owner with at least one dirty chest or player row. */
-    Set<UUID> dirtyOwners() {
-        Set<UUID> owners = new HashSet<>(dirtyPlayers);
-        for (ChestId id : dirtyChests) {
-            owners.add(id.owner());
-        }
-        return owners;
+        return !dirtyPlayers.contains(owner) && !dirtyChests.containsKey(owner);
     }
 
     /** Drops one owner's materialized rows (residency removal lives in the cache). */
@@ -271,39 +259,59 @@ final class ChestCacheState {
         List<ChestId> chestSnapshot = new ArrayList<>();
         List<RawPlayerRow> playerRows = new ArrayList<>();
         List<UUID> playerSnapshot = new ArrayList<>();
-        for (Iterator<ChestId> it = dirtyChests.iterator(); it.hasNext(); ) {
-            ChestId id = it.next();
-            if (only != null && !only.contains(id.owner())) {
-                continue;
+        if (only != null) {
+            // Targeted drain (quit-path group flush): touch only the requested owners' entries.
+            for (UUID owner : only) {
+                Set<Integer> indices = dirtyChests.remove(owner);
+                if (indices != null) {
+                    drainOwnerChests(owner, indices, chestUpserts, chestDeletes, chestSnapshot);
+                }
+                if (dirtyPlayers.remove(owner)) {
+                    drainPlayer(owner, playerRows, playerSnapshot);
+                }
             }
-            it.remove();
-            chestSnapshot.add(id);
-            ChestRow row = row(id.owner(), id.index());
-            if (row == null) {
-                chestDeletes.add(new ChestKey(id.owner().toString(), id.index()));
-            } else {
-                chestUpserts.add(toRaw(id.owner(), id.index(), row));
+        } else {
+            for (Iterator<Map.Entry<UUID, Set<Integer>>> it = dirtyChests.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<UUID, Set<Integer>> e = it.next();
+                it.remove();
+                drainOwnerChests(e.getKey(), e.getValue(), chestUpserts, chestDeletes, chestSnapshot);
             }
-        }
-        for (Iterator<UUID> it = dirtyPlayers.iterator(); it.hasNext(); ) {
-            UUID uuid = it.next();
-            if (only != null && !only.contains(uuid)) {
-                continue;
-            }
-            it.remove();
-            playerSnapshot.add(uuid);
-            PlayerRow p = players.get(uuid);
-            if (p != null) {
-                playerRows.add(new RawPlayerRow(uuid.toString(), p.username,
-                        p.editMode ? 1 : 0, p.appliedDefaultSize));
+            for (Iterator<UUID> it = dirtyPlayers.iterator(); it.hasNext(); ) {
+                UUID uuid = it.next();
+                it.remove();
+                drainPlayer(uuid, playerRows, playerSnapshot);
             }
         }
         return new DirtyBatch(chestUpserts, chestDeletes, chestSnapshot, playerRows, playerSnapshot);
     }
 
+    private void drainOwnerChests(UUID owner, Set<Integer> indices, List<RawChestRow> chestUpserts,
+                                  List<ChestKey> chestDeletes, List<ChestId> chestSnapshot) {
+        for (int index : indices) {
+            chestSnapshot.add(new ChestId(owner, index));
+            ChestRow row = row(owner, index);
+            if (row == null) {
+                chestDeletes.add(new ChestKey(owner.toString(), index));
+            } else {
+                chestUpserts.add(toRaw(owner, index, row));
+            }
+        }
+    }
+
+    private void drainPlayer(UUID owner, List<RawPlayerRow> playerRows, List<UUID> playerSnapshot) {
+        playerSnapshot.add(owner);
+        PlayerRow p = players.get(owner);
+        if (p != null) {
+            playerRows.add(new RawPlayerRow(owner.toString(), p.username,
+                    p.editMode ? 1 : 0, p.appliedDefaultSize));
+        }
+    }
+
     /** Re-marks a drained batch dirty after a failed flush, so the next autosave retries it. */
     void restoreDirty(DirtyBatch batch) {
-        dirtyChests.addAll(batch.chestSnapshot());
+        for (ChestId id : batch.chestSnapshot()) {
+            markChestDirty(id.owner(), id.index());
+        }
         dirtyPlayers.addAll(batch.playerSnapshot());
     }
 }

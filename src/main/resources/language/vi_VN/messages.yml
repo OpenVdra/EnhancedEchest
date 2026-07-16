@@ -1,102 +1,108 @@
 # ============================================================================
 #  Tin nhắn chat cho EnhancedEchest
-#  {prefix} được thay bằng giá trị bên dưới. Phần lớn là chữ trắng;
-#  chỉ các giá trị động được chèn vào để câu đọc liền mạch.
-#  Dòng chứa '<' sẽ được phân tích theo MiniMessage, ngược lại dùng mã '&' cũ.
+#  {prefix} được thay bằng giá trị bên dưới. Văn bản dùng thẻ MiniMessage
+#  (<red>, <gray>, <#RRGGBB>, ...) và các token {placeholder} do plugin
+#  điền vào. Mã màu '&' cũ vẫn nạp được, nên dòng tùy chỉnh viết kiểu cũ vẫn chạy.
 # ============================================================================
 
-prefix: '&#9B59B6EnhancedEchest &8⏩ &r'
+prefix: '<#9B59B6>EnhancedEchest <dark_gray>⏩ <reset>'
 
 command:
-  not-player: '{prefix}&fChỉ người chơi mới có thể dùng rương ender.'
+  not-player: '{prefix}Chỉ người chơi mới có thể dùng rương ender.'
 
 chest:
-  load-failed: '{prefix}&fKhông thể tải rương ender của bạn. Vui lòng liên hệ quản trị viên.'
-  not-found: '{prefix}&fRương ender đó không còn tồn tại.'
+  load-failed: '{prefix}Không thể tải rương ender của bạn. Vui lòng liên hệ quản trị viên.'
+  not-found: '{prefix}Rương ender đó không còn tồn tại.'
   # Hiện (trên action bar) khi người chơi cố bỏ vật phẩm vào rương tạm.
-  temp-take-only: '&cĐây là rương tạm. Bạn chỉ có thể lấy vật phẩm ra, không thể bỏ vào.'
+  temp-take-only: '<red>Đây là rương tạm. Bạn chỉ có thể lấy vật phẩm ra, không thể bỏ vào.'
+  # Nhắc khi vào server nếu người chơi còn vật phẩm trong rương tạm (cấu hình
+  # temp-enderchest.join-notify). {count} = số rương tạm, {time} = thời gian đến khi rương gần hết hạn
+  # nhất hết hạn (ví dụ "6 ngày 23 giờ"). Bản chat bên dưới là thông báo đầy đủ; bản action bar là dòng
+  # ngắn gọn hiện cùng lúc.
+  temp-join-chat: '{prefix}<red>Bạn còn vật phẩm trong {count} rương tạm. Hãy lấy chúng ra với /ec trước khi hết hạn. Rương gần nhất sẽ hết hạn sau {time}.'
+  temp-join-actionbar: '<red>Còn vật phẩm trong rương tạm. Hãy lấy ra trong {time}!'
   # Hiện cho quản trị viên khi mở rương đang được dùng (Folia chỉ cho một người xem mỗi rương).
-  in-use: '{prefix}&fRương ender đó đang được sử dụng. Vui lòng thử lại sau giây lát.'
+  in-use: '{prefix}Rương ender đó đang được sử dụng. Vui lòng thử lại sau giây lát.'
   # Action bar hiện cho quản trị viên chỉ được xem mà không được sửa rương người khác (không có quyền sửa).
-  view-only: '&7Chỉ xem: bạn có thể xem rương này nhưng không thể thay đổi nội dung.'
+  view-only: '<gray>Chỉ xem: bạn có thể xem rương này nhưng không thể thay đổi nội dung.'
   # Hiện sau khi nút Sắp xếp dọn xong rương.
-  sorted: '{prefix}&fĐã sắp xếp rương.'
+  sorted: '{prefix}Đã sắp xếp rương.'
   # Hiện khi bấm Sắp xếp lại trước khi hết thời gian chờ. {time} = thời gian còn lại, ví dụ "2s".
-  sort-cooldown: '{prefix}&fVui lòng đợi {time} trước khi sắp xếp lại.'
+  sort-cooldown: '{prefix}Vui lòng đợi {time} trước khi sắp xếp lại.'
   # Hiện khi đổi tên bị từ chối vì tên chứa từ trong enderchest.features.rename-blacklist.
-  rename-blocked: '{prefix}&cTên này không được phép. Vui lòng chọn tên khác.'
+  rename-blocked: '{prefix}<red>Tên này không được phép. Vui lòng chọn tên khác.'
 
 migrate:
-  no-players: '{prefix}&fKhông có người chơi nào trực tuyến.'
-  complete: '{prefix}&fChuyển dữ liệu hoàn tất. {migrated} đã chuyển, {skipped} đã có từ trước.'
-  player-offline: '{prefix}&f{player} không trực tuyến.'
-  success: '{prefix}&fĐã chuyển dữ liệu cho {player} thành công.'
-  already-done: '{prefix}&f{player} đã được chuyển dữ liệu từ trước.'
-  failed: '{prefix}&fChuyển dữ liệu cho {player} thất bại. Xem console để biết chi tiết.'
+  no-players: '{prefix}Không có người chơi nào trực tuyến.'
+  complete: '{prefix}Chuyển dữ liệu hoàn tất. {migrated} đã chuyển, {skipped} đã có từ trước.'
+  player-offline: '{prefix}{player} không trực tuyến.'
+  success: '{prefix}Đã chuyển dữ liệu cho {player} thành công.'
+  already-done: '{prefix}{player} đã được chuyển dữ liệu từ trước.'
+  failed: '{prefix}Chuyển dữ liệu cho {player} thất bại. Xem console để biết chi tiết.'
   # Nhập từ plugin kho khác; {source} là tên plugin (AxVaults, PlayerVaultsX).
-  no-source: '{prefix}&fKhông tìm thấy dữ liệu {source} để nhập.'
-  started: '{prefix}&fĐang nhập kho từ {source}… tiến trình chạy nền.'
-  import-done: '{prefix}&fNhập {source} xong. {players} người chơi, {vaults} kho đã nhập, {skipped} bỏ qua, {failed} lỗi.'
-  import-player-done: '{prefix}&fNhập {source} cho {player}: {vaults} kho đã nhập, {skipped} bỏ qua.'
-  import-failed: '{prefix}&fNhập {source} thất bại: {error}'
+  no-source: '{prefix}Không tìm thấy dữ liệu {source} để nhập.'
+  started: '{prefix}Đang nhập kho từ {source}… tiến trình chạy nền.'
+  import-done: '{prefix}Nhập {source} xong. {players} người chơi, {vaults} kho đã nhập, {skipped} bỏ qua, {failed} lỗi.'
+  import-player-done: '{prefix}Nhập {source} cho {player}: {vaults} kho đã nhập, {skipped} bỏ qua.'
+  import-failed: '{prefix}Nhập {source} thất bại: {error}'
 
 # Nhập cơ sở dữ liệu sang cơ sở dữ liệu (/ee import): sao chép backend cũ vào backend đang dùng.
 import:
   # Kiểm tra biểu mẫu trong hộp thoại trước khi chạy.
-  missing-sqlite-file: '{prefix}&fNhập tệp cơ sở dữ liệu SQLite cần nhập từ đó.'
-  missing-remote-fields: '{prefix}&fNhập host, tên cơ sở dữ liệu và tên đăng nhập của cơ sở dữ liệu nguồn.'
-  invalid-port: '{prefix}&fCổng của cơ sở dữ liệu nguồn không hợp lệ.'
-  invalid-type: '{prefix}&fHãy chọn loại cơ sở dữ liệu nguồn.'
+  missing-sqlite-file: '{prefix}Nhập tệp cơ sở dữ liệu SQLite cần nhập từ đó.'
+  missing-remote-fields: '{prefix}Nhập host, tên cơ sở dữ liệu và tên đăng nhập của cơ sở dữ liệu nguồn.'
+  invalid-port: '{prefix}Cổng của cơ sở dữ liệu nguồn không hợp lệ.'
+  invalid-type: '{prefix}Hãy chọn loại cơ sở dữ liệu nguồn.'
   # Các bước kiểm tra trước khi chạy.
-  players-online: '{prefix}&fChỉ có thể nhập khi không còn người chơi nào khác trực tuyến. Hãy yêu cầu mọi người thoát ra rồi thử lại.'
-  same-database: '{prefix}&fNguồn chính là cơ sở dữ liệu plugin đang dùng. Hãy trỏ tới backend CŨ thay vào đó.'
-  dest-not-empty: '{prefix}&fCơ sở dữ liệu đang dùng đã có {count} rương. Việc nhập chỉ hoạt động vào một cơ sở dữ liệu mới, trống.'
+  players-online: '{prefix}Chỉ có thể nhập khi không còn người chơi nào khác trực tuyến. Hãy yêu cầu mọi người thoát ra rồi thử lại.'
+  same-database: '{prefix}Nguồn chính là cơ sở dữ liệu plugin đang dùng. Hãy trỏ tới backend CŨ thay vào đó.'
+  dest-not-empty: '{prefix}Cơ sở dữ liệu đang dùng đã có {count} rương. Việc nhập chỉ hoạt động vào một cơ sở dữ liệu mới, trống.'
   # Tiến trình + kết quả. {source} = loại đã chọn; {players}/{chests} = số hàng đã sao chép.
-  started: '{prefix}&fĐang nhập từ cơ sở dữ liệu {source}… tiến trình chạy nền.'
-  done: '{prefix}&fNhập hoàn tất. Đã sao chép {players} người chơi và {chests} rương vào cơ sở dữ liệu đang dùng.'
-  failed: '{prefix}&fNhập thất bại và không ghi gì cả. Lý do: {error}'
+  started: '{prefix}Đang nhập từ cơ sở dữ liệu {source}… tiến trình chạy nền.'
+  done: '{prefix}Nhập hoàn tất. Đã sao chép {players} người chơi và {chests} rương vào cơ sở dữ liệu đang dùng.'
+  failed: '{prefix}Nhập thất bại và không ghi gì cả. Lý do: {error}'
 
 admin:
-  reload-success: '{prefix}&fĐã tải lại cấu hình.'
-  player-not-found: '{prefix}&fKhông tìm thấy người chơi {player}.'
-  no-permission: '{prefix}&fBạn không có quyền làm điều đó.'
+  reload-success: '{prefix}Đã tải lại cấu hình.'
+  player-not-found: '{prefix}Không tìm thấy người chơi {player}.'
+  no-permission: '{prefix}Bạn không có quyền làm điều đó.'
   # Hành động "Dọn rương" của quản trị viên từ /ee view. {player} = chủ rương, {index} = số thứ tự.
-  chest-cleared: '{prefix}&fĐã dọn sạch rương ender {index} của {player}.'
-  invalid-size: '{prefix}&fKích thước phải là bội số của 9 trong khoảng 9 đến 54.'
-  invalid-duration: '{prefix}&fThời lượng "{duration}" không hợp lệ. Hãy dùng dạng như 20s, 5m, 1h, 7d, hoặc 1d_2h_30m.'
-  chest-not-found: '{prefix}&f{player} không có rương ender nào với số thứ tự {index}.'
+  chest-cleared: '{prefix}Đã dọn sạch rương ender {index} của {player}.'
+  invalid-size: '{prefix}Kích thước phải là bội số của 9 trong khoảng 9 đến 54.'
+  invalid-duration: '{prefix}Thời lượng "{duration}" không hợp lệ. Hãy dùng dạng như 20s, 5m, 1h, 7d, hoặc 1d_2h_30m.'
+  chest-not-found: '{prefix}{player} không có rương ender nào với số thứ tự {index}.'
   # /ee resize trên rương cấp theo quyền: chúng được quản lý bởi quyền, không phải lệnh quản trị.
-  cannot-modify-perm: '{prefix}&fRương ender {index} của {player} được cấp bởi một quyền và không thể chỉnh sửa.'
+  cannot-modify-perm: '{prefix}Rương ender {index} của {player} được cấp bởi một quyền và không thể chỉnh sửa.'
   # /ee resize trên rương gốc khi kích thước được đặt bởi quyền enhancedechest.default_size.<size>.
-  cannot-modify-default-size: '{prefix}&fRương ender {index} của {player} có kích thước do một quyền quy định và không thể đổi kích thước.'
+  cannot-modify-default-size: '{prefix}Rương ender {index} của {player} có kích thước do một quyền quy định và không thể đổi kích thước.'
   # /ee view <player>: người được xem chưa có rương nào nên không có gì để mở.
-  view-no-chests: '{prefix}&f{player} chưa có rương ender nào.'
-  chest-added: '{prefix}&fĐã thêm rương ender {index} với {size} ô cho {player}.'
-  chest-added-expiring: '{prefix}&fĐã thêm rương ender {index} với {size} ô cho {player}. Rương sẽ hết hạn sau {duration}.'
-  chests-added: '{prefix}&fĐã thêm {count} rương ender ({range}) với {size} ô cho {player}.'
-  chests-added-expiring: '{prefix}&fĐã thêm {count} rương ender ({range}) với {size} ô cho {player}. Chúng sẽ hết hạn sau {duration}.'
-  chest-resized: '{prefix}&fĐã đổi kích thước rương ender {index} của {player} thành {size} ô.'
+  view-no-chests: '{prefix}{player} chưa có rương ender nào.'
+  chest-added: '{prefix}Đã thêm rương ender {index} với {size} ô cho {player}.'
+  chest-added-expiring: '{prefix}Đã thêm rương ender {index} với {size} ô cho {player}. Rương sẽ hết hạn sau {duration}.'
+  chests-added: '{prefix}Đã thêm {count} rương ender ({range}) với {size} ô cho {player}.'
+  chests-added-expiring: '{prefix}Đã thêm {count} rương ender ({range}) với {size} ô cho {player}. Chúng sẽ hết hạn sau {duration}.'
+  chest-resized: '{prefix}Đã đổi kích thước rương ender {index} của {player} thành {size} ô.'
   # /ee delete <player> <count> [force]: xóa các rương mới nhất; rương đầu tiên luôn được giữ lại.
-  no-chests-deletable: '{prefix}&f{player} chỉ có rương ender đầu tiên, không thể xóa được.'
-  chest-deleted-newest: '{prefix}&fĐã xóa rương ender mới nhất của {player}. Vật phẩm trong rương đã bị bỏ đi.'
-  chest-deleted-newest-spilled: '{prefix}&fĐã xóa rương ender mới nhất của {player}. Vật phẩm trong rương đã được chuyển sang một rương tạm.'
-  chests-deleted-newest: '{prefix}&fĐã xóa {count} rương ender mới nhất của {player}. Vật phẩm trong chúng đã bị bỏ đi.'
-  chests-deleted-newest-spilled: '{prefix}&fĐã xóa {count} rương ender mới nhất của {player}. Vật phẩm trong chúng đã được chuyển sang các rương tạm.'
+  no-chests-deletable: '{prefix}{player} chỉ có rương ender đầu tiên, không thể xóa được.'
+  chest-deleted-newest: '{prefix}Đã xóa rương ender mới nhất của {player}. Vật phẩm trong rương đã bị bỏ đi.'
+  chest-deleted-newest-spilled: '{prefix}Đã xóa rương ender mới nhất của {player}. Vật phẩm trong rương đã được chuyển sang một rương tạm.'
+  chests-deleted-newest: '{prefix}Đã xóa {count} rương ender mới nhất của {player}. Vật phẩm trong chúng đã bị bỏ đi.'
+  chests-deleted-newest-spilled: '{prefix}Đã xóa {count} rương ender mới nhất của {player}. Vật phẩm trong chúng đã được chuyển sang các rương tạm.'
   # /ee transfer <from> <to> <index|name|all> [override|temp]: chuyển rương sang tài khoản mới.
-  transfer-usage: '{prefix}&fCách dùng: /ee transfer <from> <to> <#index | name | all> [override | temp].'
-  transfer-same-player: '{prefix}&fNgười chơi nguồn và đích phải khác nhau.'
-  transfer-not-found: '{prefix}&f{player} không có rương ender nào khớp với "{target}".'
-  transfer-no-source: '{prefix}&f{player} không có rương ender nào để chuyển.'
+  transfer-usage: '{prefix}Cách dùng: /ee transfer <from> <to> <#index | name | all> [override | temp].'
+  transfer-same-player: '{prefix}Người chơi nguồn và đích phải khác nhau.'
+  transfer-not-found: '{prefix}{player} không có rương ender nào khớp với "{target}".'
+  transfer-no-source: '{prefix}{player} không có rương ender nào để chuyển.'
   # Hiện khi tài khoản đích đã có vật phẩm trong các rương sẽ bị thay thế mà chưa chọn cờ.
-  transfer-needs-flag: '{prefix}&f{player} đã có vật phẩm trong các rương sẽ bị thay thế. Thêm "override" để bỏ chúng đi hoặc "temp" để chuyển sang kho tạm.'
-  transfer-failed: '{prefix}&fChuyển thất bại. Không có rương nào bị thay đổi. Vui lòng kiểm tra console.'
-  transfer-complete-all: '{prefix}&fĐã chuyển toàn bộ {count} rương ender từ {from} sang {to}.'
-  transfer-complete-one: '{prefix}&fĐã chuyển {count} rương ender từ {from} sang {to}.'
-  transfer-displaced-temp: '{prefix}&fVật phẩm cũ của {player} đã được chuyển sang kho tạm.'
-  transfer-displaced-override: '{prefix}&fVật phẩm cũ của {player} đã bị bỏ đi.'
+  transfer-needs-flag: '{prefix}{player} đã có vật phẩm trong các rương sẽ bị thay thế. Thêm "override" để bỏ chúng đi hoặc "temp" để chuyển sang kho tạm.'
+  transfer-failed: '{prefix}Chuyển thất bại. Không có rương nào bị thay đổi. Vui lòng kiểm tra console.'
+  transfer-complete-all: '{prefix}Đã chuyển toàn bộ {count} rương ender từ {from} sang {to}.'
+  transfer-complete-one: '{prefix}Đã chuyển {count} rương ender từ {from} sang {to}.'
+  transfer-displaced-temp: '{prefix}Vật phẩm cũ của {player} đã được chuyển sang kho tạm.'
+  transfer-displaced-override: '{prefix}Vật phẩm cũ của {player} đã bị bỏ đi.'
 
 update:
-  available: '{prefix}&fĐã có bản cập nhật mới. Bạn đang dùng {current}, bản mới nhất là {latest}.'
+  available: '{prefix}Đã có bản cập nhật mới. Bạn đang dùng {current}, bản mới nhất là {latest}.'
   # {url} được cấp sẵn dạng component bấm được từ code, nên để ở vị trí văn bản
   # (placeholder nằm trong thuộc tính <click:...> sẽ không được thay theo từng người xem).
   download: '{prefix}<gray>Tải về: {url}'

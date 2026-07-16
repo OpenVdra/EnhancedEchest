@@ -22,15 +22,24 @@ import java.util.List;
  * <b>no per-row write DML</b>: its job is schema creation/migration, per-player reads on a cache miss,
  * the batched flush of dirty rows (autosave/quit/shutdown), the handful of whole-database read
  * questions the cache cannot answer alone (expiry candidates, chest count, name resolution), and the
- * verbatim {@code /ee import} copy. All SQL below is standard and valid for SQLite, MySQL/MariaDB and PostgreSQL; only the
- * schema-creation statements differ per dialect and are injected by subclasses. Flush upserts are
- * portable delete-then-insert, so no dialect-specific {@code ON CONFLICT} / {@code ON DUPLICATE KEY}
- * is needed.
+ * verbatim {@code /ee import} copy. All SQL below is standard and valid for SQLite, MySQL/MariaDB and
+ * PostgreSQL except the flush upserts, whose conflict clause is dialect-specific and selected by the
+ * {@link UpsertSyntax} the subclass passes in (a native upsert is one B-tree mutation per row and one
+ * batch execution, versus two of each for the portable delete-then-insert it replaced — the flush
+ * runs under the cache's flush lock, so this directly gates quit write-back latency).
  */
 public abstract class AbstractSqlStorage implements StorageBackend {
 
     /** Rows per JDBC batch flush, to bound memory while still collapsing round-trips. */
     private static final int BATCH_SIZE = 1000;
+
+    /** Which native upsert conflict clause the dialect speaks. */
+    protected enum UpsertSyntax {
+        /** SQLite and PostgreSQL: {@code ON CONFLICT (keys) DO UPDATE SET col = excluded.col}. */
+        ON_CONFLICT,
+        /** MySQL and MariaDB: {@code ON DUPLICATE KEY UPDATE col = VALUES(col)}. */
+        ON_DUPLICATE_KEY
+    }
 
     protected final HikariDataSource dataSource;
 
@@ -43,9 +52,10 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     private final String[] schemaStatements;
 
     private final String sqlDeleteChest;
-    private final String sqlDeletePlayer;
     private final String sqlInsertPlayer;
     private final String sqlInsertChest;
+    private final String sqlUpsertPlayer;
+    private final String sqlUpsertChest;
     private final String sqlLoadPlayerChests;
     private final String sqlLoadAllPlayers;
     private final String sqlLoadOnePlayer;
@@ -53,7 +63,8 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     private final String sqlCountChests;
     private final String sqlNameFind;
 
-    protected AbstractSqlStorage(HikariConfig config, String tablePrefix, String... schemaStatements) {
+    protected AbstractSqlStorage(HikariConfig config, String tablePrefix, UpsertSyntax upsertSyntax,
+                                 String... schemaStatements) {
         this.dataSource = new HikariDataSource(config);
         this.tablePrefix = tablePrefix;
         this.schemaStatements = schemaStatements;
@@ -62,15 +73,20 @@ public abstract class AbstractSqlStorage implements StorageBackend {
         String players = tablePrefix + "players";
 
         this.sqlDeleteChest = "DELETE FROM " + chests + " WHERE player_uuid = ? AND chest_index = ?";
-        this.sqlDeletePlayer = "DELETE FROM " + players + " WHERE player_uuid = ?";
         // Verbatim full-row inserts: every column is written from the row as-is (no defaults relied on).
-        // Shared by the /ee import copy and the flush write-back, reused as one batched PreparedStatement
-        // per table under a single transaction.
+        // The plain inserts serve the /ee import copy (a duplicate key must fail the import); the flush
+        // write-back uses the upsert variants below, each reused as one batched PreparedStatement per
+        // table under a single transaction.
         this.sqlInsertPlayer = "INSERT INTO " + players
                 + " (player_uuid, username, edit_mode, applied_default_size) VALUES (?, ?, ?, ?)";
         this.sqlInsertChest = "INSERT INTO " + chests + " "
                 + "(player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, last_updated, kind, expires_at, icon) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        this.sqlUpsertPlayer = sqlInsertPlayer + upsertClause(upsertSyntax, "player_uuid",
+                "username", "edit_mode", "applied_default_size");
+        this.sqlUpsertChest = sqlInsertChest + upsertClause(upsertSyntax, "player_uuid, chest_index",
+                "size", "custom_name", "is_primary", "container_data", "migrated", "last_updated",
+                "kind", "expires_at", "icon");
         this.sqlLoadPlayerChests = "SELECT player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, "
                 + "last_updated, kind, expires_at, icon FROM " + chests + " WHERE player_uuid = ?";
         this.sqlLoadAllPlayers = "SELECT player_uuid, username, edit_mode, applied_default_size FROM " + players;
@@ -79,6 +95,21 @@ public abstract class AbstractSqlStorage implements StorageBackend {
                 + "WHERE expires_at IS NOT NULL AND expires_at <= ?";
         this.sqlCountChests = "SELECT COUNT(*) FROM " + chests;
         this.sqlNameFind = "SELECT player_uuid FROM " + players + " WHERE username IS NOT NULL AND LOWER(username) = LOWER(?)";
+    }
+
+    /** Builds the dialect's conflict clause updating {@code updateColumns} on a {@code keyColumns} collision. */
+    private static String upsertClause(UpsertSyntax syntax, String keyColumns, String... updateColumns) {
+        StringBuilder sb = new StringBuilder(syntax == UpsertSyntax.ON_CONFLICT
+                ? " ON CONFLICT (" + keyColumns + ") DO UPDATE SET "
+                : " ON DUPLICATE KEY UPDATE ");
+        for (int i = 0; i < updateColumns.length; i++) {
+            if (i > 0) sb.append(", ");
+            String col = updateColumns[i];
+            sb.append(col).append(" = ").append(syntax == UpsertSyntax.ON_CONFLICT
+                    ? "excluded." + col
+                    : "VALUES(" + col + ")");
+        }
+        return sb.toString();
     }
 
     @Override
@@ -125,32 +156,32 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     }
 
     @Override
-    public List<RawChestRow> loadChests(String playerUuid) {
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlLoadPlayerChests)) {
-            ps.setString(1, playerUuid);
-            try (ResultSet rs = ps.executeQuery()) {
-                List<RawChestRow> rows = new ArrayList<>();
-                while (rs.next()) {
-                    rows.add(readChestRow(rs));
+    public OwnerRows loadOwner(String playerUuid) {
+        // Both per-player queries ride one connection acquisition: this is the hottest backend read
+        // (every cache miss / join prefetch), and on the single-connection SQLite pool a second
+        // acquisition would queue behind every other storage call all over again.
+        try (Connection conn = dataSource.getConnection()) {
+            List<RawChestRow> rows = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sqlLoadPlayerChests)) {
+                ps.setString(1, playerUuid);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        rows.add(readChestRow(rs));
+                    }
                 }
-                return rows;
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to load chest rows for " + playerUuid, e);
-        }
-    }
-
-    @Override
-    public RawPlayerRow loadPlayer(String playerUuid) {
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlLoadOnePlayer)) {
-            ps.setString(1, playerUuid);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? readPlayerRow(rs) : null;
+            RawPlayerRow player = null;
+            try (PreparedStatement ps = conn.prepareStatement(sqlLoadOnePlayer)) {
+                ps.setString(1, playerUuid);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        player = readPlayerRow(rs);
+                    }
+                }
             }
+            return new OwnerRows(rows, player);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load player row for " + playerUuid, e);
+            throw new RuntimeException("Failed to load rows for " + playerUuid, e);
         }
     }
 
@@ -224,29 +255,32 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     // ---- flush (autosave / shutdown write-back) ----
 
     @Override
-    public void flushChests(List<RawChestRow> upserts, List<ChestKey> deletes) {
+    public void flushDirty(List<RawChestRow> chestUpserts, List<ChestKey> chestDeletes, List<RawPlayerRow> playerRows) {
+        // One connection, one transaction, one commit for the whole flush: upserts are native
+        // dialect upserts (no pre-delete pass), deletes their own small batch. The flush runs under
+        // the cache's flush lock, so every millisecond here is quit write-back latency for everyone
+        // queued behind it.
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // Upserts are portable delete-then-insert: clear the key first (no-op for a brand-new
-                // row), then write the full row via the same verbatim insert the import path uses.
-                try (PreparedStatement ps = conn.prepareStatement(sqlDeleteChest)) {
-                    int pending = 0;
-                    for (RawChestRow c : upserts) {
-                        ps.setString(1, c.playerUuid());
-                        ps.setInt(2, c.chestIndex());
-                        ps.addBatch();
-                        if (++pending >= BATCH_SIZE) { ps.executeBatch(); pending = 0; }
+                if (!chestDeletes.isEmpty()) {
+                    try (PreparedStatement ps = conn.prepareStatement(sqlDeleteChest)) {
+                        int pending = 0;
+                        for (ChestKey k : chestDeletes) {
+                            ps.setString(1, k.playerUuid());
+                            ps.setInt(2, k.chestIndex());
+                            ps.addBatch();
+                            if (++pending >= BATCH_SIZE) { ps.executeBatch(); pending = 0; }
+                        }
+                        if (pending > 0) ps.executeBatch();
                     }
-                    for (ChestKey k : deletes) {
-                        ps.setString(1, k.playerUuid());
-                        ps.setInt(2, k.chestIndex());
-                        ps.addBatch();
-                        if (++pending >= BATCH_SIZE) { ps.executeBatch(); pending = 0; }
-                    }
-                    if (pending > 0) ps.executeBatch();
                 }
-                batchChests(conn, upserts);
+                if (!chestUpserts.isEmpty()) {
+                    batchChests(conn, sqlUpsertChest, chestUpserts);
+                }
+                if (!playerRows.isEmpty()) {
+                    batchPlayers(conn, sqlUpsertPlayer, playerRows);
+                }
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
@@ -255,34 +289,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to flush chest rows to the database", e);
-        }
-    }
-
-    @Override
-    public void flushPlayers(List<RawPlayerRow> rows) {
-        try (Connection conn = dataSource.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                try (PreparedStatement ps = conn.prepareStatement(sqlDeletePlayer)) {
-                    int pending = 0;
-                    for (RawPlayerRow p : rows) {
-                        ps.setString(1, p.playerUuid());
-                        ps.addBatch();
-                        if (++pending >= BATCH_SIZE) { ps.executeBatch(); pending = 0; }
-                    }
-                    if (pending > 0) ps.executeBatch();
-                }
-                batchPlayers(conn, rows);
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            } finally {
-                conn.setAutoCommit(true);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to flush player rows to the database", e);
+            throw new RuntimeException("Failed to flush dirty rows to the database", e);
         }
     }
 
@@ -293,8 +300,8 @@ public abstract class AbstractSqlStorage implements StorageBackend {
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                int playerCount = batchPlayers(conn, players);
-                int chestCount = batchChests(conn, chests);
+                int playerCount = batchPlayers(conn, sqlInsertPlayer, players);
+                int chestCount = batchChests(conn, sqlInsertChest, chests);
                 conn.commit();
                 return new int[]{playerCount, chestCount};
             } catch (SQLException e) {
@@ -308,11 +315,12 @@ public abstract class AbstractSqlStorage implements StorageBackend {
         }
     }
 
-    // ---- shared batched inserts (operate on a caller-managed connection) ----
+    // ---- shared batched writes (operate on a caller-managed connection; the statement decides
+    // insert-only (import) vs upsert (flush), both binding the same column order) ----
 
-    private int batchPlayers(Connection conn, List<RawPlayerRow> players) throws SQLException {
+    private int batchPlayers(Connection conn, String sql, List<RawPlayerRow> players) throws SQLException {
         int pending = 0, total = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlInsertPlayer)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (RawPlayerRow p : players) {
                 ps.setString(1, p.playerUuid());
                 if (p.username() == null) ps.setNull(2, Types.VARCHAR); else ps.setString(2, p.username());
@@ -330,9 +338,9 @@ public abstract class AbstractSqlStorage implements StorageBackend {
         return total;
     }
 
-    private int batchChests(Connection conn, List<RawChestRow> chests) throws SQLException {
+    private int batchChests(Connection conn, String sql, List<RawChestRow> chests) throws SQLException {
         int pending = 0, total = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sqlInsertChest)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (RawChestRow c : chests) {
                 ps.setString(1, c.playerUuid());
                 ps.setInt(2, c.chestIndex());

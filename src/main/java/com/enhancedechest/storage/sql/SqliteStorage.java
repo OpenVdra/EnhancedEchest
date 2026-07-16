@@ -40,7 +40,7 @@ public final class SqliteStorage extends AbstractSqlStorage {
             """;
 
     public SqliteStorage(Path dataFolder, String fileName, String tablePrefix) {
-        super(buildConfig(dataFolder, fileName), tablePrefix,
+        super(buildConfig(dataFolder, fileName), tablePrefix, UpsertSyntax.ON_CONFLICT,
                 INIT_SQL.formatted(tablePrefix), INIT_SETTINGS_SQL.formatted(tablePrefix));
     }
 

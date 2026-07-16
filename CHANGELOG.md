@@ -11,12 +11,23 @@ All notable changes to EnhancedEchest are recorded here, newest first.
   - On upgrade, existing installs start auto-detecting automatically: set `language-auto-detect: false` to keep the previous behavior of showing every player the single `language` locale.
   - A translation you add under `language/` is now served to matching clients on its own, without having to point `language` at it.
 
+- **Login reminder for temporary chests.** A player who logs in with items still waiting in a temporary chest now gets a reminder to collect them before it expires, shown in chat and on the action bar at once, with a sound. On by default.
+  - Turn the whole reminder off with `temp-enderchest.join-notify.enabled`, or silence just its sound with `temp-enderchest.join-notify.sound.enabled` (the sound is `temp-enderchest.join-notify.sound.key`).
+  - The reminder shows how many temporary chests are waiting and how long until the soonest one expires, and its wording lives in `messages.yml` under `chest.temp-join-chat` and `chest.temp-join-actionbar`. Existing installs get these keys added automatically.
+
 ### Changed
 
 - In the `inventory` style of the `/eclist` chest list, temporary overflow chests now show as a copper chest instead of an ender chest, so they stand out from your normal chests at a glance.
 - In the `inventory` style of the `/eclist` chest list, time-limited chests (a normal chest granted with an expiry) now show as a plain chest instead of an ender chest, so you can tell at a glance which of your chests will expire. A chest you have given a custom icon still shows that icon.
 - Renamed the five import-dialog field labels in `gui.yml` to end in `-label` (for example `dialog.import-host` is now `dialog.import-host-label`), so every input label is named consistently. Existing installs upgrade automatically on startup; only a fully custom `language/` folder needs these keys renamed by hand to stay translated.
 - The "time remaining" text on expiring chests (the `/eclist` expiry line, the sort cooldown message, and `/ee add` with a duration) now shows in each player's own language instead of always using the English `6d 23h` form. New `duration` keys in `messages.yml` let you translate the unit labels and set the spacing (Vietnamese now reads `6 ngày 23 giờ`); existing installs get these keys added automatically.
+
+### Performance
+
+- **Database writes are much faster.** Every write-back (the periodic autosave, the save a few seconds after a player quits, and the final save at shutdown) now writes all pending changes in a single transaction using the database's native upsert, instead of one transaction per table with a separate delete-then-insert pass. This matters most when many players quit at once (a restart, the end of an event): each departing player's data reaches the database in roughly half the time, so the write-back queue drains much faster. Applies to all four backends (SQLite, MySQL, MariaDB, PostgreSQL).
+- **Loading a player's data is faster.** The read that runs when a player joins (and when an admin command touches an offline player) now fetches the player's chests and settings over one database connection instead of two, roughly halving its latency — most noticeable on SQLite, where every database call shares a single connection.
+- Internal bookkeeping of unsaved changes is now tracked per player, so the quit-time "anything left to save?" check is constant-time no matter how many changes are waiting for the next autosave.
+- Measured in the 450-player load simulation (`./gradlew stressTest`): quit write-back latency dropped from ~9.6 ms to ~4 ms, admin reads on offline players from ~3.2 ms to ~1.4 ms, and overall storage throughput improved by roughly 40–70% run-over-run.
 
 ### Fixed
 

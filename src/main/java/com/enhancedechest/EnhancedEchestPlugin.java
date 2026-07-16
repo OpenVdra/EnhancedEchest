@@ -14,6 +14,7 @@ import com.enhancedechest.listener.EnderChestGuiListener;
 import com.enhancedechest.listener.JoinMigrationListener;
 import com.enhancedechest.listener.PlayerQuitListener;
 import com.enhancedechest.listener.PlayerSettingsListener;
+import com.enhancedechest.listener.TempChestJoinNotifyListener;
 import com.enhancedechest.listener.VanillaEnderChestListener;
 import com.enhancedechest.migration.AxVaultsMigrationService;
 import com.enhancedechest.migration.CustomEnderChestMigrationService;
@@ -240,6 +241,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 dbExecutor, getSLF4JLogger(), telemetry), this);
         pm.registerEvents(new PlayerSettingsListener(settingsCache, chestOpener, storage,
                 autosaveService), this);
+        pm.registerEvents(new TempChestJoinNotifyListener(pluginConfig, languageManager, storage,
+                dbExecutor, scheduler, getSLF4JLogger(), telemetry), this);
 
         // Pin + preload players already online (a /reload or hot-load fires no join event for them):
         // the pin keeps them cache-resident while online, and the settings preload also materializes

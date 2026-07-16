@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * The SQL half of the lazy-load + write-back cache model: the narrow contract {@link CachedStorage}
  * needs from a database backend. The cache is authoritative for every owner it holds <i>resident</i>,
- * so the backend is asked to read one player's rows on a cache miss ({@link #loadChests},
- * {@link #loadPlayer}), bulk-write dirty rows back (autosave / quit / shutdown), answer the few
+ * so the backend is asked to read one player's rows on a cache miss ({@link #loadOwner}),
+ * bulk-write dirty rows back (autosave / quit / shutdown), answer the few
  * whole-database questions the cache cannot ({@link #findExpired}, {@link #countChests},
  * {@link #findUuidByName}, {@link #loadAllPlayers} for the startup name index), snapshot itself for a
  * backup, and receive the verbatim {@code /ee import} copy — there are deliberately <b>no per-row
@@ -70,11 +70,15 @@ public interface StorageBackend {
 
     // ---- per-player cache-miss reads ----
 
-    /** Reads one player's {@code enderchests} rows verbatim (lazy cache load on first touch). */
-    List<RawChestRow> loadChests(String playerUuid);
+    /** One player's full cache-miss load: their {@code enderchests} rows plus their (nullable) {@code players} row. */
+    record OwnerRows(List<RawChestRow> chests, @Nullable RawPlayerRow player) {}
 
-    /** Reads one player's {@code players} row verbatim, or null if they have none. */
-    @Nullable RawPlayerRow loadPlayer(String playerUuid);
+    /**
+     * Reads one player's {@code enderchests} rows and {@code players} row verbatim in a single
+     * connection acquisition (lazy cache load on first touch — the hottest backend read, so it must
+     * not pay for two pool round-trips).
+     */
+    OwnerRows loadOwner(String playerUuid);
 
     // ---- whole-database questions the cache cannot answer from resident owners alone ----
 
@@ -98,13 +102,12 @@ public interface StorageBackend {
     @Nullable String findUuidByName(String name);
 
     /**
-     * Writes dirty chest rows back in one transaction: every {@code upserts} row replaces whatever the
-     * table holds for its key (delete-then-insert, portable across all dialects), and every
-     * {@code deletes} key is removed. A failure rolls the whole flush back and throws, so the caller
-     * can re-mark the rows dirty and retry on the next autosave.
+     * Writes every dirty row back in <b>one</b> transaction: each {@code chestUpserts} /
+     * {@code playerRows} row replaces whatever the table holds for its key (native dialect upsert),
+     * and every {@code chestDeletes} key is removed. A single transaction and a single connection
+     * acquisition — the flush runs under the cache's flush lock, so its duration directly gates quit
+     * write-back latency. A failure rolls the whole flush back and throws, so the caller can re-mark
+     * the rows dirty and retry on the next autosave.
      */
-    void flushChests(List<RawChestRow> upserts, List<ChestKey> deletes);
-
-    /** Writes dirty player rows back in one transaction (full-row replace, delete-then-insert). */
-    void flushPlayers(List<RawPlayerRow> rows);
+    void flushDirty(List<RawChestRow> chestUpserts, List<ChestKey> chestDeletes, List<RawPlayerRow> playerRows);
 }

@@ -3,7 +3,6 @@ package com.enhancedechest.storage;
 import com.enhancedechest.crossserver.CrossServerCoordinator;
 import com.enhancedechest.storage.ChestCacheState.DirtyBatch;
 import com.enhancedechest.storage.EnderChestStorage.RawChestRow;
-import com.enhancedechest.storage.EnderChestStorage.RawPlayerRow;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -195,8 +194,7 @@ final class OwnerResidencyCache {
                 // (no-op on the NOOP coordinator). Blocking is fine — this runs on the storage
                 // executor. A failure (owner online on another server) propagates like a failed read.
                 coordinator.acquireOwner(owner);
-                List<RawChestRow> rows = backend.loadChests(key);
-                RawPlayerRow playerRow = backend.loadPlayer(key);
+                StorageBackend.OwnerRows loaded = backend.loadOwner(key);
                 synchronized (lock) {
                     // An eviction may have begun releasing the lock between our acquire and here
                     // (beginRelease runs under this same lock, so this check is never stale). If it
@@ -205,11 +203,11 @@ final class OwnerResidencyCache {
                         continue;
                     }
                     if (!resident.contains(owner)) {
-                        for (RawChestRow c : rows) {
+                        for (RawChestRow c : loaded.chests()) {
                             state.applyRawChest(c);
                         }
-                        if (playerRow != null) {
-                            state.applyRawPlayer(playerRow);
+                        if (loaded.player() != null) {
+                            state.applyRawPlayer(loaded.player());
                         }
                         resident.add(owner);
                     }
@@ -255,12 +253,9 @@ final class OwnerResidencyCache {
             }
         }
         try {
-            if (!batch.chestUpserts().isEmpty() || !batch.chestDeletes().isEmpty()) {
-                backend.flushChests(batch.chestUpserts(), batch.chestDeletes());
-            }
-            if (!batch.playerRows().isEmpty()) {
-                backend.flushPlayers(batch.playerRows());
-            }
+            // One backend call, one transaction, one commit for chests and players together — the
+            // whole write-back happens under flushLock, so its duration gates every queued quitter.
+            backend.flushDirty(batch.chestUpserts(), batch.chestDeletes(), batch.playerRows());
         } catch (RuntimeException e) {
             // Put the keys back so the next autosave retries them with their then-current state.
             synchronized (lock) {
@@ -342,12 +337,11 @@ final class OwnerResidencyCache {
             List<UUID> released = new ArrayList<>();
             int evicted;
             synchronized (lock) {
-                Set<UUID> dirtyOwners = state.dirtyOwners();
                 evicted = 0;
                 Iterator<UUID> it = resident.iterator();
                 while (it.hasNext()) {
                     UUID owner = it.next();
-                    if (pinned.contains(owner) || dirtyOwners.contains(owner)) {
+                    if (pinned.contains(owner) || !state.isClean(owner)) {
                         continue;
                     }
                     state.dropOwner(owner);

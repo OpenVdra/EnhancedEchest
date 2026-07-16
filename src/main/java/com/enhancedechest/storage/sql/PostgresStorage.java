@@ -38,7 +38,7 @@ public final class PostgresStorage extends AbstractSqlStorage {
             """;
 
     public PostgresStorage(PluginConfig config) {
-        super(buildConfig(config), config.getTablePrefix(),
+        super(buildConfig(config), config.getTablePrefix(), UpsertSyntax.ON_CONFLICT,
                 INIT_SQL.formatted(config.getTablePrefix()), INIT_SETTINGS_SQL.formatted(config.getTablePrefix()));
     }
 

@@ -34,9 +34,13 @@ methods all run under the engine's lock. The behaviour below is unchanged by tha
   allocation (`max+1`), primary fallback, the transfer collision rules, targeted settings upserts,
   `saveChest` being a no-op on a deleted row, and so on. Writes mark the row **dirty**.
 - `flush()` snapshots dirty rows under the lock, then writes them to SQL **outside** it —
-  `flushChests`/`flushPlayers` on `AbstractSqlStorage` are one transaction per table, portable
-  delete-then-insert full-row replaces (reusing the verbatim import inserts). Row presence at flush time
-  decides upsert vs `DELETE`. A failed flush re-marks the rows dirty and they retry on the next autosave.
+  `flushDirty` on `AbstractSqlStorage` writes chests **and** players in one connection acquisition,
+  one transaction, one commit, using the dialect's native upsert (`ON CONFLICT DO UPDATE` on
+  SQLite/Postgres, `ON DUPLICATE KEY UPDATE` on MySQL/MariaDB — selected by the `UpsertSyntax` enum
+  the subclass passes in). Row presence at flush time decides upsert vs `DELETE`. A failed flush
+  re-marks the rows dirty and they retry on the next autosave. Dirty keys are tracked per owner
+  (`Map<UUID, Set<Integer>>`), so the per-quit `isClean` check is O(1) and the quit-path group drain
+  touches only the drained owners.
 - Write-back + eviction is driven by **`AutosaveService`**: the periodic timer
   (`database.autosave-interval`, default `3m`, min 30s, reload-safe) calls `flush()` then `evictIdle()`
   (drops every owner that is offline/unpinned **and** clean); `flushQuitterLater` writes back and evicts
@@ -129,8 +133,12 @@ statements: a versioned, forward-only migrator (`<prefix>schema_meta` table) tha
 the migrator's steps no-op on it. `ensureIndexes` (the `expires_at` index) also carries the prefix in both
 the table and the index name, since SQLite/PostgreSQL require index names unique database-wide.
 
-**Rule:** all SQL portable, only DDL per-dialect. Avoid `ON CONFLICT` / `ON DUPLICATE KEY`; the flush
-upserts are portable delete-then-insert full-row replaces instead.
+**Rule:** all SQL portable except the flush upserts and the DDL. The flush write-back deliberately
+uses the dialect's native upsert (`ON CONFLICT (…) DO UPDATE SET col = excluded.col` on
+SQLite/Postgres, `ON DUPLICATE KEY UPDATE col = VALUES(col)` on MySQL/MariaDB) — one B-tree mutation
+and one batch execution per row instead of the two the old portable delete-then-insert paid; the
+clause is built once in `AbstractSqlStorage` from the `UpsertSyntax` enum the subclass passes. The
+verbatim `/ee import` copy keeps the plain `INSERT` (a duplicate key must fail the import).
 
 ## Schema: `enderchests` (table: `<prefix>enderchests`, default `echest_enderchests`)
 

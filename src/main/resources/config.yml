@@ -82,6 +82,18 @@ temp-enderchest:
     enabled: true
     # Any Minecraft sound id. Default is the villager "no" grunt.
     key: minecraft:entity.villager.no
+  # Remind a player when they log in with items still waiting in a temporary chest, so they collect
+  # them before it expires. The reminder is shown BOTH in chat and on the action bar at once. Wording
+  # is in language/<locale>/messages.yml (chest.temp-join-chat / chest.temp-join-actionbar).
+  join-notify:
+    # Set to false to disable the join reminder entirely.
+    enabled: true
+    # Sound played together with the reminder.
+    sound:
+      # Set to false to play no sound.
+      enabled: true
+      # Any Minecraft sound id.
+      key: minecraft:block.note_block.pling
 
 database:
   # NOTE: changes to the CONNECTION settings in this section (type/file/host/port/database/username/

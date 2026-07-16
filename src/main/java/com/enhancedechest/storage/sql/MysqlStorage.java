@@ -39,7 +39,7 @@ public final class MysqlStorage extends AbstractSqlStorage {
             """;
 
     public MysqlStorage(PluginConfig config) {
-        super(buildConfig(config), config.getTablePrefix(),
+        super(buildConfig(config), config.getTablePrefix(), UpsertSyntax.ON_DUPLICATE_KEY,
                 INIT_SQL.formatted(config.getTablePrefix()), INIT_SETTINGS_SQL.formatted(config.getTablePrefix()));
     }
 

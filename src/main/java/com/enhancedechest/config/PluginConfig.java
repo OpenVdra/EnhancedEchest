@@ -60,6 +60,13 @@ public final class PluginConfig {
     private long expiryCheckIntervalMillis;
     /** Sound played when a player tries to deposit into a take-only temp chest; null when disabled. */
     private Sound tempDenySound;
+    /**
+     * When on (default), a player who joins with items still sitting in a temporary chest gets a
+     * chat + action-bar reminder to collect them before the temp chest expires.
+     */
+    private volatile boolean tempJoinNotifyEnabled;
+    /** Sound played alongside the join reminder above; null when disabled. */
+    private Sound tempJoinNotifySound;
 
     // Database — common
     private String databaseType;
@@ -134,7 +141,10 @@ public final class PluginConfig {
 
         tempExpiryMillis          = parseDuration(config.getString("temp-enderchest.expiry", "7d"), "7d");
         expiryCheckIntervalMillis = parseDuration(config.getString("temp-enderchest.check-interval", "5m"), "5m");
-        tempDenySound             = parseSound(config);
+        tempDenySound             = parseSound(config, "temp-enderchest.deny-sound", "minecraft:entity.villager.no");
+        tempJoinNotifyEnabled     = config.getBoolean("temp-enderchest.join-notify.enabled", true);
+        tempJoinNotifySound       = parseSound(config, "temp-enderchest.join-notify.sound",
+                "minecraft:block.note_block.pling");
 
         databaseType = config.getString("database.type", "sqlite");
         tablePrefix  = sanitizeTablePrefix(config.getString("database.table-prefix", "echest_"));
@@ -170,19 +180,19 @@ public final class PluginConfig {
     }
 
     /**
-     * Builds the temp-chest deny sound from config. Returns {@code null} when disabled; falls back to
-     * the default villager "no" sound if the configured key is malformed.
+     * Builds a configurable sound from a {@code <path>.enabled} / {@code <path>.key} pair. Returns
+     * {@code null} when disabled; falls back to {@code defaultKey} if the configured key is malformed.
      */
-    private static Sound parseSound(FileConfiguration config) {
-        if (!config.getBoolean("temp-enderchest.deny-sound.enabled", true)) {
+    private static Sound parseSound(FileConfiguration config, String path, String defaultKey) {
+        if (!config.getBoolean(path + ".enabled", true)) {
             return null;
         }
-        String rawKey = config.getString("temp-enderchest.deny-sound.key", "minecraft:entity.villager.no");
+        String rawKey = config.getString(path + ".key", defaultKey);
         Key key;
         try {
             key = Key.key(rawKey);
         } catch (IllegalArgumentException e) {
-            key = Key.key("minecraft:entity.villager.no");
+            key = Key.key(defaultKey);
         }
         return Sound.sound(key, Sound.Source.MASTER, 1.0f, 1.0f);
     }
