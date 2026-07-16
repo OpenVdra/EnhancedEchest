@@ -19,8 +19,8 @@ chest:
   # temp-enderchest.join-notify). {count} = số rương tạm, {time} = thời gian đến khi rương gần hết hạn
   # nhất hết hạn (ví dụ "6 ngày 23 giờ"). Bản chat bên dưới là thông báo đầy đủ; bản action bar là dòng
   # ngắn gọn hiện cùng lúc.
-  temp-join-chat: '{prefix}<red>Bạn còn vật phẩm trong {count} rương tạm. Hãy lấy chúng ra với /ec trước khi hết hạn. Rương gần nhất sẽ hết hạn sau {time}.'
-  temp-join-actionbar: '<red>Còn vật phẩm trong rương tạm. Hãy lấy ra trong {time}!'
+  temp-join-chat: '{prefix}<red>Bạn còn vật phẩm trong {count} rương ender tạm. Hãy lấy ra trước khi hết hạn. Gần nhất sau {time}.'
+  temp-join-actionbar: '<red>Còn vật phẩm trong rương ender tạm. Hãy lấy ra trong {time}!'
   # Hiện cho quản trị viên khi mở rương đang được dùng (Folia chỉ cho một người xem mỗi rương).
   in-use: '{prefix}Rương ender đó đang được sử dụng. Vui lòng thử lại sau giây lát.'
   # Action bar hiện cho quản trị viên chỉ được xem mà không được sửa rương người khác (không có quyền sửa).

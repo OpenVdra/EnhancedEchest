@@ -18,10 +18,10 @@ chest:
   temp-take-only: '<red>This is a temporary chest. You can only take items out, not put them in.'
   # Reminder sent on join when the player has items waiting in temporary chest(s) (config
   # temp-enderchest.join-notify). {count} = how many temp chests, {time} = time until the soonest one
-  # expires (e.g. "6d 23h"). The chat version below is the full message; the action-bar version is a
-  # shorter one-liner shown at the same time.
-  temp-join-chat: '{prefix}<red>You have items waiting in {count} temporary chest(s). Collect them with /ec before they expire. The soonest expires in {time}.'
-  temp-join-actionbar: '<red>Items waiting in a temporary chest. Collect them within {time}!'
+  # expires (e.g. "6d 23h"). The chat version below is the full message; the action-bar version is an
+  # even shorter one-liner shown at the same time.
+  temp-join-chat: '{prefix}<red>You have items in {count} temporary ender chest(s). Collect them before they expire. Soonest in {time}.'
+  temp-join-actionbar: '<red>Items in a temporary ender chest. Collect within {time}!'
   # Shown to an admin who tries to open a chest already in use (Folia allows only one viewer per chest).
   in-use: '{prefix}That ender chest is currently in use. Please try again in a moment.'
   # Action bar shown to an admin who may view but not edit another player''s chest (no edit permission).
