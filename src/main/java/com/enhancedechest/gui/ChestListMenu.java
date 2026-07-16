@@ -4,10 +4,10 @@ import com.enhancedechest.gui.dialog.IconCatalog;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.model.ChestKind;
 import com.enhancedechest.model.ChestSummary;
-import com.enhancedechest.util.DurationFormat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.translation.Argument;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -144,8 +144,8 @@ public final class ChestListMenu {
         List<Component> lore = new ArrayList<>(2);
         lore.add(loreLine(lang.getGui(locale, "dialog.slots", "size", Integer.toString(chest.size()))));
         if (chest.expiresAt() != null) {
-            String remaining = DurationFormat.formatRemaining(chest.expiresAt() - System.currentTimeMillis());
-            lore.add(loreLine(lang.getGui(locale, "dialog.expires-in", "time", remaining)));
+            Component remaining = lang.duration(chest.expiresAt() - System.currentTimeMillis());
+            lore.add(loreLine(lang.getGuiArgs(locale, "dialog.expires-in", Argument.component("time", remaining))));
         }
         meta.lore(lore);
 

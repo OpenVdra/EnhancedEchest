@@ -7,7 +7,6 @@ import com.enhancedechest.model.ChestSummary;
 import com.enhancedechest.service.ChestOpener;
 import com.enhancedechest.service.PlayerSettingsCache;
 import com.enhancedechest.service.StorageGateway;
-import com.enhancedechest.util.DurationFormat;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
@@ -19,6 +18,7 @@ import com.enhancedechest.migration.SourceSpec;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.minimessage.translation.Argument;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -711,8 +711,8 @@ public final class ChestDialogs {
         if (chest.expiresAt() == null) {
             return null;
         }
-        String remaining = DurationFormat.formatRemaining(chest.expiresAt() - System.currentTimeMillis());
-        return lang.getGui(locale, "dialog.expires-in", "time", remaining);
+        Component remaining = lang.duration(chest.expiresAt() - System.currentTimeMillis());
+        return lang.getGuiArgs(locale, "dialog.expires-in", Argument.component("time", remaining));
     }
 
     private static DialogAction click(BiConsumer<io.papermc.paper.dialog.DialogResponseView,

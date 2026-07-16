@@ -1,5 +1,8 @@
 package com.enhancedechest.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Parses and formats human-friendly durations.
  *
@@ -97,37 +100,82 @@ public final class DurationFormat {
     }
 
     /**
-     * Formats a remaining duration as a compact human-friendly string showing the two most
-     * significant non-zero units, e.g. {@code "23h 45m"} or {@code "1d 4h"}.
+     * One unit component of a formatted duration: a whole {@code count} of the unit named by
+     * {@code unit} (one of {@code year month week day hour minute second}). The unit name is a stable
+     * key, not display text, so callers can localize it (e.g. into {@code enhancedechest.msg.duration.<unit>}).
+     */
+    public record Part(long count, String unit) {}
+
+    /** Unit lengths, longest first — parallel to {@link #UNIT_NAMES}. */
+    private static final long[] UNIT_LENGTHS = {YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, SECOND};
+    /** Stable unit names, parallel to {@link #UNIT_LENGTHS}. */
+    private static final String[] UNIT_NAMES = {"year", "month", "week", "day", "hour", "minute", "second"};
+
+    /**
+     * Breaks a remaining duration into the two most significant non-zero units, e.g. {@code [1d, 4h]} or
+     * {@code [23h, 45m]}, as locale-free {@link Part}s the caller renders into localized text. Rather than
+     * baking unit suffixes into a string (which could not be localized), this returns only the numbers and
+     * unit names.
+     *
+     * <p>Edge cases mirror the old compact formatter: a zero or negative duration yields a single
+     * {@code 0 second} part, and a sub-second positive value rounds up to a single {@code 1 second} part —
+     * so the result is never empty.
+     *
+     * @param millis the remaining time in milliseconds
+     * @return an immutable list of one or two parts, most significant first
+     */
+    public static List<Part> remainingParts(long millis) {
+        if (millis <= 0L) {
+            return List.of(new Part(0L, "second"));
+        }
+
+        List<Part> parts = new ArrayList<>(2);
+        long remaining = millis;
+        for (int i = 0; i < UNIT_LENGTHS.length && parts.size() < 2; i++) {
+            long count = remaining / UNIT_LENGTHS[i];
+            if (count == 0) {
+                continue; // skip zero units; show the two most significant non-zero ones
+            }
+            parts.add(new Part(count, UNIT_NAMES[i]));
+            remaining -= count * UNIT_LENGTHS[i];
+        }
+
+        // Fallback: a sub-second positive value rounds up to "1 second".
+        if (parts.isEmpty()) {
+            parts.add(new Part(1L, "second"));
+        }
+        return parts;
+    }
+
+    /**
+     * Compact, non-localized form of {@link #remainingParts} ({@code "1d 4h"}, {@code "0s"}) for logs and
+     * the startup banner. <b>Player-facing</b> text must localize the parts instead (see
+     * {@code LanguageManager#duration}), since these suffixes are English.
      *
      * @param millis the remaining time in milliseconds
      * @return a short label; {@code "0s"} when the duration is zero or negative
      */
     public static String formatRemaining(long millis) {
-        if (millis <= 0L) {
-            return "0s";
-        }
-
-        long[] lengths = {YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, SECOND};
-        String[] suffixes = {"y", "mo", "w", "d", "h", "m", "s"};
-
         StringBuilder out = new StringBuilder();
-        long remaining = millis;
-        int shown = 0;
-        for (int i = 0; i < lengths.length && shown < 2; i++) {
-            long count = remaining / lengths[i];
-            if (count == 0) {
-                continue; // skip zero units; show the two most significant non-zero ones
-            }
+        for (Part part : remainingParts(millis)) {
             if (out.length() > 0) {
                 out.append(' ');
             }
-            out.append(count).append(suffixes[i]);
-            remaining -= count * lengths[i];
-            shown++;
+            out.append(part.count()).append(compactSuffix(part.unit()));
         }
+        return out.toString();
+    }
 
-        // Fallback: a sub-second positive value rounds up to "1s".
-        return out.length() == 0 ? "1s" : out.toString();
+    /** English suffix for a unit name, used only by the non-localized {@link #formatRemaining}. */
+    private static String compactSuffix(String unit) {
+        switch (unit) {
+            case "year":   return "y";
+            case "month":  return "mo";
+            case "week":   return "w";
+            case "day":    return "d";
+            case "hour":   return "h";
+            case "minute": return "m";
+            default:       return "s";
+        }
     }
 }

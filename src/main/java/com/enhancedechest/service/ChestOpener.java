@@ -13,7 +13,7 @@ import com.enhancedechest.model.ChestSummary;
 import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.storage.EnderChestStorage;
 import com.enhancedechest.telemetry.Telemetry;
-import com.enhancedechest.util.DurationFormat;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -503,9 +503,9 @@ public final class ChestOpener {
         if (cooldown > 0) {
             Long last = lastSortAt.get(viewerId);
             if (last != null && now - last < cooldown) {
-                String remaining = DurationFormat.formatRemaining(cooldown - (now - last));
+                Component remaining = lang.duration(cooldown - (now - last));
                 scheduler.runAtEntity(viewer, t -> {
-                    if (viewer.isOnline()) viewer.sendMessage(lang.get("chest.sort-cooldown", "time", remaining));
+                    if (viewer.isOnline()) viewer.sendMessage(lang.getRich("chest.sort-cooldown", "time", remaining));
                 });
                 return;
             }

@@ -11,6 +11,7 @@ import com.enhancedechest.service.StorageGateway;
 import com.enhancedechest.util.DurationFormat;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.translation.Argument;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -63,7 +64,7 @@ public final class ChestAdminCommand {
             int total = Math.max(1, count);
 
             Long expiresAt = null;
-            String durationLabel = null;
+            Component durationLabel = null;
             if (duration != null) {
                 long durationMillis;
                 try {
@@ -73,10 +74,10 @@ public final class ChestAdminCommand {
                     return;
                 }
                 expiresAt = System.currentTimeMillis() + durationMillis;
-                durationLabel = DurationFormat.formatRemaining(durationMillis);
+                durationLabel = ctx.lang.duration(durationMillis);
             }
 
-            final String label = durationLabel;
+            final Component label = durationLabel;
             createChests(ctx, total, size, expiresAt).thenAccept(indices -> {
                 if (indices.size() == 1) {
                     int index = indices.get(0);
@@ -86,11 +87,11 @@ public final class ChestAdminCommand {
                                 "index", Integer.toString(index),
                                 "size", Integer.toString(size)));
                     } else {
-                        ctx.sender.sendMessage(ctx.lang.get("admin.chest-added-expiring",
-                                "player", playerName,
-                                "index", Integer.toString(index),
-                                "size", Integer.toString(size),
-                                "duration", label));
+                        ctx.sender.sendMessage(ctx.lang.getArgs("admin.chest-added-expiring",
+                                Argument.string("player", playerName),
+                                Argument.string("index", Integer.toString(index)),
+                                Argument.string("size", Integer.toString(size)),
+                                Argument.component("duration", label)));
                     }
                     return;
                 }
@@ -102,12 +103,12 @@ public final class ChestAdminCommand {
                             "range", range,
                             "size", Integer.toString(size)));
                 } else {
-                    ctx.sender.sendMessage(ctx.lang.get("admin.chests-added-expiring",
-                            "player", playerName,
-                            "count", Integer.toString(indices.size()),
-                            "range", range,
-                            "size", Integer.toString(size),
-                            "duration", label));
+                    ctx.sender.sendMessage(ctx.lang.getArgs("admin.chests-added-expiring",
+                            Argument.string("player", playerName),
+                            Argument.string("count", Integer.toString(indices.size())),
+                            Argument.string("range", range),
+                            Argument.string("size", Integer.toString(size)),
+                            Argument.component("duration", label)));
                 }
             });
         });

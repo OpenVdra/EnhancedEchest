@@ -1,6 +1,8 @@
 package com.enhancedechest.lang;
 
 import com.enhancedechest.config.PluginConfig;
+import com.enhancedechest.util.DurationFormat;
+import net.kyori.adventure.text.minimessage.translation.Argument;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.Translator;
@@ -75,5 +77,46 @@ class LanguageManagerIntegrationTest {
     void unbundledLocaleFallsBackToConfigLocale() {
         Locale ja = Translator.parseLocale("ja_JP");
         assertEquals("Your Ender Chests", rendered("dialog.list-title", ja));
+    }
+
+    /** Renders a deferred duration Component (nested unit translatables) for {@code viewer}. */
+    private String renderedDuration(long millis, Locale viewer) {
+        return PLAIN.serialize(GlobalTranslator.render(lang.duration(millis), viewer));
+    }
+
+    @Test
+    void durationRendersTwoUnitsLocalizedPerViewer() {
+        Locale en = Translator.parseLocale("en_US");
+        Locale vi = Translator.parseLocale("vi_VN");
+        long millis = DurationFormat.parse("6d_23h");
+
+        // The number/label spacing is entirely locale-controlled: compact "6d 23h" vs spaced Vietnamese.
+        assertEquals("6d 23h", renderedDuration(millis, en));
+        assertEquals("6 ngày 23 giờ", renderedDuration(millis, vi));
+    }
+
+    @Test
+    void durationEdgeCasesLocalize() {
+        Locale en = Translator.parseLocale("en_US");
+        Locale vi = Translator.parseLocale("vi_VN");
+
+        // Zero/negative -> "0s"; a sub-second positive value rounds up to "1s".
+        assertEquals("0s", renderedDuration(0L, en));
+        assertEquals("0 giây", renderedDuration(-5L, vi));
+        assertEquals("1s", renderedDuration(500L, en));
+    }
+
+    @Test
+    void durationInsertedIntoMessageResolvesNestedUnitsPerViewer() {
+        Locale vi = Translator.parseLocale("vi_VN");
+        long millis = DurationFormat.parse("1d_4h");
+
+        // getGuiArgs renders the outer key eagerly for the viewer; the nested duration units must resolve
+        // in the same pass (the whole point of approach B) rather than leaking their raw keys.
+        String line = PLAIN.serialize(
+                lang.getGuiArgs(vi, "dialog.expires-in", Argument.component("time", lang.duration(millis))));
+
+        assertEquals("Hết hạn sau 1 ngày 4 giờ", line);
+        assertFalse(line.contains("enhancedechest."), "raw key leaked: " + line);
     }
 }

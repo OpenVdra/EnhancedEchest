@@ -100,3 +100,17 @@ update:
   # {url} is supplied as a ready-made clickable component from code, so keep it in text position
   # (a placeholder inside a <click:...> attribute is not substituted per-viewer).
   download: '{prefix}<gray>Download: {url}'
+
+# Duration unit labels, used to build the "time remaining" text shown wherever a chest expires
+# (the /eclist expiry line, the sort cooldown message, /ee add with a duration, ...). Only the two most
+# significant non-zero units are shown, e.g. "1d 4h". {count} is the number; put a space before the unit
+# word if your language reads better that way (as vi_VN does). Do not add colour codes here; the text
+# inherits the colour of the message it is placed into.
+duration:
+  year: '{count}y'
+  month: '{count}mo'
+  week: '{count}w'
+  day: '{count}d'
+  hour: '{count}h'
+  minute: '{count}m'
+  second: '{count}s'

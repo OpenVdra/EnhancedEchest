@@ -16,6 +16,7 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 - In the `inventory` style of the `/eclist` chest list, temporary overflow chests now show as a copper chest instead of an ender chest, so they stand out from your normal chests at a glance.
 - In the `inventory` style of the `/eclist` chest list, time-limited chests (a normal chest granted with an expiry) now show as a plain chest instead of an ender chest, so you can tell at a glance which of your chests will expire. A chest you have given a custom icon still shows that icon.
 - Renamed the five import-dialog field labels in `gui.yml` to end in `-label` (for example `dialog.import-host` is now `dialog.import-host-label`), so every input label is named consistently. Existing installs upgrade automatically on startup; only a fully custom `language/` folder needs these keys renamed by hand to stay translated.
+- The "time remaining" text on expiring chests (the `/eclist` expiry line, the sort cooldown message, and `/ee add` with a duration) now shows in each player's own language instead of always using the English `6d 23h` form. New `duration` keys in `messages.yml` let you translate the unit labels and set the spacing (Vietnamese now reads `6 ngày 23 giờ`); existing installs get these keys added automatically.
 
 ### Fixed
 

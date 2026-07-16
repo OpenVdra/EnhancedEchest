@@ -100,3 +100,16 @@ update:
   # {url} được cấp sẵn dạng component bấm được từ code, nên để ở vị trí văn bản
   # (placeholder nằm trong thuộc tính <click:...> sẽ không được thay theo từng người xem).
   download: '{prefix}<gray>Tải về: {url}'
+
+# Nhãn đơn vị thời gian, dùng để dựng chuỗi "thời gian còn lại" ở mọi nơi rương hết hạn
+# (dòng hết hạn trong /eclist, thông báo chờ sắp xếp, /ee add có thời hạn, ...). Chỉ hiển thị hai đơn vị
+# lớn nhất khác 0, ví dụ "1 ngày 4 giờ". {count} là con số; thêm dấu cách trước từ đơn vị cho tự nhiên
+# (tiếng Việt nên có). Đừng thêm mã màu ở đây; chữ sẽ theo màu của thông báo chứa nó.
+duration:
+  year: '{count} năm'
+  month: '{count} tháng'
+  week: '{count} tuần'
+  day: '{count} ngày'
+  hour: '{count} giờ'
+  minute: '{count} phút'
+  second: '{count} giây'

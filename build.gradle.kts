@@ -122,6 +122,12 @@ tasks.shadowJar {
 
     configurations = listOf(shade)
 
+    // Let duplicate entries reach the transformers (mergeServiceFiles). The task default is
+    // EXCLUDE, which drops duplicate META-INF/services/* files — the JDBC drivers each ship a
+    // java.sql.Driver service file, and MariaDB ships several plugin service files — before the
+    // ServiceFileTransformer can merge them, silently losing driver/plugin registrations.
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
     exclude("META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA")
     exclude("META-INF/maven/**")
     exclude("META-INF/MANIFEST.MF")
@@ -165,8 +171,6 @@ tasks.processResources {
 tasks.runServer {
     downloadPlugins {
         // modrinth("luckperms", "v5.5.53-bukkit")
-        // modrinth("axvaults", "2.15.0")
-        // modrinth("custom-ender-chest", "Zo10TSW5")
         modrinth("viaversion", "5.10.0")
     }
     minecraftVersion("1.21.11")

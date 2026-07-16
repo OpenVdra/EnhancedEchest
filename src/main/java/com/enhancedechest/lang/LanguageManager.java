@@ -4,8 +4,10 @@ import com.enhancedechest.config.ConfigMigrations;
 import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.config.YamlMigrator;
 import com.enhancedechest.model.ChestKind;
+import com.enhancedechest.util.DurationFormat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
@@ -275,6 +277,43 @@ public final class LanguageManager {
      */
     public Component getRich(String key, String name, ComponentLike value) {
         return Component.translatable(NS_MSG + key, Argument.component(name, value));
+    }
+
+    /**
+     * Deferred message with an arbitrary mix of arguments — pass ready-made {@link Argument#string} /
+     * {@link Argument#component} objects. Used when at least one argument is itself a Component that must
+     * localize per viewer (e.g. a {@link #duration duration}), which the plain-string {@link #get} can't carry.
+     */
+    public Component getArgs(String key, ComponentLike... args) {
+        return Component.translatable(NS_MSG + key, args);
+    }
+
+    /**
+     * Eager, locale-rendered GUI label taking the same arbitrary {@link Argument} mix as {@link #getArgs}.
+     * For Dialog-API / inventory-item surfaces (which Paper does not run through the {@code GlobalTranslator}),
+     * so callers pass the viewer's {@code player.locale()}. A component argument's own nested translatables
+     * are resolved by this same render pass, so a {@link #duration duration} inserted here localizes too.
+     */
+    public Component getGuiArgs(Locale locale, String key, ComponentLike... args) {
+        return GlobalTranslator.render(Component.translatable(NS_GUI + key, args), locale);
+    }
+
+    /**
+     * A remaining duration ("6d 23h", "6 ngày 23 giờ", ...) as a per-viewer translatable Component: the two
+     * most significant units, each rendered from {@code enhancedechest.msg.duration.<unit>} (template
+     * {@code {count}<unit-label>}) so operators localize the unit labels and number/label spacing in
+     * {@code messages.yml}. Insert it into a message with {@link #getRich}/{@link #getArgs} (chat) or
+     * {@link #getGuiArgs} (dialogs/inventory), never {@link #get} (which would flatten it to a key).
+     *
+     * @see DurationFormat#remainingParts(long)
+     */
+    public Component duration(long millis) {
+        List<Component> parts = new ArrayList<>(2);
+        for (DurationFormat.Part part : DurationFormat.remainingParts(millis)) {
+            parts.add(Component.translatable(NS_MSG + "duration." + part.unit(),
+                    Argument.string("count", Long.toString(part.count()))));
+        }
+        return Component.join(JoinConfiguration.separator(Component.space()), parts);
     }
 
     /**
