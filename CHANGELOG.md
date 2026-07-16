@@ -25,9 +25,9 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 ### Performance
 
 - **Database writes are much faster.** Every write-back (the periodic autosave, the save a few seconds after a player quits, and the final save at shutdown) now writes all pending changes in a single transaction using the database's native upsert, instead of one transaction per table with a separate delete-then-insert pass. This matters most when many players quit at once (a restart, the end of an event): each departing player's data reaches the database in roughly half the time, so the write-back queue drains much faster. Applies to all four backends (SQLite, MySQL, MariaDB, PostgreSQL).
-- **Loading a player's data is faster.** The read that runs when a player joins (and when an admin command touches an offline player) now fetches the player's chests and settings over one database connection instead of two, roughly halving its latency — most noticeable on SQLite, where every database call shares a single connection.
+- **Loading a player's data is faster.** The read that runs when a player joins (and when an admin command touches an offline player) now fetches the player's chests and settings over one database connection instead of two, roughly halving its latency. The difference is most noticeable on SQLite, where every database call shares a single connection.
 - Internal bookkeeping of unsaved changes is now tracked per player, so the quit-time "anything left to save?" check is constant-time no matter how many changes are waiting for the next autosave.
-- Measured in the 450-player load simulation (`./gradlew stressTest`): quit write-back latency dropped from ~9.6 ms to ~4 ms, admin reads on offline players from ~3.2 ms to ~1.4 ms, and overall storage throughput improved by roughly 40–70% run-over-run.
+- Measured in the 450-player load simulation (`./gradlew stressTest`): quit write-back latency dropped from ~9.6 ms to ~4 ms, admin reads on offline players from ~3.2 ms to ~1.4 ms, and overall storage throughput improved by roughly 40-70% run-over-run.
 
 ### Fixed
 
@@ -39,13 +39,13 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 - New default for `temp-enderchest.expiry` is now **7d** (was 24h), so temporary overflow chests keep their items for a week before expiring.
 - New default for `database.autosave-interval` is now **3m** (was 5m), narrowing the window of unsaved changes if the server is killed hard.
-- Both only affect fresh installs — existing `config.yml` files keep whatever value they already have. Edit those keys (and `/ee reload` for `autosave-interval`) to adopt the new values.
+- Both only affect fresh installs: existing `config.yml` files keep whatever value they already have. Edit those keys (and `/ee reload` for `autosave-interval`) to adopt the new values.
 
 ### Added
 
 - **Optional TLS encryption for remote databases.** A new `database.ssl` setting encrypts the connection to a remote MySQL, MariaDB, or PostgreSQL server. Off by default; requires a full server restart to change (like the other connection settings). SQLite is unaffected.
   - `disable` (default) keeps the connection unencrypted.
-  - `require` encrypts the connection but does not verify the server's certificate or hostname — it stops passive snooping, not an active man-in-the-middle.
+  - `require` encrypts the connection but does not verify the server's certificate or hostname; it stops passive snooping, not an active man-in-the-middle.
   - `verify-full` encrypts and verifies the certificate chain and hostname; the database server's CA must be trusted by your Minecraft server's JVM. This is the only mode that defends against a man-in-the-middle.
   - The Redis connection (`cross-server.redis.ssl`) verifies the certificate chain **and** hostname when enabled, matching database `verify-full`.
 
