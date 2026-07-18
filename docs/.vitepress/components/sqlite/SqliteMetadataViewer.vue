@@ -1,7 +1,12 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useData } from 'vitepress'
 import LucideIcon from '../icon/LucideIcon.vue'
+import {
+  clearTransientSqliteSession,
+  getTransientSqliteSession,
+  setTransientSqliteSession,
+} from './transientSession.js'
 
 const { lang } = useData()
 const isVi = computed(() => lang.value.startsWith('vi'))
@@ -10,10 +15,17 @@ const copy = computed(() => isVi.value ? {
   dropTitle: 'Chọn cơ sở dữ liệu SQLite',
   dropHint: 'Kéo thả file vào đây hoặc chọn enderchests.db',
   choose: 'Chọn file SQLite',
-  privacy: 'File chỉ được đọc trong trình duyệt và không được tải lên máy chủ.',
+  privacy: 'File chỉ được xử lý trong trình duyệt và không được tải lên máy chủ.',
   loading: 'Đang mở cơ sở dữ liệu…',
   replace: 'Đổi file',
+  download: 'Tải file .db',
   close: 'Đóng',
+  modified: 'Có thay đổi chưa tải xuống',
+  editHint: 'Bấm vào một ô để sửa. Ô BLOB chỉ đọc.',
+  saveEdit: 'Lưu thay đổi',
+  cancelEdit: 'Hủy',
+  setNull: 'Đặt NULL',
+  required: 'bắt buộc',
   tables: 'Bảng',
   rows: 'hàng',
   search: 'Tìm trong bảng…',
@@ -26,15 +38,29 @@ const copy = computed(() => isVi.value ? {
   emptyDb: 'Cơ sở dữ liệu không có bảng nào để hiển thị.',
   invalidDb: 'Không thể mở file này. Hãy chọn một cơ sở dữ liệu SQLite hợp lệ.',
   readError: 'Không thể đọc dữ liệu từ bảng đã chọn.',
+  updateError: 'Không thể cập nhật ô này.',
+  invalidNumber: 'Giá trị này phải là một số hợp lệ.',
+  nullNotAllowed: 'Cột này bắt buộc phải có giá trị và không thể đặt thành NULL.',
+  uniqueViolation: 'Giá trị này bị trùng với một hàng khác hoặc tạo ra khóa đã tồn tại.',
+  checkViolation: 'Giá trị này không đáp ứng quy tắc dữ liệu của bảng.',
+  foreignKeyViolation: 'Giá trị này không tham chiếu đến một hàng hợp lệ trong bảng liên quan.',
+  typeMismatch: 'Giá trị này không đúng kiểu dữ liệu mà cột yêu cầu.',
   fileTooLarge: 'File quá lớn để mở an toàn trong trình duyệt (tối đa 100 MB).',
 } : {
   dropTitle: 'Choose a SQLite database',
   dropHint: 'Drop a file here or select enderchests.db',
   choose: 'Choose SQLite file',
-  privacy: 'The file is read only in your browser and is never uploaded.',
+  privacy: 'The file is processed only in your browser and is never uploaded.',
   loading: 'Opening database…',
   replace: 'Change file',
+  download: 'Download .db',
   close: 'Close',
+  modified: 'Changes not downloaded',
+  editHint: 'Click a cell to edit it. BLOB cells are read-only.',
+  saveEdit: 'Save change',
+  cancelEdit: 'Cancel',
+  setNull: 'Set NULL',
+  required: 'required',
   tables: 'Tables',
   rows: 'rows',
   search: 'Search this table…',
@@ -47,6 +73,13 @@ const copy = computed(() => isVi.value ? {
   emptyDb: 'This database has no tables to display.',
   invalidDb: 'This file could not be opened. Choose a valid SQLite database.',
   readError: 'The selected table could not be read.',
+  updateError: 'This cell could not be updated.',
+  invalidNumber: 'This value must be a valid number.',
+  nullNotAllowed: 'This column requires a value and cannot be set to NULL.',
+  uniqueViolation: 'This value duplicates another row or creates a key that already exists.',
+  checkViolation: 'This value does not satisfy the table\'s data rules.',
+  foreignKeyViolation: 'This value does not reference a valid row in the related table.',
+  typeMismatch: 'This value does not match the data type required by the column.',
   fileTooLarge: 'This file is too large to open safely in the browser (100 MB maximum).',
 })
 
@@ -68,6 +101,11 @@ const totalRows = ref(0)
 const loading = ref(false)
 const error = ref('')
 const dragging = ref(false)
+const dirty = ref(false)
+const editingCell = ref(null)
+const editError = ref('')
+const tableHasRowid = ref(true)
+const rowidAlias = ref('__sqlite_viewer_rowid__')
 
 const selectedTableInfo = computed(() =>
   tables.value.find(table => table.name === selectedTable.value)
@@ -77,6 +115,14 @@ const rangeStart = computed(() => totalRows.value ? (currentPage.value - 1) * PA
 const rangeEnd = computed(() => Math.min(currentPage.value * PAGE_SIZE, totalRows.value))
 
 const quoteIdentifier = (name) => `"${String(name).replaceAll('"', '""')}"`
+
+const loadSqlJs = async () => {
+  const [{ default: initSqlJs }, { default: wasmUrl }] = await Promise.all([
+    import('sql.js'),
+    import('sql.js/dist/sql-wasm.wasm?url'),
+  ])
+  return initSqlJs({ locateFile: () => wasmUrl })
+}
 
 const queryObjects = (sql, params = []) => {
   const statement = database.value.prepare(sql)
@@ -131,10 +177,23 @@ const loadRows = () => {
     totalRows.value = Number(queryObjects(`SELECT COUNT(*) AS count FROM ${table}${filter.sql}`, filter.params)[0]?.count || 0)
     if (currentPage.value > totalPages.value) currentPage.value = totalPages.value
     const offset = (currentPage.value - 1) * PAGE_SIZE
+    const select = tableHasRowid.value
+      ? `SELECT rowid AS ${quoteIdentifier(rowidAlias.value)}, *`
+      : 'SELECT *'
     rows.value = queryObjects(
-      `SELECT * FROM ${table}${filter.sql} LIMIT ? OFFSET ?`,
+      `${select} FROM ${table}${filter.sql} LIMIT ? OFFSET ?`,
       [...filter.params, PAGE_SIZE, offset],
-    )
+    ).map(values => ({
+      identity: tableHasRowid.value
+        ? { rowid: values[rowidAlias.value] }
+        : {
+            primaryKey: columns.value
+              .filter(column => column.primaryKey > 0)
+              .sort((a, b) => a.primaryKey - b.primaryKey)
+              .map(column => ({ name: column.name, value: values[column.name] })),
+          },
+      values,
+    }))
   } catch (cause) {
     console.error(cause)
     rows.value = []
@@ -152,11 +211,24 @@ const loadTable = (name) => {
   columns.value = queryObjects(`PRAGMA table_info(${table})`).map(column => ({
     name: String(column.name),
     type: String(column.type || ''),
+    primaryKey: Number(column.pk || 0),
+    notNull: Boolean(column.notnull),
   }))
+  let alias = '__sqlite_viewer_rowid__'
+  while (columns.value.some(column => column.name === alias)) alias += '_'
+  rowidAlias.value = alias
+  const createSql = queryObjects(
+    `SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?`,
+    [name],
+  )[0]?.sql
+  tableHasRowid.value = !/\bWITHOUT\s+ROWID\b/i.test(String(createSql || ''))
+  editingCell.value = null
+  editError.value = ''
   loadRows()
 }
 
-const reset = () => {
+const reset = ({ clearSession = true } = {}) => {
+  if (clearSession) clearTransientSqliteSession()
   database.value?.close()
   database.value = null
   fileName.value = ''
@@ -169,7 +241,39 @@ const reset = () => {
   currentPage.value = 1
   totalRows.value = 0
   error.value = ''
+  dirty.value = false
+  editingCell.value = null
+  editError.value = ''
   if (input.value) input.value.value = ''
+}
+
+const discoverTables = () => queryObjects(`
+  SELECT name
+  FROM sqlite_master
+  WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
+  ORDER BY name COLLATE NOCASE
+`).map(({ name }) => ({
+  name: String(name),
+  count: Number(queryObjects(`SELECT COUNT(*) AS count FROM ${quoteIdentifier(name)}`)[0]?.count || 0),
+}))
+
+const openBytes = async (bytes, metadata) => {
+  const SQL = await loadSqlJs()
+  database.value = new SQL.Database(bytes)
+  fileName.value = metadata.fileName
+  fileSize.value = metadata.fileSize
+  dirty.value = Boolean(metadata.dirty)
+  tables.value = discoverTables()
+
+  if (!tables.value.length) throw new Error('empty-database')
+  const fallback = tables.value.find(table => table.name.toLowerCase().endsWith('enderchests')) || tables.value[0]
+  const selected = tables.value.find(table => table.name === metadata.selectedTable) || fallback
+  loadTable(selected.name)
+  search.value = metadata.search || ''
+  await nextTick()
+  currentPage.value = Math.max(1, Number(metadata.currentPage) || 1)
+  await nextTick()
+  loadRows()
 }
 
 const openPicker = () => {
@@ -188,35 +292,121 @@ const openFile = async (file) => {
 
   loading.value = true
   try {
-    const [{ default: initSqlJs }, { default: wasmUrl }] = await Promise.all([
-      import('sql.js'),
-      import('sql.js/dist/sql-wasm.wasm?url'),
-    ])
-    const SQL = await initSqlJs({ locateFile: () => wasmUrl })
     const bytes = new Uint8Array(await file.arrayBuffer())
-    database.value = new SQL.Database(bytes)
-    fileName.value = file.name
-    fileSize.value = file.size
+    await openBytes(bytes, { fileName: file.name, fileSize: file.size })
+  } catch (cause) {
+    console.error(cause)
+    reset()
+    error.value = cause.message === 'empty-database' ? copy.value.emptyDb : copy.value.invalidDb
+  } finally {
+    loading.value = false
+  }
+}
 
-    const discovered = queryObjects(`
-      SELECT name
-      FROM sqlite_master
-      WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
-      ORDER BY name COLLATE NOCASE
-    `).map(({ name }) => ({
-      name: String(name),
-      count: Number(queryObjects(`SELECT COUNT(*) AS count FROM ${quoteIdentifier(name)}`)[0]?.count || 0),
-    }))
+const isBlobColumn = (column) => column.type.toUpperCase().includes('BLOB')
+const isBlobValue = (value) => value instanceof Uint8Array
+const canSetNull = (column) => !column.notNull && column.primaryKey === 0
 
-    tables.value = discovered
-    if (!discovered.length) {
-      reset()
-      error.value = copy.value.emptyDb
-      return
+const startEdit = (rowIndex, column) => {
+  if (isBlobColumn(column)) return
+  const value = rows.value[rowIndex]?.values[column.name]
+  if (value instanceof Uint8Array) return
+  editError.value = ''
+  editingCell.value = {
+    rowIndex,
+    column,
+    draft: value === null || value === undefined ? '' : String(value),
+  }
+}
+
+const cancelEdit = () => {
+  editingCell.value = null
+  editError.value = ''
+}
+
+const parseEditedValue = (draft, column) => {
+  const type = column.type.toUpperCase()
+  if (type.includes('INT')) {
+    if (!/^[+-]?\d+$/.test(draft.trim())) throw new Error('invalid-number')
+    return Number(draft)
+  }
+  if (/(REAL|FLOA|DOUB)/.test(type)) {
+    const value = Number(draft)
+    if (!draft.trim() || !Number.isFinite(value)) throw new Error('invalid-number')
+    return value
+  }
+  return draft
+}
+
+const saveEdit = (asNull = false) => {
+  const edit = editingCell.value
+  const row = rows.value[edit?.rowIndex]
+  if (!edit || !row || !database.value) return
+  if (asNull && !canSetNull(edit.column)) {
+    editError.value = copy.value.nullNotAllowed
+    return
+  }
+
+  try {
+    const value = asNull ? null : parseEditedValue(edit.draft, edit.column)
+    const table = quoteIdentifier(selectedTable.value)
+    const column = quoteIdentifier(edit.column.name)
+    let where
+    let identityParams
+    if (Object.hasOwn(row.identity, 'rowid')) {
+      where = 'rowid IS ?'
+      identityParams = [row.identity.rowid]
+    } else if (row.identity.primaryKey?.length) {
+      where = row.identity.primaryKey.map(key => `${quoteIdentifier(key.name)} IS ?`).join(' AND ')
+      identityParams = row.identity.primaryKey.map(key => key.value)
+    } else {
+      throw new Error('missing-row-identity')
     }
 
-    const preferred = discovered.find(table => table.name.toLowerCase().endsWith('enderchests')) || discovered[0]
-    loadTable(preferred.name)
+    database.value.run('BEGIN')
+    database.value.run(`UPDATE ${table} SET ${column} = ? WHERE ${where}`, [value, ...identityParams])
+    if (database.value.getRowsModified() !== 1) throw new Error('unexpected-update-count')
+    database.value.run('COMMIT')
+    dirty.value = true
+    cancelEdit()
+    loadRows()
+  } catch (cause) {
+    try { database.value.run('ROLLBACK') } catch { /* no active transaction */ }
+    console.error(cause)
+    const message = String(cause.message || '')
+    if (message === 'invalid-number') editError.value = copy.value.invalidNumber
+    else if (/NOT NULL constraint failed/i.test(message)) editError.value = copy.value.nullNotAllowed
+    else if (/UNIQUE constraint failed/i.test(message)) editError.value = copy.value.uniqueViolation
+    else if (/CHECK constraint failed/i.test(message)) editError.value = copy.value.checkViolation
+    else if (/FOREIGN KEY constraint failed/i.test(message)) editError.value = copy.value.foreignKeyViolation
+    else if (/datatype mismatch/i.test(message)) editError.value = copy.value.typeMismatch
+    else editError.value = copy.value.updateError
+  }
+}
+
+const downloadDatabase = () => {
+  if (!database.value) return
+  const bytes = database.value.export()
+  const blob = new Blob([bytes], { type: 'application/vnd.sqlite3' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName.value || 'database.db'
+  link.hidden = true
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 0)
+  fileSize.value = bytes.byteLength
+  dirty.value = false
+}
+
+const restoreSession = async () => {
+  const session = getTransientSqliteSession()
+  if (!session) return
+  loading.value = true
+  try {
+    await openBytes(session.bytes, session)
   } catch (cause) {
     console.error(cause)
     reset()
@@ -240,8 +430,21 @@ watch(search, () => {
 })
 watch(currentPage, loadRows)
 
+onMounted(restoreSession)
+
 onBeforeUnmount(() => {
   clearTimeout(searchTimer)
+  if (database.value) {
+    setTransientSqliteSession({
+      bytes: database.value.export(),
+      fileName: fileName.value,
+      fileSize: fileSize.value,
+      selectedTable: selectedTable.value,
+      search: search.value,
+      currentPage: currentPage.value,
+      dirty: dirty.value,
+    })
+  }
   database.value?.close()
 })
 </script>
@@ -285,9 +488,16 @@ onBeforeUnmount(() => {
       <header class="sqlite-file-bar">
         <div>
           <strong>{{ fileName }}</strong>
-          <span>{{ formatBytes(fileSize) }}</span>
+          <span>
+            {{ formatBytes(fileSize) }}
+            <em v-if="dirty" class="sqlite-modified">{{ copy.modified }}</em>
+          </span>
         </div>
         <div class="sqlite-file-actions">
+          <button type="button" class="sqlite-download-button" @click="downloadDatabase">
+            <LucideIcon name="Download" :size="14" />
+            {{ copy.download }}
+          </button>
           <button type="button" @click="openPicker">{{ copy.replace }}</button>
           <button type="button" @click="reset">{{ copy.close }}</button>
         </div>
@@ -313,7 +523,10 @@ onBeforeUnmount(() => {
           <div class="sqlite-toolbar">
             <div class="sqlite-table-title">
               <strong>{{ selectedTableInfo?.name }}</strong>
-              <span>{{ totalRows.toLocaleString(isVi ? 'vi-VN' : 'en-US') }} {{ copy.rows }}</span>
+              <span>
+                {{ totalRows.toLocaleString(isVi ? 'vi-VN' : 'en-US') }} {{ copy.rows }}
+                · {{ copy.editHint }}
+              </span>
             </div>
             <label class="sqlite-search">
               <LucideIcon name="Search" :size="16" />
@@ -327,17 +540,52 @@ onBeforeUnmount(() => {
                 <tr>
                   <th v-for="column in columns" :key="column.name" scope="col">
                     <span>{{ column.name }}</span>
-                    <small v-if="column.type">{{ column.type }}</small>
+                    <small v-if="column.type">
+                      {{ column.type }}<template v-if="!canSetNull(column)"> · {{ copy.required }}</template>
+                    </small>
                   </th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(row, rowIndex) in rows" :key="rowIndex">
                   <td v-for="column in columns" :key="column.name">
+                    <div
+                      v-if="editingCell?.rowIndex === rowIndex && editingCell?.column.name === column.name"
+                      class="sqlite-cell-editor"
+                    >
+                      <div class="sqlite-cell-editor-controls">
+                        <input
+                          v-model="editingCell.draft"
+                          autofocus
+                          :aria-label="column.name"
+                          :aria-invalid="Boolean(editError)"
+                          @input="editError = ''"
+                          @keydown.enter.prevent="saveEdit()"
+                          @keydown.escape.prevent="cancelEdit"
+                        >
+                        <button type="button" :title="copy.saveEdit" @click="saveEdit()">✓</button>
+                        <button
+                          type="button"
+                          :disabled="!canSetNull(column)"
+                          :title="canSetNull(column) ? copy.setNull : copy.nullNotAllowed"
+                          @click="saveEdit(true)"
+                        >NULL</button>
+                        <button type="button" :title="copy.cancelEdit" @click="cancelEdit">×</button>
+                      </div>
+                      <small v-if="editError" class="sqlite-cell-edit-error" role="alert">{{ editError }}</small>
+                      <small v-else-if="!canSetNull(column)" class="sqlite-cell-edit-note">{{ copy.nullNotAllowed }}</small>
+                    </div>
                     <span
-                      :class="`sqlite-cell-${formatCell(row[column.name], column.name).kind}`"
-                      :title="formatCell(row[column.name], column.name).title"
-                    >{{ formatCell(row[column.name], column.name).text }}</span>
+                      v-else
+                      :class="[
+                        `sqlite-cell-${formatCell(row.values[column.name], column.name).kind}`,
+                        { 'sqlite-cell-editable': !isBlobColumn(column) && !isBlobValue(row.values[column.name]) },
+                      ]"
+                      :title="formatCell(row.values[column.name], column.name).title"
+                      :tabindex="isBlobColumn(column) || isBlobValue(row.values[column.name]) ? undefined : 0"
+                      @click="startEdit(rowIndex, column)"
+                      @keydown.enter.prevent="startEdit(rowIndex, column)"
+                    >{{ formatCell(row.values[column.name], column.name).text }}</span>
                   </td>
                 </tr>
               </tbody>
@@ -482,7 +730,10 @@ onBeforeUnmount(() => {
 .sqlite-file-bar strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sqlite-file-bar span { color: var(--vp-c-text-3); font-size: 0.78rem; }
 .sqlite-file-actions { display: flex; gap: 8px; }
-.sqlite-file-actions button { padding: 6px 10px; font-size: 0.8rem; }
+.sqlite-file-actions button { display: inline-flex; padding: 6px 10px; font-size: 0.8rem; align-items: center; gap: 5px; }
+.sqlite-file-actions .sqlite-download-button { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); }
+.sqlite-modified { margin-left: 7px; color: var(--vp-c-warning-1); font-style: normal; }
+.sqlite-modified::before { content: '•'; margin-right: 5px; }
 
 .sqlite-browser { display: grid; min-height: 430px; grid-template-columns: 190px minmax(0, 1fr); }
 
@@ -554,6 +805,18 @@ onBeforeUnmount(() => {
 .sqlite-result-table th small { margin-top: 1px; color: var(--vp-c-text-3); font-size: 0.64rem; font-weight: 500; }
 .sqlite-result-table td > span { display: block; overflow: hidden; text-overflow: ellipsis; }
 .sqlite-result-table tbody tr:hover { background: var(--vp-c-default-soft); }
+.sqlite-cell-editable { margin: -5px -7px; padding: 5px 7px; border-radius: 5px; cursor: text; }
+.sqlite-cell-editable:hover,
+.sqlite-cell-editable:focus-visible { background: var(--vp-c-brand-soft); outline: 1px solid var(--vp-c-brand-1); }
+.sqlite-cell-editor { display: flex; min-width: 280px; align-items: stretch; flex-direction: column; gap: 5px; }
+.sqlite-cell-editor-controls { display: flex; align-items: center; gap: 4px; }
+.sqlite-cell-editor input { width: 150px; min-width: 80px; padding: 5px 7px; border: 1px solid var(--vp-c-brand-1); border-radius: 5px; outline: 0; background: var(--vp-c-bg); color: var(--vp-c-text-1); font: inherit; flex: 1; }
+.sqlite-cell-editor input[aria-invalid="true"] { border-color: var(--vp-c-danger-1); }
+.sqlite-cell-editor button { padding: 4px 6px; border: 1px solid var(--vp-c-divider); border-radius: 5px; background: var(--vp-c-bg); color: var(--vp-c-text-2); font: inherit; font-size: 0.7rem; cursor: pointer; }
+.sqlite-cell-editor button:hover { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); }
+.sqlite-cell-editor button:disabled { cursor: not-allowed; opacity: 0.4; }
+.sqlite-cell-edit-error { max-width: 360px; color: var(--vp-c-danger-1); font-size: 0.68rem; line-height: 1.35; white-space: normal; }
+.sqlite-cell-edit-note { max-width: 360px; color: var(--vp-c-text-3); font-size: 0.68rem; line-height: 1.35; white-space: normal; }
 .sqlite-cell-null { color: var(--vp-c-text-3); }
 .sqlite-cell-blob { padding: 2px 6px; border-radius: 5px; background: var(--vp-c-default-soft); color: var(--vp-c-text-2); font-family: var(--vp-font-family-mono); font-size: 0.72rem; }
 .sqlite-cell-date { font-variant-numeric: tabular-nums; }
@@ -581,6 +844,7 @@ onBeforeUnmount(() => {
   .sqlite-search { width: 100%; }
   .sqlite-pagination { align-items: flex-start; flex-direction: column; }
   .sqlite-pagination > div { width: 100%; justify-content: space-between; }
-  .sqlite-file-actions button:first-child { display: none; }
+  .sqlite-file-bar { align-items: flex-start; flex-direction: column; }
+  .sqlite-file-actions { width: 100%; flex-wrap: wrap; }
 }
 </style>

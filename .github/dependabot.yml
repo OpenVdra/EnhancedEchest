@@ -13,3 +13,12 @@ updates:
       - "ptthanh02"
     commit-message:
       prefix: "chore"
+
+  - package-ecosystem: "npm"
+    directory: "/docs"
+    schedule:
+      interval: "daily"
+    assignees:
+      - "ptthanh02"
+    commit-message:
+      prefix: "chore"
