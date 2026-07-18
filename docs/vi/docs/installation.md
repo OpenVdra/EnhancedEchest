@@ -20,6 +20,31 @@ Plugin được biên dịch cho Java 21. Hãy đảm bảo máy chủ chạy Ja
 Các menu rương của EnhancedEchest (`/eclist` và các màn hình quản lý) dùng tính năng Dialog có sẵn của Minecraft. Các phiên bản [LPX (LPX-AntiPacketExploit)](https://builtbybit.com/resources/lpx-antipacketexploit.15709/) cũ chặn các gói dialog này, nên menu không mở được. Tác giả đã sửa lỗi này ở LPX [3.8.4](https://builtbybit.com/resources/lpx-antipacketexploit.15709/updates#resource-update-261684) ("Fixed dialog not working in certain situations"), nên hãy cập nhật LPX lên 3.8.4 trở lên nếu bạn dùng nó.
 :::
 
+## Paper và Folia
+
+EnhancedEchest chạy trên Paper, Folia và các bản fork của Paper như Purpur. Gần như mọi thứ hoạt động giống nhau trên mọi nền tảng. Khác biệt duy nhất xuất hiện khi **cùng một rương** được mở trên hai màn hình cùng lúc.
+
+### Mở cùng một rương hai lần
+
+Trường hợp phổ biến là quản trị viên dùng `/ee view` trong khi chủ rương đang mở chính rương đó.
+
+| Tình huống | Paper | Folia |
+|-----------|-------|-------|
+| Hai người mở **cùng một** rương cùng lúc | Cả hai cùng xem và chỉnh sửa, được đồng bộ | Chỉ người đầu tiên được vào; người thứ hai được báo rương **đang được dùng** |
+| Mở các rương **khác nhau** | Hoạt động với mọi người | Hoạt động với mọi người |
+| Một người chơi, một rương mỗi lần | Bình thường | Bình thường |
+
+Trên Paper, quản trị viên và chủ rương có thể mở cùng một rương cạnh nhau. Trên Folia, mỗi rương chỉ cho một người xem tại một thời điểm vì các vùng có thể chạy trên các luồng riêng. Người thứ hai chỉ cần thử lại sau khi người đầu tiên đóng rương; không có vật phẩm nào bị mất hoặc nhân đôi.
+
+### Quản trị viên sẽ thấy gì
+
+Khi dùng `/ee view` hoặc **Dọn rương** trong lúc chủ rương đang mở rương đó:
+
+- **Paper** mở rương và giữ hai màn hình đồng bộ.
+- **Folia** từ chối thao tác với thông báo "đang được dùng" cho đến khi chủ rương đóng lại.
+
+Lưu trữ, nhiều rương, tên và biểu tượng tùy chỉnh, rương cấp theo quyền, rương tạm, chuyển dữ liệu, chuyển tài khoản và mọi lệnh khác đều hoạt động giống nhau trên Paper và Folia.
+
 ## Tải Về
 
 Chọn nguồn tải bạn ưa thích:

@@ -1,6 +1,8 @@
-# Tính Năng
+# Giới Thiệu
 
-Đây là tổng quan mọi thứ mà **EnhancedEchest** mang đến cho máy chủ Minecraft của bạn.
+<img class="page-banner" src="/banner.png" alt="Banner EnhancedEchest" />
+
+Khám phá **EnhancedEchest** và mọi tính năng plugin mang đến cho máy chủ Minecraft của bạn.
 
 <CardGrid>
 

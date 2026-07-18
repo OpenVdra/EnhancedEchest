@@ -76,13 +76,6 @@ const t = computed(() => (isVi.value
   border: 1px solid var(--vp-c-border);
   border-radius: 16px;
   box-shadow: 0 6px 24px color-mix(in srgb, var(--vp-c-text-1) 8%, transparent);
-  transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
-}
-
-.usage-chart:hover {
-  border-color: var(--vp-c-brand-1);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px color-mix(in srgb, var(--vp-c-brand-1) 16%, transparent);
 }
 
 .usage-chart img {

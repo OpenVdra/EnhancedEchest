@@ -1,29 +1,282 @@
 :root {
-    --vp-c-brand-1: #8E44AD;
-    --vp-c-brand-2: #9B59B6;
-    --vp-c-brand-3: #B07CC6;
-    --vp-c-brand-soft: rgba(155, 89, 182, 0.12);
+    /* Purple is kept only as a restrained accent (links, active states, primary
+       buttons). The heavy lifting is done by neutral surfaces — most of the UI,
+       especially in dark mode, leans black/grey for a modern, low-chroma look. */
+    --vp-c-brand-1: #8B62CE;
+    --vp-c-brand-2: #9D79D9;
+    --vp-c-brand-3: #B7A0E6;
+    --vp-c-brand-soft: rgba(139, 98, 206, 0.10);
 
-    --vp-button-brand-bg: #8E44AD;
-    --vp-button-brand-hover-bg: #9B59B6;
-    --vp-button-brand-active-bg: #7D3C98;
+    --vp-button-brand-bg: #8B62CE;
+    --vp-button-brand-hover-bg: #9D79D9;
+    --vp-button-brand-active-bg: #7A51BD;
     --vp-button-brand-text: #ffffff;
+
+    /* Height of the secondary section-tab bar; consumed by the layout offsets
+       further down so the sidebar / content / aside clear both nav rows. */
+    --secondary-nav-height: 44px;
 }
 
 .dark {
-    --vp-c-brand-1: #C792EA;
-    --vp-c-brand-2: #D6ABEF;
-    --vp-c-brand-3: #E2C2F4;
-    --vp-c-brand-soft: rgba(199, 146, 234, 0.16);
+    /* Near-black, modern surfaces. Backgrounds carry the look; purple stays an
+       accent, never a fill. */
+    --vp-c-bg: #0a0a0c;
+    --vp-c-bg-alt: #101012;
+    --vp-c-bg-elv: #141417;
+    --vp-c-bg-soft: #141417;
+    --vp-c-bg-mute: #1b1b1f;
 
-    --vp-button-brand-bg: #C792EA;
-    --vp-button-brand-hover-bg: #D6ABEF;
-    --vp-button-brand-active-bg: #9B59B6;
-    --vp-button-brand-text: #1a0f24;
+    --vp-c-divider: #232327;
+    --vp-c-border: #2c2c31;
+
+    --vp-c-brand-1: #C6A5F0;
+    --vp-c-brand-2: #D3B9F4;
+    --vp-c-brand-3: #E0CCF8;
+    --vp-c-brand-soft: rgba(198, 165, 240, 0.14);
+
+    --vp-button-brand-bg: #8B62CE;
+    --vp-button-brand-hover-bg: #9D79D9;
+    --vp-button-brand-active-bg: #7A51BD;
+    --vp-button-brand-text: #ffffff;
 }
 
 .vp-doc a {
     font-weight: 600;
+}
+
+/* Softer, rounder corners across interactive surfaces. */
+:root {
+    --vp-code-block-radius: 14px;
+}
+
+.VPButton {
+    border-radius: 12px !important;
+}
+
+.vp-doc div[class*='language-'],
+.vp-doc pre {
+    border-radius: 14px;
+}
+
+.custom-block {
+    border-radius: 12px;
+}
+
+.DocSearch-Button,
+.VPNavBarSearchButton {
+    border-radius: 12px !important;
+}
+
+.vp-doc :not(pre) > code {
+    border-radius: 6px;
+}
+
+/* Slightly rounder nav-bar menu items so the top nav matches the soft look. */
+.VPNavBarMenuLink,
+.VPNavBarMenuGroup .VPMenuLink,
+.VPFlyout .button {
+    border-radius: 10px;
+}
+
+/* ─── Frosted-glass navigation (airi-style) ───────────────────────────────────
+   Translucent background + backdrop blur on both the main nav and the second
+   bar, so page content shows through as frosted glass (inspired by Airi's
+   translucent background and medium backdrop blur). The has-sidebar title/content panels are made transparent
+   so the whole bar blurs uniformly. */
+.VPNavBar {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 82%, transparent) !important;
+    backdrop-filter: blur(16px) saturate(135%);
+    -webkit-backdrop-filter: blur(16px) saturate(135%);
+}
+
+.VPNavBar.has-sidebar .title,
+.VPNavBar.has-sidebar .content,
+.VPNavBar .content-body {
+    background-color: transparent !important;
+}
+
+/* A touch more breathing room in the nav (airi has generous spacing). */
+.VPNavBarMenuLink,
+.VPNavBarMenuGroup {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+}
+
+/* VitePress links establish the menu row height through line-height, while
+   custom nav components otherwise keep only their intrinsic height. Give the
+   row an explicit cross-axis and centre every item so custom dropdowns share
+   the exact same vertical centre as Docs / Download. */
+.VPNavBar .VPNavBarMenu {
+    align-items: center;
+    height: var(--vp-nav-height);
+}
+
+/* The custom language dropdown sits beside the version in the desktop menu.
+   VitePress's separate language picker remains available in the mobile menu. */
+.VPNavBar > .wrapper .VPNavBarTranslations {
+    display: none !important;
+}
+
+/* Airi uses a wider, more clearly defined search control in the desktop nav. */
+@media (min-width: 1280px) {
+    .VPNavBarSearch .DocSearch-Button,
+    .VPNavBarSearch .VPNavBarSearchButton {
+        width: 250px;
+        min-width: 250px;
+        border: 1px solid color-mix(in srgb, var(--vp-c-text-1) 10%, transparent);
+        background-color: color-mix(in srgb, var(--vp-c-bg-soft) 88%, transparent);
+        box-shadow: inset 0 1px 0 color-mix(in srgb, white 3%, transparent);
+    }
+
+    .VPNavBarSearch .DocSearch-Button:hover,
+    .VPNavBarSearch .VPNavBarSearchButton:hover {
+        border-color: color-mix(in srgb, var(--vp-c-text-1) 16%, transparent);
+        background-color: color-mix(in srgb, var(--vp-c-bg-mute) 92%, transparent);
+    }
+}
+
+/* The remaining VitePress flyouts (language, appearance) get a frosted-glass
+   surface and a gentle slide + fade so they match the custom version dropdown.
+   These keep VitePress's default hover trigger. The version menu is a fully
+   custom click dropdown (components/nav/VersionDropdown.vue). */
+.VPNavBar .VPFlyout .menu {
+    transform: translateY(-8px);
+    transform-origin: top center;
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+    background-color: color-mix(in srgb, var(--vp-c-bg) 80%, transparent) !important;
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid var(--vp-c-divider);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+}
+
+.VPNavBar .VPFlyout:hover .menu,
+.VPNavBar .VPFlyout:focus-within .menu {
+    transform: translateY(0);
+}
+
+/* ─── Secondary section-tab bar (airi-style two-tier navigation) ───────────────
+   A second fixed bar sits directly below the main nav on doc pages, holding the
+   top-level section tabs (Overview / Manual / Contributing / Changelog). The
+   component is rendered by theme/Layout.vue → components/nav/SecondaryNav.vue. */
+.secondary-nav {
+    position: fixed;
+    top: var(--vp-nav-height);
+    left: 0;
+    right: 0;
+    height: var(--secondary-nav-height);
+    box-sizing: border-box;
+    z-index: var(--vp-z-index-nav);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    /* Match the desktop logo's VitePress layout grid instead of hugging the
+       viewport edge. The 32px fallback preserves the normal tablet spacing. */
+    padding-right: 32px;
+    padding-left: max(32px, calc((100% - var(--vp-layout-max-width)) / 2 + 32px));
+    /* Frosted-glass to match the main nav (airi-style): translucent bg + blur.
+       This background stays full-bleed edge-to-edge; only the seam lines below
+       are inset to the content width. */
+    background-color: color-mix(in srgb, var(--vp-c-bg) 68%, transparent);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+/* Seam lines (above: joins the main nav, below: joins the content) inset to
+   the same left/right bounds as the main nav's title/content boxes, so they
+   run from the logo to the trailing icons instead of bleeding to the viewport
+   edges. Both sides use the same 32px-flat-then-grows-past-1440px formula
+   VitePress itself uses for the nav title (left) and content (right) — past
+   that breakpoint the nav re-centers on --vp-layout-max-width, so a flat 32px
+   on the right alone drifts away from the icons as the window widens. */
+.secondary-nav::before,
+.secondary-nav::after {
+    content: '';
+    position: absolute;
+    left: max(32px, calc((100% - var(--vp-layout-max-width)) / 2 + 32px));
+    right: max(32px, calc((100% - var(--vp-layout-max-width)) / 2 + 32px));
+    height: 1px;
+    background-color: var(--vp-c-divider);
+}
+
+.secondary-nav::before {
+    top: 0;
+}
+
+.secondary-nav::after {
+    bottom: 0;
+}
+
+/* The main nav draws its own hard bottom line (a black `.divider-line`) that
+   only spans the content half, so it would poke through the top-right of the
+   second bar. Hide it on doc pages; the second bar's own border-top is the seam. */
+.VPNavBar.has-sidebar .divider-line {
+    display: none;
+}
+
+.secondary-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.secondary-nav-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--vp-c-text-2);
+    text-decoration: none !important;
+    transition: color 0.2s;
+}
+
+.secondary-nav-tab:hover {
+    color: var(--vp-c-text-1);
+}
+
+.secondary-nav-tab.is-active {
+    color: var(--vp-c-brand-1);
+    font-weight: 600;
+}
+
+.secondary-nav-tab.is-active::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background-color: var(--vp-c-brand-1);
+}
+
+/* Reserve room for the second bar. Only doc pages (which always render the left
+   sidebar) get the offset; the home page has no sidebar and no second bar, so it
+   is left untouched. Hidden below the sidebar breakpoint, where VitePress switches
+   to its own mobile local-nav + drawer. */
+@media (min-width: 960px) {
+    .VPSidebar {
+        padding-top: calc(var(--vp-nav-height) + var(--secondary-nav-height)) !important;
+    }
+
+    .VPContent.has-sidebar {
+        padding-top: calc(var(--vp-nav-height) + var(--secondary-nav-height)) !important;
+    }
+
+    .aside-container {
+        padding-top: calc(var(--vp-nav-height) + var(--secondary-nav-height) + 32px) !important;
+    }
+}
+
+@media (max-width: 959px) {
+    .secondary-nav {
+        display: none;
+    }
 }
 
 /* Row of placeholders/screenshots that sit side by side on wide viewports and
@@ -125,47 +378,4 @@
     border-radius: 14px;
     border: 1px solid var(--vp-c-border);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
-}
-
-/* Lucide icons injected into sidebar section titles (see config.mts `withIcon`).
-   The icon sits in a soft rounded badge; badge + label form a flex row so the
-   label can wrap to a second line while the badge stays pinned to the top line. */
-.VPSidebarItem .text:has(.sidebar-icon-badge) {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    /* Pull the badge + label slightly left so the icon, not the text, lines up
-       with the sidebar's left edge. */
-    margin-left: -20px;
-}
-
-.sidebar-icon-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    background: var(--vp-c-brand-soft);
-    color: var(--vp-c-brand-1);
-    transition: background-color 0.25s, color 0.25s;
-}
-
-.sidebar-icon-badge .sidebar-icon {
-    width: 15px;
-    height: 15px;
-}
-
-/* Vertically center the label against the 26px badge on a single line; if the
-   label wraps, the badge stays aligned to the first line via `flex-start`. */
-.VPSidebarItem .text:has(.sidebar-icon-badge) .sidebar-label {
-    line-height: 26px;
-}
-
-/* Brighten the badge when its section row is active/hovered. */
-.VPSidebarItem.is-active > .item .sidebar-icon-badge,
-.VPSidebarItem > .item:hover .sidebar-icon-badge {
-    background: var(--vp-c-brand-1);
-    color: var(--vp-c-bg);
 }

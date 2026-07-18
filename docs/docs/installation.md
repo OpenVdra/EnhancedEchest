@@ -22,6 +22,31 @@ The plugin is compiled for Java 21. Make sure your server runs on Java 21 or new
 EnhancedEchest's chest menus (`/eclist` and the management screens) use Minecraft's built-in Dialog feature. Older versions of [LPX (LPX-AntiPacketExploit)](https://builtbybit.com/resources/lpx-antipacketexploit.15709/) block those dialog packets, so the menus never open. The author fixed this in LPX [3.8.4](https://builtbybit.com/resources/lpx-antipacketexploit.15709/updates#resource-update-261684) ("Fixed dialog not working in certain situations"), so update LPX to 3.8.4 or newer if you run it.
 :::
 
+## Paper vs Folia
+
+EnhancedEchest runs on Paper, Folia, and Paper forks such as Purpur. Almost everything behaves identically on every platform. The only difference appears when the **same chest** is opened on two screens at once.
+
+### Opening the same chest twice
+
+The common case is an admin running `/ee view` while the chest owner already has that chest open.
+
+| Situation | Paper | Folia |
+|-----------|-------|-------|
+| Two people open the **same** chest at once | Both can view and edit it together, kept in sync | Only the first viewer is allowed in; the second is told the chest is **in use** |
+| Opening **different** chests | Works for everyone | Works for everyone |
+| One player, one chest at a time | Normal | Normal |
+
+On Paper, an admin and the owner can have the same chest open side by side. On Folia, a chest is limited to one viewer at a time because different regions can run on separate threads. The second viewer simply tries again after the first closes it; no items are lost or duplicated.
+
+### What administrators notice
+
+When you use `/ee view` or **Clear chest** while the owner has that chest open:
+
+- **Paper** opens the chest and keeps both screens synchronized.
+- **Folia** declines the action with an "in use" message until the owner closes the chest.
+
+Storage, multiple chests, custom names and icons, permission-granted chests, temporary chests, migration, account transfers, and all other commands work the same on Paper and Folia.
+
 ## Download
 
 Choose your preferred download source:

@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "docs-preview",
+      "name": "docs",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "docs", "run", "docs:preview", "--", "--port", "4173"],
-      "port": 4173
+      "runtimeArgs": ["--prefix", "docs", "run", "docs:dev", "--", "--port", "5199"],
+      "port": 5199
     }
   ]
 }

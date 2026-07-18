@@ -4,14 +4,18 @@ import {
   Package, Archive, Terminal, ShieldCheck, Settings, Download,
   Sparkles, Palette, Key, Globe, ArrowRightLeft, Layers,
   MousePointer2, Sliders, List, Star, Wrench, Eye, BarChart2,
-  RefreshCw, Bell, FileText, Box, SquareStack
+  RefreshCw, Bell, FileText, Box, SquareStack,
+  Pencil, MessageCircle, Heart, Github, Languages, Check, BookOpen,
+  Tag, Bug, ArrowUpRight
 } from 'lucide-vue-next'
 
 const ICONS = {
   Package, Archive, Terminal, ShieldCheck, Settings, Download,
   Sparkles, Palette, Key, Globe, ArrowRightLeft, Layers,
   MousePointer2, Sliders, List, Star, Wrench, Eye, BarChart2,
-  RefreshCw, Bell, FileText, Box, SquareStack
+  RefreshCw, Bell, FileText, Box, SquareStack,
+  Pencil, MessageCircle, Heart, Github, Languages, Check, BookOpen,
+  Tag, Bug, ArrowUpRight
 }
 
 const props = defineProps({
