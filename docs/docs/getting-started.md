@@ -6,13 +6,13 @@ Meet **EnhancedEchest** and explore everything it brings to your Minecraft serve
 
 <CardGrid>
 
-<DocCard icon="Sparkles" title="Features" link="/docs/features" desc="See everything EnhancedEchest adds for your players." />
+<DocCard icon="Sparkles" title="Features" link="/docs/features/" desc="See everything EnhancedEchest adds for your players." />
 
-<DocCard icon="Settings" title="Configuration" link="/docs/configuration" desc="Set up chest size, storage, backups, and more." />
+<DocCard icon="Settings" title="Configuration" link="/docs/configuration/" desc="Set up chest size, storage, backups, and more." />
 
-<DocCard icon="ArrowRightLeft" title="Migration" link="/docs/migration" desc="Import players' existing vanilla ender chest data." />
+<DocCard icon="ArrowRightLeft" title="Migration" link="/docs/configuration/migration" desc="Import players' existing vanilla ender chest data." />
 
-<DocCard icon="Globe" title="Localization" link="/docs/language" desc="All player-facing text is editable and translatable." />
+<DocCard icon="Globe" title="Localization" link="/docs/configuration/language" desc="All player-facing text is editable and translatable." />
 
 </CardGrid>
 
@@ -61,7 +61,7 @@ The Modrinth page is being prepared and may not be public yet. Until it goes liv
 4. **Start your server** (avoid using `/reload`)
 
 ::: tip No extra dependencies
-Everything the plugin needs, including the database driver, is bundled inside the jar. By default it uses SQLite, so it works out of the box with no further setup. See [Configuration](/docs/configuration) and [Database](/docs/database) for what's created and how to change it.
+Everything the plugin needs, including the database driver, is bundled inside the jar. By default it uses SQLite, so it works out of the box with no further setup. See [Configuration](/docs/configuration/) and [Database](/docs/database/) for what's created and how to change it.
 :::
 
 ## Updating

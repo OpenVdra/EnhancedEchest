@@ -12,24 +12,33 @@
     --vp-button-brand-active-bg: #7A51BD;
     --vp-button-brand-text: #ffffff;
 
+    /* Light mode: a hair off pure white so large surfaces don't glare, with
+       alt/elv/mute steps spaced enough to read as distinct layers. */
+    --vp-c-bg: #fdfdfd;
+    --vp-c-bg-alt: #f6f5f8;
+    --vp-c-bg-elv: #ffffff;
+    --vp-c-bg-soft: #f6f5f8;
+    --vp-c-bg-mute: #eeedf1;
 }
 
 .dark {
-    /* Near-black, modern surfaces. Backgrounds carry the look; purple stays an
-       accent, never a fill. */
-    --vp-c-bg: #0a0a0c;
-    --vp-c-bg-alt: #101012;
-    --vp-c-bg-elv: #141417;
-    --vp-c-bg-soft: #141417;
-    --vp-c-bg-mute: #1b1b1f;
+    /* Charcoal, not near-black — dark mode should feel dim, not like a void.
+       Each surface step is a visible lightness bump over the last so cards,
+       dropdowns and hovers read as distinct layers instead of blending into
+       the page. Purple stays an accent, never a fill. */
+    --vp-c-bg: #16161a;
+    --vp-c-bg-alt: #1c1c21;
+    --vp-c-bg-elv: #222229;
+    --vp-c-bg-soft: #1e1e24;
+    --vp-c-bg-mute: #28282f;
 
-    --vp-c-divider: #232327;
-    --vp-c-border: #2c2c31;
+    --vp-c-divider: #303038;
+    --vp-c-border: #3a3a43;
 
     --vp-c-brand-1: #C6A5F0;
     --vp-c-brand-2: #D3B9F4;
     --vp-c-brand-3: #E0CCF8;
-    --vp-c-brand-soft: rgba(198, 165, 240, 0.14);
+    --vp-c-brand-soft: rgba(198, 165, 240, 0.16);
 
     --vp-button-brand-bg: #8B62CE;
     --vp-button-brand-hover-bg: #9D79D9;

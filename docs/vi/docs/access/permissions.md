@@ -10,12 +10,12 @@ Cho phép dùng `/ec` và `/eclist` bằng lệnh, và đặt rương chính. Ch
 **`enhancedechest.default_size.<size>`**
 Ghi đè kích thước rương Ender **cơ bản** (rương đầu tiên) của người chơi theo rank, độc lập với `enderchest.default-size` toàn cục. Ví dụ, `enhancedechest.default_size.54` cho rương cơ bản của người chơi đó 54 ô. Nếu người chơi giữ nhiều node, node có kích thước **lớn nhất** sẽ thắng.
 
-Xem [Kích Thước Rương Cơ Bản Theo Quyền](/vi/docs/permission-chests#default-size-permission) để biết chi tiết.
+Xem [Kích Thước Rương Cơ Bản Theo Quyền](/vi/docs/access/permission-chests#default-size-permission) để biết chi tiết.
 
 **`enhancedechest.additional_amount.<count>.slot.<size>`**
 Cấp rương **bổ sung** theo rank, ngoài rương cơ bản. Ví dụ, `enhancedechest.additional_amount.2.slot.54` cho người chơi hai rương 54 ô. Nhiều node cộng dồn. Xóa node sẽ xóa các rương đó; vật phẩm dồn sang rương tạm có thể khôi phục từ `/eclist`.
 
-Xem [Rương Cấp Theo Quyền](/vi/docs/permission-chests#permission-granted-chests) để biết chi tiết.
+Xem [Rương Cấp Theo Quyền](/vi/docs/access/permission-chests#permission-granted-chests) để biết chi tiết.
 
 ## Quản Trị Viên
 
@@ -23,7 +23,7 @@ Mỗi lệnh `/ee` chỉ cần đúng node riêng của lệnh đó. Không còn
 
 **`enhancedechest.admin.add`** - `/ee add`: cấp cho người chơi một rương mới.
 
-**`enhancedechest.admin.resize`** - `/ee resize`: thay đổi số ô của một rương. Từ chối trên rương được cấp theo quyền, và trên rương cơ bản có kích thước do quyền [`default_size`](/vi/docs/permission-chests#default-size-permission) đặt.
+**`enhancedechest.admin.resize`** - `/ee resize`: thay đổi số ô của một rương. Từ chối trên rương được cấp theo quyền, và trên rương cơ bản có kích thước do quyền [`default_size`](/vi/docs/access/permission-chests#default-size-permission) đặt.
 
 **`enhancedechest.admin.delete`** - `/ee delete`: xóa các rương mới nhất của người chơi.
 
@@ -45,4 +45,4 @@ Mỗi lệnh `/ee` chỉ cần đúng node riêng của lệnh đó. Không còn
 Để cấp toàn quyền quản trị một lần, cấp `enhancedechest.admin.*` (nếu plugin quyền của bạn hỗ trợ wildcard).
 :::
 
-Hai quyền cấp rương theo rank (`default_size` và `additional_amount`) có trang riêng: xem [Rương Theo Quyền](/vi/docs/permission-chests).
+Hai quyền cấp rương theo rank (`default_size` và `additional_amount`) có trang riêng: xem [Rương Theo Quyền](/vi/docs/access/permission-chests).

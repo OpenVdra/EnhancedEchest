@@ -1,6 +1,6 @@
 # Database
 
-EnhancedEchest stores every ender chest's contents in a database. You choose the backend with the `database.type` option in `config.yml`: [SQLite](/docs/sqlite), [MySQL / MariaDB](/docs/mysql-mariadb), or [PostgreSQL](/docs/postgresql).
+EnhancedEchest stores every ender chest's contents in a database. You choose the backend with the `database.type` option in `config.yml`: [SQLite](/docs/database/sqlite), [MySQL / MariaDB](/docs/database/mysql-mariadb), or [PostgreSQL](/docs/database/postgresql).
 
 | Backend | `type` value | Best for |
 |---------|--------------|----------|
@@ -64,7 +64,7 @@ starts, with no data loss. Only letters, digits and underscore are used; anythin
 
 When you update the plugin, it upgrades your existing database automatically on startup. No manual steps, no data loss, existing chests and their contents are always preserved.
 
-As always, keep a backup (the SQLite [auto-backup](/docs/configuration), or your own MySQL/PostgreSQL dump) before a major upgrade, just in case.
+As always, keep a backup (the SQLite [auto-backup](/docs/configuration/), or your own MySQL/PostgreSQL dump) before a major upgrade, just in case.
 
 ### Offline player lookups
 

@@ -25,4 +25,4 @@ The copy is byte-for-byte, so it is fast and every chest's contents, size, name,
 Nothing is written unless the whole copy succeeds (it runs in a single transaction). If it fails part-way, the destination is left empty: just fix the reported problem, drop the destination's tables (or delete the SQLite file) so it is fresh again, restart, and re-run `/ee import`.
 :::
 
-The [vanilla migration](/docs/migration) and the AxVaults / PlayerVaultsX imports are separate features for pulling data in from *other* plugins.
+The [vanilla migration](/docs/configuration/migration) and the AxVaults / PlayerVaultsX imports are separate features for pulling data in from *other* plugins.

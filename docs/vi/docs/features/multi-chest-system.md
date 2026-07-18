@@ -25,7 +25,7 @@ Cá nhân hóa rương ngay từ menu trong game, không cần lệnh:
 - **Chọn biểu tượng**: chọn vật phẩm bất kỳ để hiện trong danh sách
 - **Sắp xếp**: gộp cụm và xếp lại theo loại chỉ với một cú bấm
 
-Mỗi mục là một công tắc toàn máy chủ ở `enderchest.features`. Xem [Cấu hình](/vi/docs/configuration).
+Mỗi mục là một công tắc toàn máy chủ ở `enderchest.features`. Xem [Cấu hình](/vi/docs/configuration/).
 
 <div class="placeholder-row">
   <figure>
@@ -49,7 +49,7 @@ Quản trị viên có thể thêm, đổi kích thước và xóa rương cho b
 
 ## Rương Cấp Theo Quyền
 
-Phát rương theo rank thay vì bằng lệnh. Quyền `enhancedechest.additional_amount.<count>.slot.<size>` cấp ngần ấy rương với kích thước đó. Các node cộng dồn, việc cấp đồng bộ khi mở rương, và xóa một node sẽ xóa các rương đó (vật phẩm dồn sang rương tạm có thể khôi phục). Rương cơ bản của người chơi luôn được bảo vệ. Xem trang [Rương Theo Quyền](/vi/docs/permission-chests#permission-granted-chests).
+Phát rương theo rank thay vì bằng lệnh. Quyền `enhancedechest.additional_amount.<count>.slot.<size>` cấp ngần ấy rương với kích thước đó. Các node cộng dồn, việc cấp đồng bộ khi mở rương, và xóa một node sẽ xóa các rương đó (vật phẩm dồn sang rương tạm có thể khôi phục). Rương cơ bản của người chơi luôn được bảo vệ. Xem trang [Rương Theo Quyền](/vi/docs/access/permission-chests#permission-granted-chests).
 
 ## Xem Rương Của Người Chơi Khác
 

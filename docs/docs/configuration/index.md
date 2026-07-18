@@ -13,7 +13,7 @@ After editing `config.yml`, run `/ee reload` in-game or from the console to appl
 <ConfigProperty name="language" value="en_US" type="string">
 
 Language folder to load from <code>plugins/EnhancedEchest/language/</code>. The plugin ships with <code>en_US</code> (English) and <code>vi_VN</code> (Tiếng Việt). With <code>language-auto-detect</code> on, this is the <strong>fallback</strong> for clients whose language isn't translated.<br><br>
-See the <a href="/docs/language">Language</a> page for the full list of message keys.
+See the <a href="/docs/configuration/language">Language</a> page for the full list of message keys.
 
 </ConfigProperty>
 
@@ -40,7 +40,7 @@ Slot count of the chest that is auto-created the first time a player ever opens 
 | <code>45</code> | 5 |
 | <code>54</code> | 6 (double chest) |
 
-You can also override the base chest size <strong>per player</strong> with the <code>enhancedechest.default_size.&lt;size&gt;</code> permission (always available, no config needed). See the <a href="/docs/permission-chests#default-size-permission">Permission Chests</a> page.
+You can also override the base chest size <strong>per player</strong> with the <code>enhancedechest.default_size.&lt;size&gt;</code> permission (always available, no config needed). See the <a href="/docs/access/permission-chests#default-size-permission">Permission Chests</a> page.
 
 </ConfigProperty>
 
@@ -81,12 +81,12 @@ Whether players may colour their chest names. When <code>true</code>, names acce
 
 <ConfigGroup name="permission-chests">
 <template #info>
-Controls ender chests granted automatically from permissions. See the <a href="/docs/permission-chests#permission-granted-chests">Permission Chests</a> page for the node format and behavior.
+Controls ender chests granted automatically from permissions. See the <a href="/docs/access/permission-chests#permission-granted-chests">Permission Chests</a> page for the node format and behavior.
 </template>
 
 <ConfigProperty name="enabled" value="true" type="boolean">
 When <code>true</code>, players are granted ender chests from <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> permissions. Grants are synced each time a player opens their ender chest; losing a node removes those chests, spilling any items into a recoverable temporary chest. Players always keep their base chest. Setting this to <code>false</code> stops syncing but leaves already-granted chests in place.<br><br>
-See the <a href="/docs/permission-chests#permission-granted-chests">Permission Chests</a> page for full details.
+See the <a href="/docs/access/permission-chests#permission-granted-chests">Permission Chests</a> page for full details.
 </ConfigProperty>
 
 </ConfigGroup>
@@ -116,7 +116,7 @@ Which sound to play. Accepts any Minecraft sound id; the default is the villager
 
 <ConfigGroup name="database">
 <template #info>
-Configures where ender chest contents are stored. SQLite works out of the box with no setup. See the <a href="/docs/database">Database</a> page for MySQL, MariaDB, and PostgreSQL setup.
+Configures where ender chest contents are stored. SQLite works out of the box with no setup. See the <a href="/docs/database/">Database</a> page for MySQL, MariaDB, and PostgreSQL setup.
 </template>
 
 <ConfigProperty name="type" value="sqlite" type="string">
@@ -124,11 +124,11 @@ Storage backend. Supported values: <code>sqlite</code>, <code>mysql</code>, <cod
 </ConfigProperty>
 
 <ConfigProperty name="table-prefix" value="echest_" type="string">
-Prepended to every table this plugin creates (e.g. <code>echest_enderchests</code>), so its data is easy to tell apart from other plugins' tables and safe to keep in a database shared with them. Letters, digits and underscore only. Changing it on an existing install renames its existing tables to match on the next startup. See <a href="/docs/database#tables">Tables</a>.
+Prepended to every table this plugin creates (e.g. <code>echest_enderchests</code>), so its data is easy to tell apart from other plugins' tables and safe to keep in a database shared with them. Letters, digits and underscore only. Changing it on an existing install renames its existing tables to match on the next startup. See <a href="/docs/database/#tables">Tables</a>.
 </ConfigProperty>
 
 <ConfigProperty name="autosave-interval" value="3m" type="string">
-How often in-memory changes are written back to the database (each online player's data is kept in memory; it is also saved a few seconds after they quit and once at shutdown). Minimum <code>30s</code>. See <a href="/docs/database#how-data-is-saved">How data is saved</a>.
+How often in-memory changes are written back to the database (each online player's data is kept in memory; it is also saved a few seconds after they quit and once at shutdown). Minimum <code>30s</code>. See <a href="/docs/database/#how-data-is-saved">How data is saved</a>.
 </ConfigProperty>
 
 <ConfigProperty name="sqlite-file" value="enderchests.db" type="string">
@@ -173,7 +173,7 @@ Maximum number of pooled database connections. Only applies to MySQL, MariaDB, a
 
 <ConfigGroup name="cross-server">
 <template #info>
-Lets several servers behind a proxy share one database, so a player's ender chests follow them between servers. Needs a shared MySQL/MariaDB/PostgreSQL database and a shared Redis server. See <a href="/docs/cross-server">Cross-Server Support</a>. Changes in this section require a full server restart.
+Lets several servers behind a proxy share one database, so a player's ender chests follow them between servers. Needs a shared MySQL/MariaDB/PostgreSQL database and a shared Redis server. See <a href="/docs/database/cross-server">Cross-Server Support</a>. Changes in this section require a full server restart.
 </template>
 
 <ConfigProperty name="enabled" value="false" type="boolean">
@@ -239,7 +239,7 @@ Folder (inside <code>plugins/EnhancedEchest/</code>) where backup files are save
 
 <ConfigGroup name="migration">
 <template #info>
-Controls automatic import of existing vanilla ender chest data. See the <a href="/docs/migration">Migration</a> page for the full workflow.
+Controls automatic import of existing vanilla ender chest data. See the <a href="/docs/configuration/migration">Migration</a> page for the full workflow.
 </template>
 
 <ConfigProperty name="enabled" value="false" type="boolean">

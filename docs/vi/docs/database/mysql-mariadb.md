@@ -2,8 +2,8 @@
 
 Trỏ plugin tới một cơ sở dữ liệu MySQL hoặc MariaDB có sẵn:
 
-**Phù hợp cho:** máy chủ lớn và mạng nhiều máy chủ, đặc biệt nếu cần hỗ trợ [Liên Máy Chủ](/vi/docs/cross-server) hoặc đã chạy sẵn MySQL/MariaDB cho các plugin khác. Chịu tải nhiều kết nối cùng lúc tốt.
-**Không phù hợp nếu:** bạn chỉ muốn thứ gì đó chạy được ngay không cần thiết lập, [SQLite](/vi/docs/sqlite) đơn giản hơn cho việc đó.
+**Phù hợp cho:** máy chủ lớn và mạng nhiều máy chủ, đặc biệt nếu cần hỗ trợ [Liên Máy Chủ](/vi/docs/database/cross-server) hoặc đã chạy sẵn MySQL/MariaDB cho các plugin khác. Chịu tải nhiều kết nối cùng lúc tốt.
+**Không phù hợp nếu:** bạn chỉ muốn thứ gì đó chạy được ngay không cần thiết lập, [SQLite](/vi/docs/database/sqlite) đơn giản hơn cho việc đó.
 
 Tài liệu: [MySQL](https://dev.mysql.com/doc/) / [MariaDB](https://mariadb.com/kb/en/documentation/)
 
@@ -20,4 +20,4 @@ database:
 ```
 
 - **Tạo sẵn cơ sở dữ liệu trống trước**, ví dụ `CREATE DATABASE enhancedechest;`. Plugin tự tạo và quản lý các bảng bên trong đó, nhưng bản thân cơ sở dữ liệu phải tồn tại sẵn thì plugin mới kết nối được.
-- Đặt `ssl` thành `require` để mã hóa kết nối (thất bại nếu máy chủ không hỗ trợ TLS), hoặc `verify-full` để đồng thời xác minh certificate và hostname của máy chủ. Xem trang [SSL / TLS](/vi/docs/ssl-tls).
+- Đặt `ssl` thành `require` để mã hóa kết nối (thất bại nếu máy chủ không hỗ trợ TLS), hoặc `verify-full` để đồng thời xác minh certificate và hostname của máy chủ. Xem trang [SSL / TLS](/vi/docs/database/ssl-tls).

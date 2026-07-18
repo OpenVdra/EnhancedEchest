@@ -7,7 +7,7 @@ Dùng [Trình Chỉnh Sửa SQLite](/vi/docs/sqlite-editor) tích hợp sẵn đ
 :::
 
 **Phù hợp cho:** máy chủ đơn và cộng đồng nhỏ đến vừa (khoảng vài trăm người chơi cùng lúc trở xuống). Chỉ một file, không cần cài hay bảo trì gì thêm.
-**Không phù hợp nếu:** bạn chạy nhiều máy chủ sau proxy cần chia sẻ dữ liệu người chơi, vì một file chỉ thuộc về một máy chủ. Hãy dùng [MySQL / MariaDB](/vi/docs/mysql-mariadb) hoặc [PostgreSQL](/vi/docs/postgresql) để hỗ trợ [Liên Máy Chủ](/vi/docs/cross-server).
+**Không phù hợp nếu:** bạn chạy nhiều máy chủ sau proxy cần chia sẻ dữ liệu người chơi, vì một file chỉ thuộc về một máy chủ. Hãy dùng [MySQL / MariaDB](/vi/docs/database/mysql-mariadb) hoặc [PostgreSQL](/vi/docs/database/postgresql) để hỗ trợ [Liên Máy Chủ](/vi/docs/database/cross-server).
 
 Tài liệu: [sqlite.org](https://www.sqlite.org/docs.html)
 
@@ -18,5 +18,5 @@ database:
 ```
 
 ::: info Các file phụ cạnh cơ sở dữ liệu
-SQLite chạy ở chế độ write-ahead logging (WAL) để có hiệu năng tốt hơn khi đông người, nên bạn có thể thấy thêm `enderchests.db-wal` và `enderchests.db-shm` cạnh file cơ sở dữ liệu. Đó là file của SQLite: cứ để nguyên, và đừng bao giờ tự copy file `.db` bằng tay khi máy chủ đang chạy (hãy dùng [sao lưu tự động](/vi/docs/configuration) tích hợp sẵn).
+SQLite chạy ở chế độ write-ahead logging (WAL) để có hiệu năng tốt hơn khi đông người, nên bạn có thể thấy thêm `enderchests.db-wal` và `enderchests.db-shm` cạnh file cơ sở dữ liệu. Đó là file của SQLite: cứ để nguyên, và đừng bao giờ tự copy file `.db` bằng tay khi máy chủ đang chạy (hãy dùng [sao lưu tự động](/vi/docs/configuration/) tích hợp sẵn).
 :::

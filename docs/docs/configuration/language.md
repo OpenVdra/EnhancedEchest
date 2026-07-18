@@ -12,7 +12,7 @@ The plugin ships with `en_US` (English) and `vi_VN` (Tiếng Việt).
 
 By default each player sees messages and menus in **their own Minecraft client language**, as long as a matching translation is available (bundled, or added by you). A player using the game in Vietnamese sees Vietnamese; a player using English sees English, at the same time, on the same server. Changing the language in Minecraft's Options and reopening a menu updates it, no relog needed.
 
-This is controlled by two options in [`config.yml`](/docs/configuration):
+This is controlled by two options in [`config.yml`](/docs/configuration/):
 
 ```yaml
 # Fallback language for clients whose language has no translation.

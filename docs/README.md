@@ -15,22 +15,25 @@ docs/
 │   ├── theme/             # Custom theme overrides (style.css, index.js)
 │   └── config.mts         # VitePress config (nav, sidebar)
 ├── docs/                  # All documentation pages (English, root locale)
-│   ├── commands.md
-│   ├── configuration.md
-│   ├── database.md
-│   ├── download.md
-│   ├── features.md
-│   ├── installation.md
-│   ├── language.md
-│   ├── migration.md
-│   └── permissions.md
+│   ├── access/             # commands.md, permissions.md, permission-chests.md
+│   ├── configuration/      # index.md (main config), migration.md, language.md
+│   ├── database/           # index.md (overview), sqlite.md, mysql-mariadb.md, postgresql.md, ssl-tls.md, cross-server.md, switching-backends.md
+│   ├── features/           # index.md (overview), larger-ender-chests.md, multi-chest-system.md, bedrock-support.md
+│   ├── changelog.md
+│   ├── getting-started.md
+│   └── sqlite-editor.md
 ├── vi/                    # Vietnamese locale, mirrors the root structure
-│   ├── docs/              # Translated documentation pages
+│   ├── docs/              # Translated documentation pages (same subfolders as above)
 │   └── index.md           # Translated home page
 ├── public/                # Static assets (logo, favicon)
 ├── index.md               # Home page
 └── package.json
 ```
+
+A page's sidebar group is inferred from which subfolder it lives in (see `manualPages`/
+`featuresPages` in `config.mts`) — add new pages to the matching folder (`access/`,
+`configuration/`, `database/`, `features/`, or top-level for standalone pages) and register
+the path there.
 
 ## Internationalization (i18n)
 
@@ -43,7 +46,7 @@ merged in. A language-switcher dropdown is added to the nav automatically.
 To add another language, add a locale entry in `config.mts` and create a folder mirroring
 the root content (`<lang>/index.md` + `<lang>/docs/*.md`). The Vue components are registered
 globally, so only the text inside the markdown needs translating. Use locale-prefixed links
-(e.g. `/vi/docs/database`) inside translated pages.
+(e.g. `/vi/docs/database/`) inside translated pages.
 
 ## Development
 

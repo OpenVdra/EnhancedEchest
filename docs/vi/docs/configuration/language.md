@@ -12,7 +12,7 @@ Plugin đi kèm `en_US` (English) và `vi_VN` (Tiếng Việt).
 
 Mặc định, mỗi người chơi thấy tin nhắn và menu theo **ngôn ngữ máy khách Minecraft của chính họ**, miễn là có bản dịch tương ứng (đóng gói sẵn, hoặc do bạn thêm). Người dùng game tiếng Việt thấy tiếng Việt; người dùng tiếng Anh thấy tiếng Anh, cùng lúc, trên cùng một server. Đổi ngôn ngữ trong Options của Minecraft rồi mở lại menu sẽ cập nhật, không cần thoát ra vào lại.
 
-Điều này do hai tùy chọn trong [`config.yml`](/vi/docs/configuration) điều khiển:
+Điều này do hai tùy chọn trong [`config.yml`](/vi/docs/configuration/) điều khiển:
 
 ```yaml
 # Ngôn ngữ dự phòng cho máy khách có ngôn ngữ chưa được dịch.

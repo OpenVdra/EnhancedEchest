@@ -25,7 +25,7 @@ Personalize a chest from the in-game menu, no commands needed:
 - **Choose an icon**: pick any item to show in the list
 - **Sort**: merge stacks and reorder by type in one click
 
-Each is a server-wide toggle under `enderchest.features`. See [Configuration](/docs/configuration).
+Each is a server-wide toggle under `enderchest.features`. See [Configuration](/docs/configuration/).
 
 <div class="placeholder-row">
   <figure>
@@ -49,7 +49,7 @@ Admins can add, resize, and delete chests for any player with `/ee add`, `/ee re
 
 ## Permission-Granted Chests
 
-Hand out chests by rank instead of by command. The permission `enhancedechest.additional_amount.<count>.slot.<size>` grants that many chests at that size. Multiple nodes stack, grants sync on open, and removing a node removes those chests (spilling any items to a recoverable temporary chest). The player's base chest is always kept. See the [Permission Chests](/docs/permission-chests#permission-granted-chests) page.
+Hand out chests by rank instead of by command. The permission `enhancedechest.additional_amount.<count>.slot.<size>` grants that many chests at that size. Multiple nodes stack, grants sync on open, and removing a node removes those chests (spilling any items to a recoverable temporary chest). The player's base chest is always kept. See the [Permission Chests](/docs/access/permission-chests#permission-granted-chests) page.
 
 ## View Other Players' Chests
 

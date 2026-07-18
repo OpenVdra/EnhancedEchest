@@ -25,4 +25,4 @@ Việc sao chép là từng byte một, nên nó nhanh và mọi nội dung, kí
 Không có gì được ghi trừ khi toàn bộ việc sao chép thành công (nó chạy trong một giao dịch duy nhất). Nếu thất bại giữa chừng, đích được để trống: chỉ cần khắc phục vấn đề được báo, xóa các bảng của đích (hoặc xóa tệp SQLite) để nó lại mới tinh, khởi động lại, và chạy lại `/ee import`.
 :::
 
-[Chuyển dữ liệu vanilla](/vi/docs/migration) và các bản nhập từ AxVaults / PlayerVaultsX là các tính năng riêng để kéo dữ liệu vào từ *các plugin khác*.
+[Chuyển dữ liệu vanilla](/vi/docs/configuration/migration) và các bản nhập từ AxVaults / PlayerVaultsX là các tính năng riêng để kéo dữ liệu vào từ *các plugin khác*.

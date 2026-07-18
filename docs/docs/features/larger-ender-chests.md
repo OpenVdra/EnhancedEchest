@@ -19,4 +19,4 @@ The default size for a player's first chest is set with `enderchest.default-size
 - Valid sizes: `9`, `18`, `27`, `36`, `45`, `54`
 - Invalid values are rounded to the nearest valid size
 - Defaults to `54` (a full double chest)
-- Per-player override by permission, see the [Permission Chests](/docs/permission-chests#default-size-permission) page
+- Per-player override by permission, see the [Permission Chests](/docs/access/permission-chests#default-size-permission) page

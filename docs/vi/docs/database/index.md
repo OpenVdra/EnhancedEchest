@@ -1,6 +1,6 @@
 # Cơ Sở Dữ Liệu
 
-EnhancedEchest lưu nội dung của mọi rương Ender vào cơ sở dữ liệu. Chọn backend bằng tùy chọn `database.type` trong `config.yml`: [SQLite](/vi/docs/sqlite), [MySQL / MariaDB](/vi/docs/mysql-mariadb), hoặc [PostgreSQL](/vi/docs/postgresql).
+EnhancedEchest lưu nội dung của mọi rương Ender vào cơ sở dữ liệu. Chọn backend bằng tùy chọn `database.type` trong `config.yml`: [SQLite](/vi/docs/database/sqlite), [MySQL / MariaDB](/vi/docs/database/mysql-mariadb), hoặc [PostgreSQL](/vi/docs/database/postgresql).
 
 | Backend | Giá trị `type` | Phù hợp nhất cho |
 |---------|----------------|------------------|
@@ -66,7 +66,7 @@ bị loại bỏ.
 
 Khi bạn cập nhật plugin, cơ sở dữ liệu sẵn có sẽ tự động được nâng cấp khi khởi động. Không cần thao tác thủ công, không mất dữ liệu, các rương và nội dung sẵn có luôn được giữ nguyên.
 
-Như thường lệ, hãy giữ một bản sao lưu (SQLite [tự động sao lưu](/vi/docs/configuration), hoặc bản dump MySQL/PostgreSQL của riêng bạn) trước khi nâng cấp lớn, để phòng hờ.
+Như thường lệ, hãy giữ một bản sao lưu (SQLite [tự động sao lưu](/vi/docs/configuration/), hoặc bản dump MySQL/PostgreSQL của riêng bạn) trước khi nâng cấp lớn, để phòng hờ.
 
 ### Tra cứu người chơi ngoại tuyến
 

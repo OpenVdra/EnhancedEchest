@@ -18,7 +18,7 @@ The vanilla ender chest is stuck at 27 slots, one per player, forever. **Enhance
 
 - **Multiple chests per player**: switch, rename, and set icons from an in-game menu (`/eclist`), no commands needed.
 
-- [**Permission-based grants**](https://openvdra.github.io/EnhancedEchest/docs/permissions#default-size-permission): hand out extra chests by rank. They sync automatically and revoke cleanly, items spill safely instead of vanishing.
+- [**Permission-based grants**](https://openvdra.github.io/EnhancedEchest/docs/access/permissions#default-size-permission): hand out extra chests by rank. They sync automatically and revoke cleanly, items spill safely instead of vanishing.
 
 - **Admin tools**: add, resize, delete, or view any player's chests, online or offline. Temporary chests can auto-expire.
 

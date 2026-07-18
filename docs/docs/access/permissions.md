@@ -10,12 +10,12 @@ Allows using `/ec` and `/eclist` by command, and setting a main chest. Right-cli
 **`enhancedechest.default_size.<size>`**
 Overrides the size of the player's **base** (first) ender chest by rank, independent of the global `enderchest.default-size`. For example, `enhancedechest.default_size.54` makes that player's base chest 54 slots. If a player holds several, the **largest** wins.
 
-See [Base Chest Size by Permission](/docs/permission-chests#default-size-permission) for full details.
+See [Base Chest Size by Permission](/docs/access/permission-chests#default-size-permission) for full details.
 
 **`enhancedechest.additional_amount.<count>.slot.<size>`**
 Grants **extra** chests by rank, on top of the base chest. For example, `enhancedechest.additional_amount.2.slot.54` gives the player two 54-slot chests. Multiple nodes stack. Removing a node removes those chests; any items spill to a temporary chest recoverable from `/eclist`.
 
-See [Permission-Granted Chests](/docs/permission-chests#permission-granted-chests) for full details.
+See [Permission-Granted Chests](/docs/access/permission-chests#permission-granted-chests) for full details.
 
 ## Admin
 
@@ -23,7 +23,7 @@ Each `/ee` command requires only its own node. There is no separate base permiss
 
 **`enhancedechest.admin.add`** - `/ee add`: give a player a new chest.
 
-**`enhancedechest.admin.resize`** - `/ee resize`: change a chest's slot count. Refuses on a permission-granted chest, and on a base chest whose size is set by a [`default_size`](/docs/permission-chests#default-size-permission) permission.
+**`enhancedechest.admin.resize`** - `/ee resize`: change a chest's slot count. Refuses on a permission-granted chest, and on a base chest whose size is set by a [`default_size`](/docs/access/permission-chests#default-size-permission) permission.
 
 **`enhancedechest.admin.delete`** - `/ee delete`: delete a player's newest chests.
 
@@ -45,4 +45,4 @@ Each `/ee` command requires only its own node. There is no separate base permiss
 To grant full admin access in one go, give `enhancedechest.admin.*` (if your permission plugin supports wildcards).
 :::
 
-The two chest-by-rank permissions (`default_size` and `additional_amount`) have their own page: see [Permission Chests](/docs/permission-chests).
+The two chest-by-rank permissions (`default_size` and `additional_amount`) have their own page: see [Permission Chests](/docs/access/permission-chests).

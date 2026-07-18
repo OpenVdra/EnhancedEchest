@@ -90,7 +90,7 @@ Reloads config and language files without restarting.
 
 <CommandRow commands="/ee import" permission="enhancedechest.admin.import">
 
-Opens a form to copy all data from an old database backend into the active one (for example SQLite → MySQL). The active database must be empty and no other players may be online. See [Switching Backends](/docs/switching-backends) for the full walkthrough.
+Opens a form to copy all data from an old database backend into the active one (for example SQLite → MySQL). The active database must be empty and no other players may be online. See [Switching Backends](/docs/database/switching-backends) for the full walkthrough.
 
 </CommandRow>
 
@@ -106,7 +106,7 @@ Imports vanilla ender chest contents into the plugin. Each player is migrated on
 
 <CommandRow :commands="['/ee migrate axvaults', '/ee migrate axvaults &lt;player&gt;']" permission="enhancedechest.admin.migrate">
 
-Imports vaults from the AxVaults plugin into matching EnhancedEchest chests. Works for offline players and reads the AxVaults database directly. See the [Migration](/docs/migration#axvaults) page for setup.
+Imports vaults from the AxVaults plugin into matching EnhancedEchest chests. Works for offline players and reads the AxVaults database directly. See the [Migration](/docs/configuration/migration#axvaults) page for setup.
 
 </CommandRow>
 
@@ -114,7 +114,7 @@ Imports vaults from the AxVaults plugin into matching EnhancedEchest chests. Wor
 
 <CommandRow :commands="['/ee migrate playervaultsx', '/ee migrate playervaultsx &lt;player&gt;']" permission="enhancedechest.admin.migrate">
 
-Imports vaults from the PlayerVaultsX plugin into matching EnhancedEchest chests. Works for offline players and reads the PlayerVaultsX flat-file vault data directly. See the [Migration](/docs/migration#playervaultsx) page for setup.
+Imports vaults from the PlayerVaultsX plugin into matching EnhancedEchest chests. Works for offline players and reads the PlayerVaultsX flat-file vault data directly. See the [Migration](/docs/configuration/migration#playervaultsx) page for setup.
 
 </CommandRow>
 
@@ -122,6 +122,6 @@ Imports vaults from the PlayerVaultsX plugin into matching EnhancedEchest chests
 
 <CommandRow :commands="['/ee migrate customenderchest', '/ee migrate customenderchest &lt;player&gt;']" permission="enhancedechest.admin.migrate">
 
-Imports a player's single chest from CustomEnderChest into EnhancedEchest chest #1. Works for offline players and reads CustomEnderChest's YAML player files; its H2 and MySQL storage backends are not supported. See the [Migration](/docs/migration#customenderchest) page for setup.
+Imports a player's single chest from CustomEnderChest into EnhancedEchest chest #1. Works for offline players and reads CustomEnderChest's YAML player files; its H2 and MySQL storage backends are not supported. See the [Migration](/docs/configuration/migration#customenderchest) page for setup.
 
 </CommandRow>

@@ -3,24 +3,28 @@ import { defineConfig } from 'vitepress'
 const REPO = 'https://github.com/OpenVdra/EnhancedEchest'
 const DISCORD = 'https://discord.com/invite/FJN7hJKPyb'
 
+// Page paths (relative to /docs/ or /vi/docs/) grouped by folder, matching the
+// on-disk layout under docs/docs/ and docs/vi/docs/: access/, configuration/,
+// database/, features/. Trailing slash = that group's index.md.
 const manualPages = [
-  'getting-started', 'commands', 'permissions',
-  'permission-chests', 'configuration', 'migration', 'language',
-  'database', 'sqlite', 'mysql-mariadb', 'postgresql', 'ssl-tls', 'cross-server', 'switching-backends'
+  'getting-started', 'access/commands', 'access/permissions', 'access/permission-chests',
+  'configuration/', 'configuration/migration', 'configuration/language',
+  'database/', 'database/sqlite', 'database/mysql-mariadb', 'database/postgresql',
+  'database/ssl-tls', 'database/cross-server', 'database/switching-backends'
 ]
 
 // Features has its own top-level nav item (not part of Manual), so its pages
 // get their own sidebar instead of living in enManualSidebar.
-const featuresPages = ['features', 'larger-ender-chests', 'multi-chest-system', 'bedrock-support']
+const featuresPages = ['features/', 'features/larger-ender-chests', 'features/multi-chest-system', 'features/bedrock-support']
 
 const enFeaturesSidebar = [
   {
     text: 'Features',
     items: [
-      { text: 'Overview', link: '/docs/features' },
-      { text: 'Larger Ender Chests', link: '/docs/larger-ender-chests' },
-      { text: 'Multi-Chest System', link: '/docs/multi-chest-system' },
-      { text: 'Bedrock Support', link: '/docs/bedrock-support' }
+      { text: 'Overview', link: '/docs/features/' },
+      { text: 'Larger Ender Chests', link: '/docs/features/larger-ender-chests' },
+      { text: 'Multi-Chest System', link: '/docs/features/multi-chest-system' },
+      { text: 'Bedrock Support', link: '/docs/features/bedrock-support' }
     ]
   }
 ]
@@ -29,10 +33,10 @@ const viFeaturesSidebar = [
   {
     text: 'Tính năng',
     items: [
-      { text: 'Tổng quan', link: '/vi/docs/features' },
-      { text: 'Rương Ender Lớn Hơn', link: '/vi/docs/larger-ender-chests' },
-      { text: 'Hệ Thống Nhiều Rương', link: '/vi/docs/multi-chest-system' },
-      { text: 'Hỗ Trợ Bedrock', link: '/vi/docs/bedrock-support' }
+      { text: 'Tổng quan', link: '/vi/docs/features/' },
+      { text: 'Rương Ender Lớn Hơn', link: '/vi/docs/features/larger-ender-chests' },
+      { text: 'Hệ Thống Nhiều Rương', link: '/vi/docs/features/multi-chest-system' },
+      { text: 'Hỗ Trợ Bedrock', link: '/vi/docs/features/bedrock-support' }
     ]
   }
 ]
@@ -51,31 +55,31 @@ const enManualSidebar = [
         text: 'Access',
         collapsed: false,
         items: [
-          { text: 'Commands', link: '/docs/commands' },
-          { text: 'Permissions', link: '/docs/permissions' },
-          { text: 'Permission Chests', link: '/docs/permission-chests' }
+          { text: 'Commands', link: '/docs/access/commands' },
+          { text: 'Permissions', link: '/docs/access/permissions' },
+          { text: 'Permission Chests', link: '/docs/access/permission-chests' }
         ]
       },
       {
         text: 'Configuration',
         collapsed: false,
         items: [
-          { text: 'Main Config', link: '/docs/configuration' },
-          { text: 'Migration', link: '/docs/migration' },
-          { text: 'Language', link: '/docs/language' }
+          { text: 'Main Config', link: '/docs/configuration/' },
+          { text: 'Migration', link: '/docs/configuration/migration' },
+          { text: 'Language', link: '/docs/configuration/language' }
         ]
       },
       {
         text: 'Database',
         collapsed: false,
         items: [
-          { text: 'Overview', link: '/docs/database' },
-          { text: 'SQLite', link: '/docs/sqlite' },
-          { text: 'MySQL / MariaDB', link: '/docs/mysql-mariadb' },
-          { text: 'PostgreSQL', link: '/docs/postgresql' },
-          { text: 'SSL / TLS', link: '/docs/ssl-tls' },
-          { text: 'Cross-Server', link: '/docs/cross-server' },
-          { text: 'Switching Backends', link: '/docs/switching-backends' }
+          { text: 'Overview', link: '/docs/database/' },
+          { text: 'SQLite', link: '/docs/database/sqlite' },
+          { text: 'MySQL / MariaDB', link: '/docs/database/mysql-mariadb' },
+          { text: 'PostgreSQL', link: '/docs/database/postgresql' },
+          { text: 'SSL / TLS', link: '/docs/database/ssl-tls' },
+          { text: 'Cross-Server', link: '/docs/database/cross-server' },
+          { text: 'Switching Backends', link: '/docs/database/switching-backends' }
         ]
       }
     ]
@@ -96,31 +100,31 @@ const viManualSidebar = [
         text: 'Truy cập',
         collapsed: false,
         items: [
-          { text: 'Lệnh', link: '/vi/docs/commands' },
-          { text: 'Quyền', link: '/vi/docs/permissions' },
-          { text: 'Rương theo quyền', link: '/vi/docs/permission-chests' }
+          { text: 'Lệnh', link: '/vi/docs/access/commands' },
+          { text: 'Quyền', link: '/vi/docs/access/permissions' },
+          { text: 'Rương theo quyền', link: '/vi/docs/access/permission-chests' }
         ]
       },
       {
         text: 'Cấu hình',
         collapsed: false,
         items: [
-          { text: 'Cấu hình chính', link: '/vi/docs/configuration' },
-          { text: 'Chuyển dữ liệu', link: '/vi/docs/migration' },
-          { text: 'Ngôn ngữ', link: '/vi/docs/language' }
+          { text: 'Cấu hình chính', link: '/vi/docs/configuration/' },
+          { text: 'Chuyển dữ liệu', link: '/vi/docs/configuration/migration' },
+          { text: 'Ngôn ngữ', link: '/vi/docs/configuration/language' }
         ]
       },
       {
         text: 'Cơ Sở Dữ Liệu',
         collapsed: false,
         items: [
-          { text: 'Tổng quan', link: '/vi/docs/database' },
-          { text: 'SQLite', link: '/vi/docs/sqlite' },
-          { text: 'MySQL / MariaDB', link: '/vi/docs/mysql-mariadb' },
-          { text: 'PostgreSQL', link: '/vi/docs/postgresql' },
-          { text: 'SSL / TLS', link: '/vi/docs/ssl-tls' },
-          { text: 'Liên máy chủ', link: '/vi/docs/cross-server' },
-          { text: 'Chuyển đổi Backend', link: '/vi/docs/switching-backends' }
+          { text: 'Tổng quan', link: '/vi/docs/database/' },
+          { text: 'SQLite', link: '/vi/docs/database/sqlite' },
+          { text: 'MySQL / MariaDB', link: '/vi/docs/database/mysql-mariadb' },
+          { text: 'PostgreSQL', link: '/vi/docs/database/postgresql' },
+          { text: 'SSL / TLS', link: '/vi/docs/database/ssl-tls' },
+          { text: 'Liên máy chủ', link: '/vi/docs/database/cross-server' },
+          { text: 'Chuyển đổi Backend', link: '/vi/docs/database/switching-backends' }
         ]
       }
     ]
@@ -189,8 +193,8 @@ export default defineConfig({
       lang: 'en',
       themeConfig: {
         nav: [
-          { text: 'Docs', link: '/docs/getting-started', activeMatch: '^/docs/(getting-started|commands|permissions|permission-chests|configuration|migration|language|database|sqlite|mysql-mariadb|postgresql|ssl-tls|cross-server|switching-backends)(/|$)' },
-          { text: 'Features', link: '/docs/features', activeMatch: '^/docs/(features|larger-ender-chests|multi-chest-system|bedrock-support)(/|$)' },
+          { text: 'Docs', link: '/docs/getting-started', activeMatch: '^/docs/(getting-started|access|configuration|database)(/|$)' },
+          { text: 'Features', link: '/docs/features/', activeMatch: '^/docs/features(/|$)' },
           { text: 'SQLite Editor', link: '/docs/sqlite-editor', activeMatch: '^/docs/sqlite-editor(/|$)' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
@@ -211,8 +215,8 @@ export default defineConfig({
       description: 'Rương Ender lớn hơn cho người chơi, nhiều rương mỗi người, mỗi rương có tên và biểu tượng riêng.',
       themeConfig: {
         nav: [
-          { text: 'Tài liệu', link: '/vi/docs/getting-started', activeMatch: '^/vi/docs/(getting-started|commands|permissions|permission-chests|configuration|migration|language|database|sqlite|mysql-mariadb|postgresql|ssl-tls|cross-server|switching-backends)(/|$)' },
-          { text: 'Tính năng', link: '/vi/docs/features', activeMatch: '^/vi/docs/(features|larger-ender-chests|multi-chest-system|bedrock-support)(/|$)' },
+          { text: 'Tài liệu', link: '/vi/docs/getting-started', activeMatch: '^/vi/docs/(getting-started|access|configuration|database)(/|$)' },
+          { text: 'Tính năng', link: '/vi/docs/features/', activeMatch: '^/vi/docs/features(/|$)' },
           { text: 'Sửa SQLite', link: '/vi/docs/sqlite-editor', activeMatch: '^/vi/docs/sqlite-editor(/|$)' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }

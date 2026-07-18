@@ -2,8 +2,8 @@
 
 Point the plugin at an existing MySQL or MariaDB database:
 
-**Good for:** larger servers and multi-server networks, especially if you need [Cross-Server](/docs/cross-server) support or already run MySQL/MariaDB for other plugins. Handles many concurrent connections comfortably.
-**Not a fit if:** you just want something that works with zero setup, [SQLite](/docs/sqlite) is simpler for that.
+**Good for:** larger servers and multi-server networks, especially if you need [Cross-Server](/docs/database/cross-server) support or already run MySQL/MariaDB for other plugins. Handles many concurrent connections comfortably.
+**Not a fit if:** you just want something that works with zero setup, [SQLite](/docs/database/sqlite) is simpler for that.
 
 Docs: [MySQL](https://dev.mysql.com/doc/) / [MariaDB](https://mariadb.com/kb/en/documentation/)
 
@@ -20,4 +20,4 @@ database:
 ```
 
 - **Create the empty database first**, for example `CREATE DATABASE enhancedechest;`. The plugin creates and manages its own tables inside it automatically, but the database itself has to exist before it can connect.
-- Set `ssl` to `require` to encrypt the connection (fails if the server does not support TLS), or to `verify-full` to also verify the server certificate and hostname. See [SSL / TLS](/docs/ssl-tls).
+- Set `ssl` to `require` to encrypt the connection (fails if the server does not support TLS), or to `verify-full` to also verify the server certificate and hostname. See [SSL / TLS](/docs/database/ssl-tls).
