@@ -261,11 +261,19 @@
    to its own mobile local-nav + drawer. */
 @media (min-width: 960px) {
     .VPSidebar {
-        padding-top: calc(var(--vp-nav-height) + var(--secondary-nav-height)) !important;
+        /* VitePress positions the sidebar's fixed box at the very top of the
+           viewport (top: 0) and pushes its *content* down with padding-top,
+           so the element's own scrollable box — and the native scrollbar
+           riding along its edge — still starts at y:0, just hidden behind
+           the two nav bars. Moving the box's actual top edge down here
+           (instead of padding) makes the scrollable area, and its scrollbar,
+           start right at the bottom of the second nav bar. */
+        top: calc(var(--vp-nav-height) + var(--secondary-nav-height)) !important;
+        padding-top: 0 !important;
         /* VitePress's own default (96px) was sized for a top offset of just
-           --vp-nav-height. Ours is 44px taller, so trim the bottom breathing
-           room by the same amount — otherwise a sidebar whose items alone
-           would fit the viewport still forces a scrollbar from padding alone. */
+           --vp-nav-height. Trim the bottom breathing room to match, so a
+           sidebar whose items alone would fit the remaining viewport height
+           doesn't still force a scrollbar from padding alone. */
         padding-bottom: 52px !important;
     }
 
