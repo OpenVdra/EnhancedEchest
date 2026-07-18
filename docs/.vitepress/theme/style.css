@@ -99,7 +99,7 @@
 /* VitePress's .title/.content/.wrapper/.container layout math (logo pinned
    absolute at a fixed --vp-sidebar-width, content padded to clear it) only
    ships scoped to .has-sidebar — pages that opt out of their sidebar
-   (sidebar: false, e.g. the SQLite Viewer tool) fall back to a completely
+   (sidebar: false, e.g. the SQLite Editor tool) fall back to a completely
    different unpositioned layout, which visibly shifts the logo/search/icons
    and makes the nav look inconsistent between pages. Use the same layout math
    on every page so the logo, search and trailing controls never shift when

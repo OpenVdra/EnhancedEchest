@@ -105,7 +105,7 @@ const dirty = ref(false)
 const editingCell = ref(null)
 const editError = ref('')
 const tableHasRowid = ref(true)
-const rowidAlias = ref('__sqlite_viewer_rowid__')
+const rowidAlias = ref('__sqlite_editor_rowid__')
 
 const selectedTableInfo = computed(() =>
   tables.value.find(table => table.name === selectedTable.value)
@@ -214,7 +214,7 @@ const loadTable = (name) => {
     primaryKey: Number(column.pk || 0),
     notNull: Boolean(column.notnull),
   }))
-  let alias = '__sqlite_viewer_rowid__'
+  let alias = '__sqlite_editor_rowid__'
   while (columns.value.some(column => column.name === alias)) alias += '_'
   rowidAlias.value = alias
   const createSql = queryObjects(
@@ -450,7 +450,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="sqlite-viewer" :class="{ 'is-compact': !database }" :aria-busy="loading">
+  <section class="sqlite-editor" :class="{ 'is-compact': !database }" :aria-busy="loading">
     <input
       ref="input"
       class="sqlite-file-input"
@@ -608,7 +608,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.sqlite-viewer {
+.sqlite-editor {
   position: relative;
   left: 50%;
   width: min(1500px, calc(100vw - 48px));
@@ -625,7 +625,7 @@ onBeforeUnmount(() => {
    as the mobile override below so specificity (two classes vs. one) can't
    fight it there — mobile always wants the plain 100%-width block layout. */
 @media (min-width: 761px) {
-  .sqlite-viewer.is-compact {
+  .sqlite-editor.is-compact {
     width: min(640px, calc(100vw - 48px));
   }
 }
@@ -830,7 +830,7 @@ onBeforeUnmount(() => {
 .sqlite-primary-button:disabled { cursor: not-allowed; opacity: 0.45; }
 
 @media (max-width: 760px) {
-  .sqlite-viewer {
+  .sqlite-editor {
     position: static;
     width: 100%;
     transform: none;

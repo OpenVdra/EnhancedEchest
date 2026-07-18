@@ -3,7 +3,7 @@
 SQLite không cần cấu hình gì. Plugin tự tạo file cơ sở dữ liệu tại `plugins/EnhancedEchest/enderchests.db` khi khởi động lần đầu.
 
 ::: tip Xem cơ sở dữ liệu ngay trong trang tài liệu
-Dùng [SQLite Viewer](/vi/docs/sqlite-viewer) tích hợp sẵn để mở cơ sở dữ liệu EnhancedEchest và xem hoặc chỉnh sửa các bảng, metadata người chơi và metadata rương ngay trong trình duyệt. File luôn nằm trên thiết bị của bạn; thay đổi chỉ tác động đến bản sao trong bộ nhớ cho tới khi bạn tải file xuống. Hãy dùng bản sao lưu tự động hoặc bản sao được tạo khi máy chủ đã dừng, thay vì tự sao chép file cơ sở dữ liệu đang hoạt động.
+Dùng [Trình Chỉnh Sửa SQLite](/vi/docs/sqlite-editor) tích hợp sẵn để mở cơ sở dữ liệu EnhancedEchest và xem hoặc chỉnh sửa các bảng, metadata người chơi và metadata rương ngay trong trình duyệt. File luôn nằm trên thiết bị của bạn; thay đổi chỉ tác động đến bản sao trong bộ nhớ cho tới khi bạn tải file xuống. Hãy dùng bản sao lưu tự động hoặc bản sao được tạo khi máy chủ đã dừng, thay vì tự sao chép file cơ sở dữ liệu đang hoạt động.
 :::
 
 **Phù hợp cho:** máy chủ đơn và cộng đồng nhỏ đến vừa (khoảng vài trăm người chơi cùng lúc trở xuống). Chỉ một file, không cần cài hay bảo trì gì thêm.

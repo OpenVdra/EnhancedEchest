@@ -6,19 +6,15 @@ Meet **EnhancedEchest** and explore everything it brings to your Minecraft serve
 
 <CardGrid>
 
-<DocCard icon="Package" title="Larger Ender Chests" link="/docs/larger-ender-chests" desc="Up to 54 slots, configurable in multiples of nine." />
+<DocCard icon="Sparkles" title="Features" link="/docs/features" desc="See everything EnhancedEchest adds for your players." />
 
-<DocCard icon="Archive" title="Multi-Chest System" link="/docs/multi-chest-system" desc="Own several chests, each managed from an in-game menu." />
+<DocCard icon="Settings" title="Configuration" link="/docs/configuration" desc="Set up chest size, storage, backups, and more." />
 
 <DocCard icon="ArrowRightLeft" title="Migration" link="/docs/migration" desc="Import players' existing vanilla ender chest data." />
-
-<DocCard icon="Layers" title="Bedrock Support" link="/docs/bedrock-support" desc="Menus render as native Bedrock forms via Geyser." />
 
 <DocCard icon="Globe" title="Localization" link="/docs/language" desc="All player-facing text is editable and translatable." />
 
 </CardGrid>
-
-See the [Features](/docs/features) section for a closer look at each of these.
 
 ## Requirements
 

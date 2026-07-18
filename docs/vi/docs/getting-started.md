@@ -6,19 +6,15 @@ Khám phá **EnhancedEchest** và mọi tính năng plugin mang đến cho máy 
 
 <CardGrid>
 
-<DocCard icon="Package" title="Rương Ender Lớn Hơn" link="/vi/docs/larger-ender-chests" desc="Tối đa 54 ô, cấu hình theo bội số của chín." />
+<DocCard icon="Sparkles" title="Tính Năng" link="/vi/docs/features" desc="Xem mọi tính năng EnhancedEchest mang đến cho người chơi." />
 
-<DocCard icon="Archive" title="Hệ Thống Nhiều Rương" link="/vi/docs/multi-chest-system" desc="Sở hữu nhiều rương, mỗi rương quản lý từ menu trong game." />
+<DocCard icon="Settings" title="Cấu Hình" link="/vi/docs/configuration" desc="Thiết lập kích thước rương, lưu trữ, sao lưu và nhiều tùy chọn khác." />
 
 <DocCard icon="ArrowRightLeft" title="Chuyển Dữ Liệu" link="/vi/docs/migration" desc="Nhập dữ liệu rương Ender vanilla sẵn có của người chơi." />
-
-<DocCard icon="Layers" title="Hỗ Trợ Bedrock" link="/vi/docs/bedrock-support" desc="Menu hiển thị dưới dạng form Bedrock native qua Geyser." />
 
 <DocCard icon="Globe" title="Đa Ngôn Ngữ" link="/vi/docs/language" desc="Mọi văn bản hiển thị cho người chơi đều có thể chỉnh sửa và dịch." />
 
 </CardGrid>
-
-Xem mục [Tính Năng](/vi/docs/features) để tìm hiểu chi tiết hơn về từng mục trên.
 
 ## Yêu Cầu
 

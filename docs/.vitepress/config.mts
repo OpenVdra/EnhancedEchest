@@ -191,7 +191,7 @@ export default defineConfig({
         nav: [
           { text: 'Docs', link: '/docs/getting-started', activeMatch: '^/docs/(getting-started|commands|permissions|permission-chests|configuration|migration|language|database|sqlite|mysql-mariadb|postgresql|ssl-tls|cross-server|switching-backends)(/|$)' },
           { text: 'Features', link: '/docs/features', activeMatch: '^/docs/(features|larger-ender-chests|multi-chest-system|bedrock-support)(/|$)' },
-          { text: 'SQLite Viewer', link: '/docs/sqlite-viewer', activeMatch: '^/docs/sqlite-viewer(/|$)' },
+          { text: 'SQLite Editor', link: '/docs/sqlite-editor', activeMatch: '^/docs/sqlite-editor(/|$)' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],
@@ -213,7 +213,7 @@ export default defineConfig({
         nav: [
           { text: 'Tài liệu', link: '/vi/docs/getting-started', activeMatch: '^/vi/docs/(getting-started|commands|permissions|permission-chests|configuration|migration|language|database|sqlite|mysql-mariadb|postgresql|ssl-tls|cross-server|switching-backends)(/|$)' },
           { text: 'Tính năng', link: '/vi/docs/features', activeMatch: '^/vi/docs/(features|larger-ender-chests|multi-chest-system|bedrock-support)(/|$)' },
-          { text: 'Xem SQLite', link: '/vi/docs/sqlite-viewer', activeMatch: '^/vi/docs/sqlite-viewer(/|$)' },
+          { text: 'Sửa SQLite', link: '/vi/docs/sqlite-editor', activeMatch: '^/vi/docs/sqlite-editor(/|$)' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],

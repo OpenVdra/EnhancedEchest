@@ -3,7 +3,7 @@
 SQLite requires no configuration. On first start the plugin creates the database file at `plugins/EnhancedEchest/enderchests.db`.
 
 ::: tip Browse your database in the docs
-Use the built-in [SQLite Viewer](/docs/sqlite-viewer) to open an EnhancedEchest database and inspect or edit its tables, player metadata, and chest metadata directly in your browser. The file stays on your device; edits affect only an in-memory copy until you download it. Use an automatic backup or a copy made while the server is stopped rather than copying the live database file.
+Use the built-in [SQLite Editor](/docs/sqlite-editor) to open an EnhancedEchest database and inspect or edit its tables, player metadata, and chest metadata directly in your browser. The file stays on your device; edits affect only an in-memory copy until you download it. Use an automatic backup or a copy made while the server is stopped rather than copying the live database file.
 :::
 
 **Good for:** solo servers and small-to-medium communities (roughly up to a few hundred concurrent players). One file, nothing extra to run or maintain.
