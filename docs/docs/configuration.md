@@ -2,6 +2,8 @@
 
 The `config.yml` file lives in `plugins/EnhancedEchest/`. It controls language, chest size, temporary chests, the storage backend, cross-server mode, automatic backups, and migration behavior.
 
+Click any option or group below for more details.
+
 ::: tip Apply changes without a restart
 After editing `config.yml`, run `/ee reload` in-game or from the console to apply your changes.
 :::
@@ -156,9 +158,9 @@ Database password. Leave empty for no password.
 <ConfigProperty name="ssl" value="disable" type="string">
 TLS mode for a remote MySQL, MariaDB, or PostgreSQL connection. One of:
 
-- **`disable`** — no encryption (default).
-- **`require`** — encrypt the connection, but do **not** verify the server certificate or hostname. Stops passive snooping, but not an active man-in-the-middle.
-- **`verify-full`** — encrypt **and** verify the certificate chain and hostname. The only mode that defends against a man-in-the-middle; the database server's CA must be trusted by the server's JVM (its truststore).
+- **`disable`**: no encryption (default).
+- **`require`**: encrypt the connection, but do **not** verify the server certificate or hostname. Stops passive snooping, but not an active man-in-the-middle.
+- **`verify-full`**: encrypt **and** verify the certificate chain and hostname. The only mode that defends against a man-in-the-middle; the database server's CA must be trusted by the server's JVM (its truststore).
 
 Requires a full server restart.
 </ConfigProperty>
@@ -195,7 +197,7 @@ Redis password. Leave empty when Redis has no password.
 </ConfigProperty>
 
 <ConfigProperty name="redis.ssl" value="false" type="boolean">
-Connect to Redis over TLS. When enabled, the connection is encrypted and the server's certificate chain **and** hostname are verified against the JVM truststore — equivalent to the database `verify-full` mode. A self-signed or private-CA certificate must be trusted by the JVM first, otherwise the connection fails at startup.
+Connect to Redis over TLS. When enabled, the connection is encrypted and the server's certificate chain **and** hostname are verified against the JVM truststore, equivalent to the database `verify-full` mode. A self-signed or private-CA certificate must be trusted by the JVM first, otherwise the connection fails at startup.
 </ConfigProperty>
 
 <ConfigProperty name="redis.database" value="0" type="number">

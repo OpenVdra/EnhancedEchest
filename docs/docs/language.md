@@ -10,7 +10,7 @@ The plugin ships with `en_US` (English) and `vi_VN` (Tiếng Việt).
 
 ## Automatic Per-Player Language
 
-By default each player sees messages and menus in **their own Minecraft client language**, as long as a matching translation is available (bundled, or added by you). A player using the game in Vietnamese sees Vietnamese; a player using English sees English — at the same time, on the same server. Changing the language in Minecraft's Options and reopening a menu updates it, no relog needed.
+By default each player sees messages and menus in **their own Minecraft client language**, as long as a matching translation is available (bundled, or added by you). A player using the game in Vietnamese sees Vietnamese; a player using English sees English, at the same time, on the same server. Changing the language in Minecraft's Options and reopening a menu updates it, no relog needed.
 
 This is controlled by two options in [`config.yml`](/docs/configuration):
 
@@ -80,7 +80,7 @@ enderchest:
 3. Translate the text inside `messages.yml` and `gui.yml`
 4. Run `/ee reload`
 
-With auto-detect on (the default), players using that language now see it automatically — no need to change `language`. Set `language: <your-locale>` only if you want it to also be the **fallback** for clients whose language you haven't translated (or if you keep auto-detect off).
+With auto-detect on (the default), players using that language now see it automatically, no need to change `language`. Set `language: <your-locale>` only if you want it to also be the **fallback** for clients whose language you haven't translated (or if you keep auto-detect off).
 
 ## Icon Picker Item Names {#icon-picker-item-names}
 
@@ -109,40 +109,16 @@ Then run `/ee reload` to pick it up, no restart needed. The item's name shown in
 
 ### Building the File From Mojang's Data
 
-Typing out every item by hand is a lot of work. Mojang publishes the exact official names for free, but they are buried inside large JSON files meant for programs, not people, so here is a walkthrough with real links you can click through, using version `26.2` (the latest release as of this writing) as a worked example. Get fresh links the same way for any other version.
+Mojang publishes the official item names for free, buried inside JSON files meant for programs. Here's how to find them, using version `26.2` as a worked example (repeat for any other version):
 
-**1. Find your version.** Open the version manifest:
-
-[https://piston-meta.mojang.com/mc/game/version_manifest_v2.json](https://piston-meta.mojang.com/mc/game/version_manifest_v2.json)
-
-Most browsers display JSON as a searchable page. Press Ctrl+F (Cmd+F on Mac), search for your version number in quotes, for example `"26.2"`, and click the `url` link shown right next to it. For `26.2` that link is:
-
-[https://piston-meta.mojang.com/v1/packages/c8eb00be8a1f9fb9adf70ee415b7e1f746b636e8/26.2.json](https://piston-meta.mojang.com/v1/packages/c8eb00be8a1f9fb9adf70ee415b7e1f746b636e8/26.2.json)
-
-**2. Find the asset index.** On the page you just opened, search for `assetIndex` and click the `url` next to it. For `26.2` that link is:
-
-[https://piston-meta.mojang.com/v1/packages/49da57a9512de46382d2fe4b68af047fea7a16f9/32.json](https://piston-meta.mojang.com/v1/packages/49da57a9512de46382d2fe4b68af047fea7a16f9/32.json)
-
-This page lists every game asset, so it is large. The search box is essential here.
-
-**3. Find your language file.** On that asset index page, search for `minecraft/lang/` followed by your locale, for example `minecraft/lang/vi_vn.json`. Right after it is a `hash` value, a long string of letters and numbers. Build a download link from it:
-
-```
-https://resources.download.minecraft.net/<first 2 characters of the hash>/<the full hash>
-```
-
-For example, Vietnamese (`vi_vn`) on `26.2` has the hash `06fd8f3fcfc2c75f874f69e720d574be140b1261`, so its download link is:
-
-[https://resources.download.minecraft.net/06/06fd8f3fcfc2c75f874f69e720d574be140b1261](https://resources.download.minecraft.net/06/06fd8f3fcfc2c75f874f69e720d574be140b1261)
-
-Opening that link downloads (or displays) the language file itself. Save it as `plugins/EnhancedEchest/icons/lang/vi_vn.json` (swap in your own locale) and skip to the last step below.
+1. Open the [version manifest](https://piston-meta.mojang.com/mc/game/version_manifest_v2.json), search (Ctrl+F) for your version in quotes (e.g. `"26.2"`), and open the `url` link next to it.
+2. On that page, search for `assetIndex` and open its `url` link. This lists every game asset, so search again for `minecraft/lang/` followed by your locale (e.g. `minecraft/lang/vi_vn.json`) and note the `hash` value right after it.
+3. Download the file from `https://resources.download.minecraft.net/<first 2 chars of hash>/<full hash>`. For Vietnamese (`vi_vn`) on `26.2`, the hash `06fd8f3fcfc2c75f874f69e720d574be140b1261` gives [this link](https://resources.download.minecraft.net/06/06fd8f3fcfc2c75f874f69e720d574be140b1261).
 
 ::: tip English (`en_us`) works differently
-English is not a separate file in the asset index, it ships inside the game client itself. On the page from step 1, search for `client` under `downloads` and click its `url` to download the client jar (a large file, several tens of megabytes). Open it with any zip tool (7-Zip, WinRAR, or Windows' built-in "Extract All", right-click the file and rename the copy to end in `.zip` first if Windows does not recognise `.jar`) and pull out `assets/minecraft/lang/en_us.json` from inside.
+It's not a separate file in the asset index, it ships inside the game client. On the version page from step 1, download the `client` jar under `downloads`, open it with any zip tool (rename the copy to end in `.zip` first if needed), and pull out `assets/minecraft/lang/en_us.json`.
 :::
 
-**Reading and saving the file.** The downloaded file is one giant line of text with no spacing at all, which is unreadable in a plain text editor like Notepad. Open it instead in a free code editor such as [Visual Studio Code](https://code.visualstudio.com/) or Notepad++. In VS Code, right-click anywhere in the text and choose **Format Document** to spread it into readable, indented lines, then use Ctrl+F to search inside it.
+The downloaded file is one unformatted line of text. Open it in [VS Code](https://code.visualstudio.com/) or Notepad++ and use **Format Document** to make it readable. It has thousands of entries besides items, but nothing needs removing: the icon picker only reads keys starting with `item.minecraft.` or `block.minecraft.`.
 
-The file has thousands of entries for menus, advancements, and more, not just items, but you do not need to remove any of them. The icon picker only ever looks at keys starting with `item.minecraft.` or `block.minecraft.`, so saving it exactly as downloaded works fine, the extra entries are simply never read.
-
-**4. Save it.** Place the finished file at `plugins/EnhancedEchest/icons/lang/<locale>.json` (lowercase, matching the locale id from step 3, for example `de_de.json`) and run `/ee reload`.
+4. Save the finished file at `plugins/EnhancedEchest/icons/lang/<locale>.json` (lowercase, e.g. `de_de.json`) and run `/ee reload`.

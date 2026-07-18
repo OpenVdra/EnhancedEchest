@@ -51,8 +51,6 @@ database:
 SQLite chạy ở chế độ write-ahead logging (WAL) để có hiệu năng tốt hơn khi đông người, nên bạn có thể thấy thêm `enderchests.db-wal` và `enderchests.db-shm` cạnh file cơ sở dữ liệu. Đó là file của SQLite: cứ để nguyên, và đừng bao giờ tự copy file `.db` bằng tay khi máy chủ đang chạy (hãy dùng [sao lưu tự động](/vi/docs/configuration) tích hợp sẵn).
 :::
 
-SQLite phù hợp với gần như mọi máy chủ: vì toàn bộ gameplay được phục vụ từ bộ nhớ, backend chỉ quyết định nơi dữ liệu được lưu trữ. Chọn MySQL/MariaDB/PostgreSQL nếu bạn muốn giữ dữ liệu trong một máy chủ cơ sở dữ liệu bên ngoài (sao lưu tập trung, công cụ sẵn có).
-
 ## <img src="https://skillicons.dev/icons?i=mysql" width="28" height="28" alt="MySQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#242938;border-radius:8px;vertical-align:middle;margin:0 6px 0 0;box-sizing:border-box"><img src="https://cdn.simpleicons.org/mariadb/ffffff" width="20" height="20" alt="MariaDB" style="display:block" /></span> MySQL / MariaDB
 
 Trỏ plugin tới một cơ sở dữ liệu MySQL hoặc MariaDB có sẵn:
@@ -70,7 +68,6 @@ database:
 ```
 
 - Tạo cơ sở dữ liệu trước, ví dụ `CREATE DATABASE enhancedechest;`
-- Plugin tự tạo và quản lý các bảng của riêng nó
 - Đặt `ssl` thành `require` để mã hóa kết nối (thất bại nếu máy chủ không hỗ trợ TLS), hoặc `verify-full` để đồng thời xác minh certificate và hostname của máy chủ. Xem mục [SSL / TLS](#ssl-tls) bên dưới.
 
 ## <img src="https://skillicons.dev/icons?i=postgres" width="28" height="28" alt="PostgreSQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /> PostgreSQL

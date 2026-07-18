@@ -4,17 +4,43 @@ const REPO = 'https://github.com/OpenVdra/EnhancedEchest'
 const DISCORD = 'https://discord.com/invite/FJN7hJKPyb'
 
 const manualPages = [
-  'manual', 'download', 'installation', 'commands', 'permissions',
+  'getting-started', 'commands', 'permissions',
   'permission-chests', 'configuration', 'database', 'migration', 'language'
+]
+
+// Features has its own top-level secondary-nav tab (not part of the Manual
+// tab), so its pages get their own sidebar instead of living in enManualSidebar.
+const featuresPages = ['features', 'larger-ender-chests', 'multi-chest-system', 'bedrock-support']
+
+const enFeaturesSidebar = [
+  {
+    text: 'Features',
+    items: [
+      { text: 'Overview', link: '/docs/features' },
+      { text: 'Larger Ender Chests', link: '/docs/larger-ender-chests' },
+      { text: 'Multi-Chest System', link: '/docs/multi-chest-system' },
+      { text: 'Bedrock Support', link: '/docs/bedrock-support' }
+    ]
+  }
+]
+
+const viFeaturesSidebar = [
+  {
+    text: 'Tính năng',
+    items: [
+      { text: 'Tổng quan', link: '/vi/docs/features' },
+      { text: 'Rương Ender Lớn Hơn', link: '/vi/docs/larger-ender-chests' },
+      { text: 'Hệ Thống Nhiều Rương', link: '/vi/docs/multi-chest-system' },
+      { text: 'Hỗ Trợ Bedrock', link: '/vi/docs/bedrock-support' }
+    ]
+  }
 ]
 
 const enManualSidebar = [
   {
     text: 'Getting Started',
     items: [
-      { text: 'Introduction', link: '/docs/manual' },
-      { text: 'Download', link: '/docs/download' },
-      { text: 'Installation', link: '/docs/installation' }
+      { text: 'Overview', link: '/docs/getting-started' }
     ]
   },
   {
@@ -47,9 +73,7 @@ const viManualSidebar = [
   {
     text: 'Bắt đầu',
     items: [
-      { text: 'Giới thiệu', link: '/vi/docs/manual' },
-      { text: 'Tải về', link: '/vi/docs/download' },
-      { text: 'Cài đặt', link: '/vi/docs/installation' }
+      { text: 'Tổng quan', link: '/vi/docs/getting-started' }
     ]
   },
   {
@@ -80,12 +104,14 @@ const viManualSidebar = [
 
 const enSidebar = {
   ...Object.fromEntries(manualPages.map(page => [`/docs/${page}`, enManualSidebar])),
+  ...Object.fromEntries(featuresPages.map(page => [`/docs/${page}`, enFeaturesSidebar])),
   '/docs/changelog': [{ text: 'Changelog', items: [{ text: 'Release history', link: '/docs/changelog' }] }],
   '/docs/': enManualSidebar
 }
 
 const viSidebar = {
   ...Object.fromEntries(manualPages.map(page => [`/vi/docs/${page}`, viManualSidebar])),
+  ...Object.fromEntries(featuresPages.map(page => [`/vi/docs/${page}`, viFeaturesSidebar])),
   '/vi/docs/changelog': [{ text: 'Nhật ký thay đổi', items: [{ text: 'Lịch sử phát hành', link: '/vi/docs/changelog' }] }],
   '/vi/docs/': viManualSidebar
 }
@@ -134,7 +160,7 @@ export default defineConfig({
   //
   // Two-tier navigation: the top nav below is deliberately light (site-level
   // links + a version menu); the in-docs section tabs (Manual /
-  // Changelog / Contributing) live in the second bar rendered by the custom
+  // Features / Changelog) live in the second bar rendered by the custom
   // theme layout (components/nav/SecondaryNav.vue).
   locales: {
     root: {
@@ -147,7 +173,7 @@ export default defineConfig({
         // part of the docs section.
         nav: [
           { text: 'Home', link: '/' },
-          { text: 'Docs', link: '/docs/manual', activeMatch: '^/docs/' },
+          { text: 'Docs', link: '/docs/getting-started', activeMatch: '^/docs/' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],
@@ -168,7 +194,7 @@ export default defineConfig({
       themeConfig: {
         nav: [
           { text: 'Trang chủ', link: '/vi/' },
-          { text: 'Tài liệu', link: '/vi/docs/manual', activeMatch: '^/vi/docs/' },
+          { text: 'Tài liệu', link: '/vi/docs/getting-started', activeMatch: '^/vi/docs/' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],

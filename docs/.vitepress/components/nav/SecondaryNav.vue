@@ -8,7 +8,6 @@ import LucideIcon from '../icon/LucideIcon.vue'
 // links + search + social/theme; these are the in-docs section tabs.
 const { page, lang } = useData()
 
-const REPO = 'https://github.com/OpenVdra/EnhancedEchest'
 const isVi = computed(() => lang.value.startsWith('vi'))
 
 // Current page key, normalized to a locale-free "docs/…" path (no .md, index
@@ -25,25 +24,24 @@ const tabs = computed(() => {
     {
       icon: 'BookOpen',
       text: isVi.value ? 'Hướng dẫn' : 'Manual',
-      link: `${base}/docs/manual`,
+      link: `${base}/docs/getting-started`,
       actives: [
-        'docs/manual', 'docs/download', 'docs/installation', 'docs/commands', 'docs/permissions',
+        'docs/getting-started', 'docs/commands', 'docs/permissions',
         'docs/permission-chests', 'docs/configuration', 'docs/database',
         'docs/migration', 'docs/language',
       ],
+    },
+    {
+      icon: 'Sparkles',
+      text: isVi.value ? 'Tính năng' : 'Features',
+      link: `${base}/docs/features`,
+      actives: ['docs/features', 'docs/larger-ender-chests', 'docs/multi-chest-system', 'docs/bedrock-support'],
     },
     {
       icon: 'List',
       text: isVi.value ? 'Nhật ký thay đổi' : 'Changelog',
       link: `${base}/docs/changelog`,
       actives: ['docs/changelog'],
-    },
-    {
-      icon: 'Github',
-      text: isVi.value ? 'Mã nguồn' : 'Source Code',
-      link: REPO,
-      external: true,
-      actives: [],
     },
   ]
 })

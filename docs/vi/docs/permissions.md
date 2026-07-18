@@ -7,15 +7,15 @@ Mọi node quyền mặc định là `op`. Hãy cấp chúng qua plugin quyền 
 **`enhancedechest.command.open`**
 Cho phép dùng `/ec` và `/eclist` bằng lệnh, và đặt rương chính. Chuột phải vào khối rương Ender không bao giờ cần quyền này.
 
-**`enhancedechest.additional_amount.<count>.slot.<size>`**
-Cấp thêm rương theo rank. Ví dụ, `enhancedechest.additional_amount.2.slot.54` cho người chơi hai rương 54 ô. Nhiều node cộng dồn. Xóa node sẽ xóa các rương đó; vật phẩm dồn sang rương tạm có thể khôi phục từ `/eclist`.
-
-Xem [Rương Cấp Theo Quyền](/vi/docs/permission-chests#permission-granted-chests) để biết chi tiết.
-
 **`enhancedechest.default_size.<size>`**
 Ghi đè kích thước rương Ender **cơ bản** (rương đầu tiên) của người chơi theo rank, độc lập với `enderchest.default-size` toàn cục. Ví dụ, `enhancedechest.default_size.54` cho rương cơ bản của người chơi đó 54 ô. Nếu người chơi giữ nhiều node, node có kích thước **lớn nhất** sẽ thắng.
 
 Xem [Kích Thước Rương Cơ Bản Theo Quyền](/vi/docs/permission-chests#default-size-permission) để biết chi tiết.
+
+**`enhancedechest.additional_amount.<count>.slot.<size>`**
+Cấp rương **bổ sung** theo rank, ngoài rương cơ bản. Ví dụ, `enhancedechest.additional_amount.2.slot.54` cho người chơi hai rương 54 ô. Nhiều node cộng dồn. Xóa node sẽ xóa các rương đó; vật phẩm dồn sang rương tạm có thể khôi phục từ `/eclist`.
+
+Xem [Rương Cấp Theo Quyền](/vi/docs/permission-chests#permission-granted-chests) để biết chi tiết.
 
 ## Quản Trị Viên
 
@@ -37,7 +37,7 @@ Mỗi lệnh `/ee` chỉ cần đúng node riêng của lệnh đó. Không còn
 
 **`enhancedechest.admin.reload`** - `/ee reload`: tải lại file cấu hình và ngôn ngữ.
 
-**`enhancedechest.admin.migrate`** - `/ee migrate vanilla`, `/ee migrate axvaults` và `/ee migrate playervaultsx`: nhập dữ liệu từ rương Ender vanilla, plugin AxVaults hoặc plugin PlayerVaultsX.
+**`enhancedechest.admin.migrate`** - `/ee migrate vanilla`, `/ee migrate axvaults`, `/ee migrate playervaultsx` và `/ee migrate customenderchest`: nhập dữ liệu từ rương Ender vanilla, AxVaults, PlayerVaultsX hoặc CustomEnderChest.
 
 **`enhancedechest.admin.import`** - `/ee import`: sao chép toàn bộ dữ liệu từ một backend cơ sở dữ liệu cũ vào backend đang dùng.
 

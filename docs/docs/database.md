@@ -50,8 +50,6 @@ database:
 SQLite runs in write-ahead-logging (WAL) mode for better performance under load, so you may also see `enderchests.db-wal` and `enderchests.db-shm` next to the database file. They belong to SQLite: leave them alone, and never copy the `.db` file by hand while the server is running (use the built-in [auto-backup](/docs/configuration) instead).
 :::
 
-SQLite is a great fit for almost every server: since all gameplay is served from memory, the backend only matters for how the data is stored at rest. Pick MySQL/MariaDB/PostgreSQL if you prefer keeping your data in an external database server (central backups, existing tooling).
-
 ## <img src="https://skillicons.dev/icons?i=mysql" width="28" height="28" alt="MySQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#242938;border-radius:8px;vertical-align:middle;margin:0 6px 0 0;box-sizing:border-box"><img src="https://cdn.simpleicons.org/mariadb/ffffff" width="20" height="20" alt="MariaDB" style="display:block" /></span> MySQL / MariaDB
 
 Point the plugin at an existing MySQL or MariaDB database:
@@ -69,7 +67,6 @@ database:
 ```
 
 - Create the database (schema) beforehand, for example `CREATE DATABASE enhancedechest;`
-- The plugin creates and manages its own tables automatically
 - Set `ssl` to `require` to encrypt the connection (fails if the server does not support TLS), or to `verify-full` to also verify the server certificate and hostname. See [SSL / TLS](#ssl-tls) below.
 
 ## <img src="https://skillicons.dev/icons?i=postgres" width="28" height="28" alt="PostgreSQL" style="display:inline-block;vertical-align:middle;margin:0 6px 0 0" /> PostgreSQL
