@@ -12,9 +12,6 @@
     --vp-button-brand-active-bg: #7A51BD;
     --vp-button-brand-text: #ffffff;
 
-    /* Height of the secondary section-tab bar; consumed by the layout offsets
-       further down so the sidebar / content / aside clear both nav rows. */
-    --secondary-nav-height: 44px;
 }
 
 .dark {
@@ -79,15 +76,7 @@
 }
 
 /* ─── Frosted-glass navigation (airi-style) ───────────────────────────────────
-   Translucent background + backdrop blur on both the main nav and the second
-   bar, so page content shows through as frosted glass (inspired by Airi's
-   translucent background and medium backdrop blur). The title/content panels
-   are made transparent so the whole bar blurs uniformly.
-   Scoped to :not(.home) rather than .has-sidebar: VitePress only adds
-   has-sidebar when the page actually renders one, but SecondaryNav (and thus
-   this whole treatment) shows on every non-home page regardless of whether
-   that page opts out of its sidebar (e.g. the SQLite Viewer tool page) — see
-   Layout.vue's `showSecondaryNav`, the same condition. */
+   The title/content panels are transparent so the main nav blurs uniformly. */
 .VPNavBar {
     background-color: color-mix(in srgb, var(--vp-c-bg) 82%, transparent) !important;
     backdrop-filter: blur(16px) saturate(135%);
@@ -101,8 +90,8 @@
    selector matches those too and silently breaks them (this cost a broken/
    missing logo once already); `>` can only reach the navbar's own wrapper
    divs. */
-.VPNavBar:not(.home) > .wrapper > .container > .title,
-.VPNavBar:not(.home) > .wrapper > .container > .content,
+.VPNavBar > .wrapper > .container > .title,
+.VPNavBar > .wrapper > .container > .content,
 .VPNavBar .content-body {
     background-color: transparent !important;
 }
@@ -112,19 +101,19 @@
    ships scoped to .has-sidebar — pages that opt out of their sidebar
    (sidebar: false, e.g. the SQLite Viewer tool) fall back to a completely
    different unpositioned layout, which visibly shifts the logo/search/icons
-   and makes the nav look inconsistent between pages. Force the has-sidebar
-   math on every non-home page regardless of whether it renders one, so the
-   top nav always measures identically. Same direct-child-only rule as above. */
+   and makes the nav look inconsistent between pages. Use the same layout math
+   on every page so the logo, search and trailing controls never shift when
+   navigating between Home and Docs. Same direct-child-only rule as above. */
 @media (min-width: 960px) {
-    .VPNavBar:not(.home) > .wrapper {
+    .VPNavBar > .wrapper {
         padding: 0 !important;
     }
 
-    .VPNavBar:not(.home) > .wrapper > .container {
+    .VPNavBar > .wrapper > .container {
         max-width: 100% !important;
     }
 
-    .VPNavBar:not(.home) > .wrapper > .container > .title {
+    .VPNavBar > .wrapper > .container > .title {
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
@@ -134,7 +123,7 @@
         height: var(--vp-nav-height) !important;
     }
 
-    .VPNavBar:not(.home) > .wrapper > .container > .content {
+    .VPNavBar > .wrapper > .container > .content {
         position: relative !important;
         z-index: 1 !important;
         padding-right: 32px !important;
@@ -143,29 +132,15 @@
 }
 
 @media (min-width: 1440px) {
-    .VPNavBar:not(.home) > .wrapper > .container > .title {
+    .VPNavBar > .wrapper > .container > .title {
         padding-left: max(32px, calc((100% - (var(--vp-layout-max-width) - 64px)) / 2)) !important;
         width: calc((100% - (var(--vp-layout-max-width) - 64px)) / 2 + var(--vp-sidebar-width) - 32px) !important;
     }
 
-    .VPNavBar:not(.home) > .wrapper > .container > .content {
+    .VPNavBar > .wrapper > .container > .content {
         padding-right: calc((100vw - var(--vp-layout-max-width)) / 2 + 32px) !important;
         padding-left: calc((100vw - var(--vp-layout-max-width)) / 2 + var(--vp-sidebar-width)) !important;
     }
-}
-
-/* VitePress draws its own 1px border under the logo specifically when the
-       page has a real sidebar (VPNavBarTitle.vue's `.has-sidebar .title`
-       border-bottom-color), independent of anything above. It sits at the
-       exact same y as SecondaryNav's own top seam line, so on real-sidebar
-       pages the two stack into a visibly thicker line under the logo/first
-       tab or two, while sidebar-less pages (no has-sidebar class, e.g. SQLite
-       Viewer) only ever draw the single seam line — same seam, inconsistent
-       thickness. Neutralize the native one; our seam line is the only divider
-       this design wants here. */
-.VPNavBarTitle.has-sidebar .title {
-    /* Keep this global so browser zoom cannot reactivate the native divider. */
-    border-bottom-color: transparent !important;
 }
 
 /* A touch more breathing room in the nav (airi has generous spacing). */
@@ -227,172 +202,6 @@
 .VPNavBar .VPFlyout:hover .menu,
 .VPNavBar .VPFlyout:focus-within .menu {
     transform: translateY(0);
-}
-
-/* ─── Secondary section-tab bar (airi-style two-tier navigation) ───────────────
-   A second fixed bar sits directly below the main nav on doc pages, holding the
-   top-level section tabs (Overview / Manual / Contributing / Changelog). The
-   component is rendered by theme/Layout.vue → components/nav/SecondaryNav.vue. */
-.secondary-nav {
-    position: fixed;
-    top: var(--vp-nav-height);
-    left: 0;
-    right: 0;
-    height: var(--secondary-nav-height);
-    box-sizing: border-box;
-    z-index: var(--vp-z-index-nav);
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    /* Match the desktop logo's VitePress layout grid instead of hugging the
-       viewport edge. The 32px fallback preserves the normal tablet spacing. */
-    padding-right: 32px;
-    padding-left: max(32px, calc((100% - var(--vp-layout-max-width)) / 2 + 32px));
-    /* Frosted-glass to match the main nav (airi-style): translucent bg + blur.
-       This background stays full-bleed edge-to-edge; only the seam lines below
-       are inset to the content width. */
-    background-color: color-mix(in srgb, var(--vp-c-bg) 68%, transparent);
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-
-/* Seam lines (above: joins the main nav, below: joins the content) inset to
-   the same left/right bounds as the main nav's title/content boxes, so they
-   run from the logo to the trailing icons instead of bleeding to the viewport
-   edges. Both sides use the same 32px-flat-then-grows-past-1440px formula
-   VitePress itself uses for the nav title (left) and content (right) — past
-   that breakpoint the nav re-centers on --vp-layout-max-width, so a flat 32px
-   on the right alone drifts away from the icons as the window widens. */
-.secondary-nav::before,
-.secondary-nav::after {
-    content: '';
-    position: absolute;
-    left: max(32px, calc((100% - var(--vp-layout-max-width)) / 2 + 32px));
-    right: max(32px, calc((100% - var(--vp-layout-max-width)) / 2 + 32px));
-    height: 1px;
-    background-color: var(--vp-c-divider);
-}
-
-.secondary-nav::before {
-    /* Keep the seam inside this stacking layer. At top: 0 VitePress's main
-       nav can paint over the shared edge; pages with a sidebar then appear
-       to have a line only because VPNav draws its own divider there, while
-       sidebar-less pages such as SQLite Viewer do not. */
-    top: 1px;
-}
-
-.secondary-nav::after {
-    bottom: 0;
-}
-
-/* The main nav draws its own hard bottom line (a black `.divider-line`) that
-   only spans the content half, so it would poke through the top-right of the
-   second bar. Hide it on any page showing SecondaryNav (every non-home page,
-   sidebar or not); the second bar's own border-top is the seam. */
-.VPNavBar:not(.home) .divider-line {
-    display: none;
-}
-
-.secondary-nav::-webkit-scrollbar {
-    display: none;
-}
-
-.secondary-nav-tab {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    height: 100%;
-    padding: 0 12px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    white-space: nowrap;
-    color: var(--vp-c-text-2);
-    text-decoration: none !important;
-    transition: color 0.2s;
-}
-
-.secondary-nav-tab:hover {
-    color: var(--vp-c-text-1);
-}
-
-.secondary-nav-tab.is-active {
-    color: var(--vp-c-brand-1);
-    font-weight: 600;
-}
-
-.secondary-nav-tab.is-active::after {
-    content: '';
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: -1px;
-    height: 2px;
-    border-radius: 2px 2px 0 0;
-    background-color: var(--vp-c-brand-1);
-}
-
-/* Reserve room for the second bar on every page it actually renders on (any
-   non-home page — see showSecondaryNav in Layout.vue), not just pages with a
-   sidebar: a page can opt out of its sidebar (sidebar: false in frontmatter,
-   e.g. the SQLite Viewer tool) while SecondaryNav still shows, and content
-   still needs to clear it. The home page has no second bar, so it is left
-   untouched. Hidden below the sidebar breakpoint, where VitePress switches to
-   its own mobile local-nav + drawer. */
-@media (min-width: 960px) {
-    .VPSidebar {
-        /* VitePress positions the sidebar's fixed box at the very top of the
-           viewport (top: 0) and pushes its *content* down with padding-top,
-           so the element's own scrollable box — and the native scrollbar
-           riding along its edge — still starts at y:0, just hidden behind
-           the two nav bars. Moving the box's actual top edge down here
-           (instead of padding) makes the scrollable area, and its scrollbar,
-           start right at the bottom of the second nav bar. */
-        top: calc(var(--vp-nav-height) + var(--secondary-nav-height)) !important;
-        padding-top: 0 !important;
-        /* VitePress's own default (96px) was sized for a top offset of just
-           --vp-nav-height. Trim the bottom breathing room to match, so a
-           sidebar whose items alone would fit the remaining viewport height
-           doesn't still force a scrollbar from padding alone. */
-        padding-bottom: 52px !important;
-    }
-
-    .VPContent:not(.is-home) {
-        padding-top: calc(var(--vp-nav-height) + var(--secondary-nav-height)) !important;
-    }
-
-    .aside-container {
-        padding-top: calc(var(--vp-nav-height) + var(--secondary-nav-height) + 32px) !important;
-    }
-}
-
-/* Below the sidebar breakpoint, VitePress's own main nav (.VPNav) drops out of
-   fixed positioning and scrolls away with the page (only its slim sticky
-   VPLocalNav stays pinned once you scroll past it) — there is no single fixed
-   header to stack a second fixed bar under. Match that model: the second bar
-   becomes part of the normal document flow (still full-width, still framed by
-   its seam lines) instead of a fixed bar, so it scrolls with the page and stays
-   reachable, rather than disappearing entirely. */
-@media (max-width: 959px) {
-    .secondary-nav {
-        position: relative;
-        top: auto;
-        /* SecondaryNav renders via the `layout-top` slot, so in DOM order it
-           lands before .VPNav inside the same flex column. Push it after
-           VPNav (order 0, unset) but before the bars/content that follow. */
-        order: 1;
-    }
-
-    .VPNav {
-        order: 0;
-    }
-
-    .VPLocalNav,
-    .VPContent,
-    .VPFooter {
-        order: 2;
-    }
 }
 
 /* Row of placeholders/screenshots that sit side by side on wide viewports and

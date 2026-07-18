@@ -9,8 +9,8 @@ const manualPages = [
   'database', 'sqlite', 'mysql-mariadb', 'postgresql', 'ssl-tls', 'cross-server', 'switching-backends'
 ]
 
-// Features has its own top-level secondary-nav tab (not part of the Manual
-// tab), so its pages get their own sidebar instead of living in enManualSidebar.
+// Features has its own top-level nav item (not part of Manual), so its pages
+// get their own sidebar instead of living in enManualSidebar.
 const featuresPages = ['features', 'larger-ender-chests', 'multi-chest-system', 'bedrock-support']
 
 const enFeaturesSidebar = [
@@ -183,22 +183,15 @@ export default defineConfig({
   // content lives in `vi/` mirroring the root structure; the Vue components are
   // registered globally so they are reused as-is in both languages.
   //
-  // Two-tier navigation: the top nav below is deliberately light (site-level
-  // links + a version menu); the in-docs section tabs (Manual /
-  // Features / Changelog) live in the second bar rendered by the custom
-  // theme layout (components/nav/SecondaryNav.vue).
   locales: {
     root: {
       label: 'English',
       lang: 'en',
       themeConfig: {
-        // Version replaces the former top-level Changelog link. Changelog now
-        // appears only in the secondary docs navigation. "Docs" stays active
-        // (via activeMatch) while on the Changelog page too, since it's still
-        // part of the docs section.
         nav: [
-          { text: 'Home', link: '/' },
-          { text: 'Docs', link: '/docs/getting-started', activeMatch: '^/docs/' },
+          { text: 'Docs', link: '/docs/getting-started', activeMatch: '^/docs/(getting-started|commands|permissions|permission-chests|configuration|migration|language|database|sqlite|mysql-mariadb|postgresql|ssl-tls|cross-server|switching-backends)(/|$)' },
+          { text: 'Features', link: '/docs/features', activeMatch: '^/docs/(features|larger-ender-chests|multi-chest-system|bedrock-support)(/|$)' },
+          { text: 'SQLite Viewer', link: '/docs/sqlite-viewer', activeMatch: '^/docs/sqlite-viewer(/|$)' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],
@@ -218,8 +211,9 @@ export default defineConfig({
       description: 'Rương Ender lớn hơn cho người chơi, nhiều rương mỗi người, mỗi rương có tên và biểu tượng riêng.',
       themeConfig: {
         nav: [
-          { text: 'Trang chủ', link: '/vi/' },
-          { text: 'Tài liệu', link: '/vi/docs/getting-started', activeMatch: '^/vi/docs/' },
+          { text: 'Tài liệu', link: '/vi/docs/getting-started', activeMatch: '^/vi/docs/(getting-started|commands|permissions|permission-chests|configuration|migration|language|database|sqlite|mysql-mariadb|postgresql|ssl-tls|cross-server|switching-backends)(/|$)' },
+          { text: 'Tính năng', link: '/vi/docs/features', activeMatch: '^/vi/docs/(features|larger-ender-chests|multi-chest-system|bedrock-support)(/|$)' },
+          { text: 'Xem SQLite', link: '/vi/docs/sqlite-viewer', activeMatch: '^/vi/docs/sqlite-viewer(/|$)' },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],
