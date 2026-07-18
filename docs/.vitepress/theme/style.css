@@ -81,16 +81,21 @@
 /* ─── Frosted-glass navigation (airi-style) ───────────────────────────────────
    Translucent background + backdrop blur on both the main nav and the second
    bar, so page content shows through as frosted glass (inspired by Airi's
-   translucent background and medium backdrop blur). The has-sidebar title/content panels are made transparent
-   so the whole bar blurs uniformly. */
+   translucent background and medium backdrop blur). The title/content panels
+   are made transparent so the whole bar blurs uniformly.
+   Scoped to :not(.home) rather than .has-sidebar: VitePress only adds
+   has-sidebar when the page actually renders one, but SecondaryNav (and thus
+   this whole treatment) shows on every non-home page regardless of whether
+   that page opts out of its sidebar (e.g. the SQLite Viewer tool page) — see
+   Layout.vue's `showSecondaryNav`, the same condition. */
 .VPNavBar {
     background-color: color-mix(in srgb, var(--vp-c-bg) 82%, transparent) !important;
     backdrop-filter: blur(16px) saturate(135%);
     -webkit-backdrop-filter: blur(16px) saturate(135%);
 }
 
-.VPNavBar.has-sidebar .title,
-.VPNavBar.has-sidebar .content,
+.VPNavBar:not(.home) .title,
+.VPNavBar:not(.home) .content,
 .VPNavBar .content-body {
     background-color: transparent !important;
 }
@@ -212,8 +217,9 @@
 
 /* The main nav draws its own hard bottom line (a black `.divider-line`) that
    only spans the content half, so it would poke through the top-right of the
-   second bar. Hide it on doc pages; the second bar's own border-top is the seam. */
-.VPNavBar.has-sidebar .divider-line {
+   second bar. Hide it on any page showing SecondaryNav (every non-home page,
+   sidebar or not); the second bar's own border-top is the seam. */
+.VPNavBar:not(.home) .divider-line {
     display: none;
 }
 
@@ -255,10 +261,13 @@
     background-color: var(--vp-c-brand-1);
 }
 
-/* Reserve room for the second bar. Only doc pages (which always render the left
-   sidebar) get the offset; the home page has no sidebar and no second bar, so it
-   is left untouched. Hidden below the sidebar breakpoint, where VitePress switches
-   to its own mobile local-nav + drawer. */
+/* Reserve room for the second bar on every page it actually renders on (any
+   non-home page — see showSecondaryNav in Layout.vue), not just pages with a
+   sidebar: a page can opt out of its sidebar (sidebar: false in frontmatter,
+   e.g. the SQLite Viewer tool) while SecondaryNav still shows, and content
+   still needs to clear it. The home page has no second bar, so it is left
+   untouched. Hidden below the sidebar breakpoint, where VitePress switches to
+   its own mobile local-nav + drawer. */
 @media (min-width: 960px) {
     .VPSidebar {
         /* VitePress positions the sidebar's fixed box at the very top of the
@@ -277,7 +286,7 @@
         padding-bottom: 52px !important;
     }
 
-    .VPContent.has-sidebar {
+    .VPContent:not(.is-home) {
         padding-top: calc(var(--vp-nav-height) + var(--secondary-nav-height)) !important;
     }
 

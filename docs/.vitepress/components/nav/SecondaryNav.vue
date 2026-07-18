@@ -41,15 +41,14 @@ const tabs = computed(() => {
     {
       icon: 'Database',
       text: isVi.value ? 'Xem SQLite' : 'SQLite Viewer',
-      link: 'https://sqliteviewer.app/',
-      external: true,
-      actives: [],
+      link: `${base}/docs/sqlite-viewer`,
+      actives: ['docs/sqlite-viewer'],
     },
   ]
 })
 
 const isActive = (tab) => tab.actives.some(a =>
-  a.endsWith('/') ? currentKey.value === a : currentKey.value.startsWith(a))
+  currentKey.value === a || currentKey.value.startsWith(`${a}/`))
 </script>
 
 <template>
@@ -59,13 +58,10 @@ const isActive = (tab) => tab.actives.some(a =>
       :key="tab.text"
       class="secondary-nav-tab"
       :class="{ 'is-active': isActive(tab) }"
-      :href="tab.external ? tab.link : withBase(tab.link)"
-      :target="tab.external ? '_blank' : undefined"
-      :rel="tab.external ? 'noreferrer' : undefined"
+      :href="withBase(tab.link)"
     >
       <LucideIcon v-if="tab.icon" :name="tab.icon" :size="15" />
       <span>{{ tab.text }}</span>
-      <LucideIcon v-if="tab.external" name="ArrowUpRight" :size="13" class="secondary-nav-tab-external" />
     </a>
   </nav>
 </template>
@@ -75,7 +71,4 @@ const isActive = (tab) => tab.actives.some(a =>
   gap: 7px;
 }
 
-.secondary-nav-tab-external {
-  opacity: 0.55;
-}
 </style>
