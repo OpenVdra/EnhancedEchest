@@ -5,7 +5,8 @@ const DISCORD = 'https://discord.com/invite/FJN7hJKPyb'
 
 const manualPages = [
   'getting-started', 'commands', 'permissions',
-  'permission-chests', 'configuration', 'database', 'migration', 'language'
+  'permission-chests', 'configuration', 'migration', 'language',
+  'database', 'sqlite', 'mysql-mariadb', 'postgresql', 'ssl-tls', 'cross-server', 'switching-backends'
 ]
 
 // Features has its own top-level secondary-nav tab (not part of the Manual
@@ -60,9 +61,21 @@ const enManualSidebar = [
         collapsed: false,
         items: [
           { text: 'Main Config', link: '/docs/configuration' },
-          { text: 'Database', link: '/docs/database' },
           { text: 'Migration', link: '/docs/migration' },
           { text: 'Language', link: '/docs/language' }
+        ]
+      },
+      {
+        text: 'Database',
+        collapsed: false,
+        items: [
+          { text: 'Overview', link: '/docs/database' },
+          { text: 'SQLite', link: '/docs/sqlite' },
+          { text: 'MySQL / MariaDB', link: '/docs/mysql-mariadb' },
+          { text: 'PostgreSQL', link: '/docs/postgresql' },
+          { text: 'SSL / TLS', link: '/docs/ssl-tls' },
+          { text: 'Cross-Server', link: '/docs/cross-server' },
+          { text: 'Switching Backends', link: '/docs/switching-backends' }
         ]
       }
     ]
@@ -93,9 +106,21 @@ const viManualSidebar = [
         collapsed: false,
         items: [
           { text: 'Cấu hình chính', link: '/vi/docs/configuration' },
-          { text: 'Cơ sở dữ liệu', link: '/vi/docs/database' },
           { text: 'Chuyển dữ liệu', link: '/vi/docs/migration' },
           { text: 'Ngôn ngữ', link: '/vi/docs/language' }
+        ]
+      },
+      {
+        text: 'Cơ Sở Dữ Liệu',
+        collapsed: false,
+        items: [
+          { text: 'Tổng quan', link: '/vi/docs/database' },
+          { text: 'SQLite', link: '/vi/docs/sqlite' },
+          { text: 'MySQL / MariaDB', link: '/vi/docs/mysql-mariadb' },
+          { text: 'PostgreSQL', link: '/vi/docs/postgresql' },
+          { text: 'SSL / TLS', link: '/vi/docs/ssl-tls' },
+          { text: 'Liên máy chủ', link: '/vi/docs/cross-server' },
+          { text: 'Chuyển đổi Backend', link: '/vi/docs/switching-backends' }
         ]
       }
     ]

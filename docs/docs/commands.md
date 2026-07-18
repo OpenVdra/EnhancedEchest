@@ -90,7 +90,7 @@ Reloads config and language files without restarting.
 
 <CommandRow commands="/ee import" permission="enhancedechest.admin.import">
 
-Opens a form to copy all data from an old database backend into the active one (for example SQLite → MySQL). The active database must be empty and no other players may be online. See [Switching Backends](/docs/database#switching-backends) for the full walkthrough.
+Opens a form to copy all data from an old database backend into the active one (for example SQLite → MySQL). The active database must be empty and no other players may be online. See [Switching Backends](/docs/switching-backends) for the full walkthrough.
 
 </CommandRow>
 

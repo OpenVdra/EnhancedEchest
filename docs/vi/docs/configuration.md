@@ -173,7 +173,7 @@ Số kết nối tối đa trong pool. Chỉ áp dụng cho MySQL, MariaDB và P
 
 <ConfigGroup name="cross-server">
 <template #info>
-Cho phép nhiều máy chủ sau proxy dùng chung một cơ sở dữ liệu, để rương Ender của người chơi đi theo họ giữa các máy chủ. Cần một cơ sở dữ liệu MySQL/MariaDB/PostgreSQL dùng chung và một máy chủ Redis dùng chung. Xem <a href="/vi/docs/database#cross-server">Hỗ Trợ Liên Máy Chủ</a>. Thay đổi trong mục này cần khởi động lại máy chủ hoàn toàn.
+Cho phép nhiều máy chủ sau proxy dùng chung một cơ sở dữ liệu, để rương Ender của người chơi đi theo họ giữa các máy chủ. Cần một cơ sở dữ liệu MySQL/MariaDB/PostgreSQL dùng chung và một máy chủ Redis dùng chung. Xem <a href="/vi/docs/cross-server">Hỗ Trợ Liên Máy Chủ</a>. Thay đổi trong mục này cần khởi động lại máy chủ hoàn toàn.
 </template>
 
 <ConfigProperty name="enabled" value="false" type="boolean">

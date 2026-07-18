@@ -27,8 +27,9 @@ const tabs = computed(() => {
       link: `${base}/docs/getting-started`,
       actives: [
         'docs/getting-started', 'docs/commands', 'docs/permissions',
-        'docs/permission-chests', 'docs/configuration', 'docs/database',
-        'docs/migration', 'docs/language',
+        'docs/permission-chests', 'docs/configuration', 'docs/migration', 'docs/language',
+        'docs/database', 'docs/sqlite', 'docs/mysql-mariadb', 'docs/postgresql',
+        'docs/ssl-tls', 'docs/cross-server', 'docs/switching-backends',
       ],
     },
     {
@@ -38,10 +39,11 @@ const tabs = computed(() => {
       actives: ['docs/features', 'docs/larger-ender-chests', 'docs/multi-chest-system', 'docs/bedrock-support'],
     },
     {
-      icon: 'List',
-      text: isVi.value ? 'Nhật ký thay đổi' : 'Changelog',
-      link: `${base}/docs/changelog`,
-      actives: ['docs/changelog'],
+      icon: 'Database',
+      text: isVi.value ? 'Xem SQLite' : 'SQLite Viewer',
+      link: 'https://sqliteviewer.app/',
+      external: true,
+      actives: [],
     },
   ]
 })
@@ -63,6 +65,7 @@ const isActive = (tab) => tab.actives.some(a =>
     >
       <LucideIcon v-if="tab.icon" :name="tab.icon" :size="15" />
       <span>{{ tab.text }}</span>
+      <LucideIcon v-if="tab.external" name="ArrowUpRight" :size="13" class="secondary-nav-tab-external" />
     </a>
   </nav>
 </template>
@@ -70,5 +73,9 @@ const isActive = (tab) => tab.actives.some(a =>
 <style scoped>
 .secondary-nav-tab {
   gap: 7px;
+}
+
+.secondary-nav-tab-external {
+  opacity: 0.55;
 }
 </style>

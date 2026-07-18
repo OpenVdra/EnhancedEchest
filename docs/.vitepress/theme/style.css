@@ -262,6 +262,11 @@
 @media (min-width: 960px) {
     .VPSidebar {
         padding-top: calc(var(--vp-nav-height) + var(--secondary-nav-height)) !important;
+        /* VitePress's own default (96px) was sized for a top offset of just
+           --vp-nav-height. Ours is 44px taller, so trim the bottom breathing
+           room by the same amount — otherwise a sidebar whose items alone
+           would fit the viewport still forces a scrollbar from padding alone. */
+        padding-bottom: 52px !important;
     }
 
     .VPContent.has-sidebar {
@@ -273,9 +278,31 @@
     }
 }
 
+/* Below the sidebar breakpoint, VitePress's own main nav (.VPNav) drops out of
+   fixed positioning and scrolls away with the page (only its slim sticky
+   VPLocalNav stays pinned once you scroll past it) — there is no single fixed
+   header to stack a second fixed bar under. Match that model: the second bar
+   becomes part of the normal document flow (still full-width, still framed by
+   its seam lines) instead of a fixed bar, so it scrolls with the page and stays
+   reachable, rather than disappearing entirely. */
 @media (max-width: 959px) {
     .secondary-nav {
-        display: none;
+        position: relative;
+        top: auto;
+        /* SecondaryNav renders via the `layout-top` slot, so in DOM order it
+           lands before .VPNav inside the same flex column. Push it after
+           VPNav (order 0, unset) but before the bars/content that follow. */
+        order: 1;
+    }
+
+    .VPNav {
+        order: 0;
+    }
+
+    .VPLocalNav,
+    .VPContent,
+    .VPFooter {
+        order: 2;
     }
 }
 

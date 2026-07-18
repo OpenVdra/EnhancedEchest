@@ -17,8 +17,17 @@ const showSecondaryNav = computed(() => frontmatter.value.layout !== 'home')
 </script>
 
 <template>
-  <SecondaryNav v-if="showSecondaryNav" />
   <Layout>
+    <!-- Default theme's own `.Layout` is a flex column (VPNav, VPLocalNav,
+         VPSidebar, VPContent, VPFooter, in that order). `layout-top` renders
+         as its first flex child, not a page-level sibling before VPNav, so on
+         desktop (SecondaryNav is position:fixed, flex order is irrelevant to
+         it) nothing changes; on mobile (VPNav drops out of fixed positioning
+         and SecondaryNav becomes an in-flow bar) an `order` override in
+         style.css reshuffles it to sit right after VPNav instead of before it. -->
+    <template #layout-top>
+      <SecondaryNav v-if="showSecondaryNav" />
+    </template>
     <template #aside-outline-after>
       <AsideLinks />
     </template>

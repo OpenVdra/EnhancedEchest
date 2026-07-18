@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useData } from 'vitepress'
+import { useData, withBase } from 'vitepress'
 import LucideIcon from '../icon/LucideIcon.vue'
 
 defineProps({
@@ -20,6 +20,7 @@ const open = ref(false)
 const root = ref(null)
 
 const items = computed(() => [
+  { icon: 'List', text: isVi.value ? 'Nhật ký thay đổi' : 'Changelog', href: withBase(isVi.value ? '/vi/docs/changelog' : '/docs/changelog') },
   { icon: 'Tag', text: isVi.value ? 'Bản phát hành' : 'Releases', href: `${REPO}/releases`, external: true },
   { icon: 'Bug', text: isVi.value ? 'Báo lỗi' : 'Report a bug', href: `${REPO}/issues`, external: true },
 ])

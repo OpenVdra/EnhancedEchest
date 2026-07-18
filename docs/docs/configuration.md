@@ -173,7 +173,7 @@ Maximum number of pooled database connections. Only applies to MySQL, MariaDB, a
 
 <ConfigGroup name="cross-server">
 <template #info>
-Lets several servers behind a proxy share one database, so a player's ender chests follow them between servers. Needs a shared MySQL/MariaDB/PostgreSQL database and a shared Redis server. See <a href="/docs/database#cross-server">Cross-Server Support</a>. Changes in this section require a full server restart.
+Lets several servers behind a proxy share one database, so a player's ender chests follow them between servers. Needs a shared MySQL/MariaDB/PostgreSQL database and a shared Redis server. See <a href="/docs/cross-server">Cross-Server Support</a>. Changes in this section require a full server restart.
 </template>
 
 <ConfigProperty name="enabled" value="false" type="boolean">
