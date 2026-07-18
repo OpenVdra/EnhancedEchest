@@ -94,10 +94,77 @@
     -webkit-backdrop-filter: blur(16px) saturate(135%);
 }
 
-.VPNavBar:not(.home) .title,
-.VPNavBar:not(.home) .content,
+/* Direct-child chains only (never a bare descendant selector) — VitePress
+   reuses "title" and "container" for unrelated nested elements inside this
+   same navbar (the actual logo link is `.VPNavBarTitle > a.title`, and the
+   mobile hamburger button renders its own `span.container`). A descendant
+   selector matches those too and silently breaks them (this cost a broken/
+   missing logo once already); `>` can only reach the navbar's own wrapper
+   divs. */
+.VPNavBar:not(.home) > .wrapper > .container > .title,
+.VPNavBar:not(.home) > .wrapper > .container > .content,
 .VPNavBar .content-body {
     background-color: transparent !important;
+}
+
+/* VitePress's .title/.content/.wrapper/.container layout math (logo pinned
+   absolute at a fixed --vp-sidebar-width, content padded to clear it) only
+   ships scoped to .has-sidebar — pages that opt out of their sidebar
+   (sidebar: false, e.g. the SQLite Viewer tool) fall back to a completely
+   different unpositioned layout, which visibly shifts the logo/search/icons
+   and makes the nav look inconsistent between pages. Force the has-sidebar
+   math on every non-home page regardless of whether it renders one, so the
+   top nav always measures identically. Same direct-child-only rule as above. */
+@media (min-width: 960px) {
+    .VPNavBar:not(.home) > .wrapper {
+        padding: 0 !important;
+    }
+
+    .VPNavBar:not(.home) > .wrapper > .container {
+        max-width: 100% !important;
+    }
+
+    .VPNavBar:not(.home) > .wrapper > .container > .title {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 2 !important;
+        padding: 0 32px !important;
+        width: var(--vp-sidebar-width) !important;
+        height: var(--vp-nav-height) !important;
+    }
+
+    .VPNavBar:not(.home) > .wrapper > .container > .content {
+        position: relative !important;
+        z-index: 1 !important;
+        padding-right: 32px !important;
+        padding-left: var(--vp-sidebar-width) !important;
+    }
+}
+
+@media (min-width: 1440px) {
+    .VPNavBar:not(.home) > .wrapper > .container > .title {
+        padding-left: max(32px, calc((100% - (var(--vp-layout-max-width) - 64px)) / 2)) !important;
+        width: calc((100% - (var(--vp-layout-max-width) - 64px)) / 2 + var(--vp-sidebar-width) - 32px) !important;
+    }
+
+    .VPNavBar:not(.home) > .wrapper > .container > .content {
+        padding-right: calc((100vw - var(--vp-layout-max-width)) / 2 + 32px) !important;
+        padding-left: calc((100vw - var(--vp-layout-max-width)) / 2 + var(--vp-sidebar-width)) !important;
+    }
+
+    /* VitePress draws its own 1px border under the logo specifically when the
+       page has a real sidebar (VPNavBarTitle.vue's `.has-sidebar .title`
+       border-bottom-color), independent of anything above. It sits at the
+       exact same y as SecondaryNav's own top seam line, so on real-sidebar
+       pages the two stack into a visibly thicker line under the logo/first
+       tab or two, while sidebar-less pages (no has-sidebar class, e.g. SQLite
+       Viewer) only ever draw the single seam line — same seam, inconsistent
+       thickness. Neutralize the native one; our seam line is the only divider
+       this design wants here. */
+    .VPNavBarTitle.has-sidebar .title {
+        border-bottom-color: transparent !important;
+    }
 }
 
 /* A touch more breathing room in the nav (airi has generous spacing). */
