@@ -13,14 +13,17 @@ defineProps({
 const VERSION = 'v1.0.11'
 const REPO = 'https://github.com/OpenVdra/EnhancedEchest'
 
-const { lang } = useData()
+const { lang, page } = useData()
 const isVi = computed(() => lang.value.startsWith('vi'))
+const isChangelog = computed(() =>
+  page.value.relativePath?.replace(/^vi\//, '') === 'docs/changelog.md'
+)
 
 const open = ref(false)
 const root = ref(null)
 
 const items = computed(() => [
-  { icon: 'List', text: isVi.value ? 'Nhật ký thay đổi' : 'Changelog', href: withBase(isVi.value ? '/vi/docs/changelog' : '/docs/changelog') },
+  { icon: 'List', text: isVi.value ? 'Nhật ký thay đổi' : 'Changelog', href: withBase(isVi.value ? '/vi/docs/changelog' : '/docs/changelog'), active: isChangelog.value },
   { icon: 'Tag', text: isVi.value ? 'Bản phát hành' : 'Releases', href: `${REPO}/releases`, external: true },
   { icon: 'Bug', text: isVi.value ? 'Báo lỗi' : 'Report a bug', href: `${REPO}/issues`, external: true },
 ])
@@ -63,7 +66,9 @@ onBeforeUnmount(() => {
           v-for="item in items"
           :key="item.text"
           class="version-dd-item"
+          :class="{ active: item.active }"
           role="menuitem"
+          :aria-current="item.active ? 'page' : undefined"
           :href="item.href"
           :target="item.external ? '_blank' : undefined"
           :rel="item.external ? 'noreferrer' : undefined"
@@ -157,7 +162,8 @@ onBeforeUnmount(() => {
   transition: color 0.18s, background-color 0.18s;
 }
 
-.version-dd-item:hover {
+.version-dd-item:hover,
+.version-dd-item.active {
   color: var(--vp-c-brand-1);
   background-color: var(--vp-c-brand-soft);
 }
