@@ -152,8 +152,9 @@
         padding-right: calc((100vw - var(--vp-layout-max-width)) / 2 + 32px) !important;
         padding-left: calc((100vw - var(--vp-layout-max-width)) / 2 + var(--vp-sidebar-width)) !important;
     }
+}
 
-    /* VitePress draws its own 1px border under the logo specifically when the
+/* VitePress draws its own 1px border under the logo specifically when the
        page has a real sidebar (VPNavBarTitle.vue's `.has-sidebar .title`
        border-bottom-color), independent of anything above. It sits at the
        exact same y as SecondaryNav's own top seam line, so on real-sidebar
@@ -162,9 +163,9 @@
        Viewer) only ever draw the single seam line — same seam, inconsistent
        thickness. Neutralize the native one; our seam line is the only divider
        this design wants here. */
-    .VPNavBarTitle.has-sidebar .title {
-        border-bottom-color: transparent !important;
-    }
+.VPNavBarTitle.has-sidebar .title {
+    /* Keep this global so browser zoom cannot reactivate the native divider. */
+    border-bottom-color: transparent !important;
 }
 
 /* A touch more breathing room in the nav (airi has generous spacing). */
@@ -275,7 +276,11 @@
 }
 
 .secondary-nav::before {
-    top: 0;
+    /* Keep the seam inside this stacking layer. At top: 0 VitePress's main
+       nav can paint over the shared edge; pages with a sidebar then appear
+       to have a line only because VPNav draws its own divider there, while
+       sidebar-less pages such as SQLite Viewer do not. */
+    top: 1px;
 }
 
 .secondary-nav::after {
