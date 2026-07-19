@@ -13,7 +13,7 @@ Run `/eclist` to open a menu listing every chest the player owns, each showing i
 
 ## Main Chest
 
-With several chests, a player can pick one as their **main**, the one opened directly by `/ec` and by right-clicking an ender chest block. Until a main is chosen, those open the management menu instead. A new chest is never made main automatically; players set it from the menu (and can always reach the menu with `/eclist`).
+With several chests, a player can pick one as their **main**, the one opened directly by `/ec` and by right-clicking an ender chest. Until a main is chosen, those open the management menu instead. A new chest is never made main automatically; players set it from the menu (and can always reach the menu with `/eclist`).
 
 One exception: while a player has a **temporary chest** holding spilled items (for example after a resize or a revoked rank chest), opening the ender chest always shows the menu, even with a main set. This makes sure the spilled items are seen. Once the player empties the temporary chest, it disappears and the main chest opens directly again.
 

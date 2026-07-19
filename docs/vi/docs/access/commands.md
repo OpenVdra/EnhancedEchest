@@ -31,7 +31,7 @@ Luôn mở menu quản lý liệt kê mọi rương của bạn. Từ đây bạ
 </CommandRow>
 
 ::: tip
-Chuột phải vào khối rương Ender hoạt động giống hệt `/ec`. Không cần quyền để chuột phải vào khối.
+Chuột phải vào rương Ender hoạt động giống hệt `/ec`. Không cần quyền để chuột phải.
 :::
 
 ## Lệnh Quản Trị Viên

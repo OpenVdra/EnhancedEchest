@@ -47,6 +47,51 @@ Two distinct audiences read these docs:
 Write each page with its audience in mind. The Features page should read as if explaining to a player.
 The Configuration page can be more technical since only admins read it.
 
+### Name config settings the way the reader sees them
+
+`config.yml` is nested YAML, so a reader never sees a dotted path like `enderchest.default-size`
+anywhere in the file. Refer to a setting by its own key plus the file:
+"the `default-size` setting in `config.yml`". Do not call it "global" either, the reader has no
+mental model of global vs. per-player until you explain it.
+
+**Wrong:** "independent of the global `enderchest.default-size`"
+**Right:** "ignoring the `default-size` value set in `config.yml`"
+
+### Cut words the sentence already implies
+
+`/ec` and `/eclist` are visibly commands, so "using `/ec` by command" says it twice. Same for
+emphasis words that add no information: "never requires this" is not clearer than "does not require
+this" (Vietnamese: "không cần", not "không bao giờ cần"). Drop the redundant half.
+
+**Wrong:** "Allows using `/ec` and `/eclist` by command. Right-clicking never requires this."
+**Right:** "Allows using `/ec` and `/eclist`. Right-clicking does not require this."
+
+Keep "never" only where it carries real meaning, for example a guarantee the reader might doubt
+("the base chest is never deleted").
+
+### Use neutral verbs, not competition words
+
+When several permission nodes overlap, the result **applies**, it does not "win".
+Vietnamese: "được áp dụng", never "thắng".
+
+### Say "ender chest", not "ender chest block"
+
+Drop the word "block" (Vietnamese: "khối") when describing right-click. It reads clunky and adds
+nothing. Keep "block" only when the sentence is genuinely about the placed block itself, for example
+the lid animation.
+
+### Point players at what they will actually do
+
+Describe the path a player really takes, not a command they would have to know about.
+Items spilled into a temporary chest are taken back by right-clicking an ender chest, which opens
+the chest list automatically while a temporary chest exists. Do not say "recoverable from `/eclist`",
+and do not say "restore" when the player simply takes the items out.
+
+### Do not repeat a link the page already gave
+
+If a section already links to a page, do not close the page with a second "see also" pointing at
+the same place.
+
 ### Be concise
 
 One sentence per feature card description. Two sentences maximum for a section intro.
@@ -249,3 +294,8 @@ However, remove: HikariCP mentions, "dupe-safe load/save model" phrasing, driver
 - [ ] Commands page: `<CommandRow>` directly, descriptions are 1-2 sentences
 - [ ] Permissions page: plain markdown bold format, no BaseTable/PermRow
 - [ ] Feature sections focus on what the player/admin does and sees
+- [ ] No redundant words ("`/ec` by command", "never requires" where "does not require" works)
+- [ ] Config settings named by their own key + `config.yml`, never as a dotted path
+- [ ] No "wins" / "thắng" for overlapping permissions, use "applies" / "được áp dụng"
+- [ ] No "ender chest block" / "khối rương" for right-click wording
+- [ ] Both languages updated: `docs/docs/...` and `docs/vi/docs/...`

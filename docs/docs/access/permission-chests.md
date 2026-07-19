@@ -4,11 +4,11 @@ A player's chests come in two kinds: their one **base** chest (`#1`, created aut
 
 ## Base Chest Size by Permission {#default-size-permission}
 
-Every player's base chest is normally sized by the global `enderchest.default-size`. The `enhancedechest.default_size.<size>` permission overrides that size **per player**, so a rank can get a bigger (or smaller) starting chest without any command.
+Every player's base chest is normally sized by the `default-size` setting in `config.yml`. The `enhancedechest.default_size.<size>` permission overrides that size **per player**, so a rank can get a bigger (or smaller) starting chest without any command.
 
 - **`<size>`**: slot count, a multiple of 9 from 9 to 54.
-- **Largest wins**: a player holding both `...27` and `...54` gets 54, since there is only one base chest and one size to pick.
-- **Grant grows, revoke shrinks**: gaining the permission resizes the base chest to it, keeping every item. Shrinking (a smaller permission, or losing it entirely) spills the overflow into a recoverable temporary chest. Losing the permission returns the base chest to `enderchest.default-size`.
+- **Largest applies**: a player holding both `...27` and `...54` gets 54, since there is only one base chest and one size to pick.
+- **Grant grows, revoke shrinks**: gaining the permission resizes the base chest to it, keeping every item. Shrinking (a smaller permission, or losing it entirely) moves the overflow into a temporary chest the player can take back. Losing the permission returns the base chest to the `default-size` in `config.yml`.
 - **Permission-managed while set**: `/ee resize` refuses to change a base chest while a `default_size` permission owns its size, even for offline players.
 
 ::: tip Interaction with additional chests

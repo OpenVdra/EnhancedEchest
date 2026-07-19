@@ -31,7 +31,7 @@ Always opens the management menu, listing all your chests. From here you can ope
 </CommandRow>
 
 ::: tip
-Right-clicking an ender chest block follows the same routing as `/ec`. No permission is required to right-click.
+Right-clicking an ender chest follows the same routing as `/ec`. No permission is required to right-click.
 :::
 
 ## Admin Commands

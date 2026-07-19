@@ -6,7 +6,7 @@ EnhancedEchest thay rương Ender vanilla 27 ô bằng một kho đồ có thể
 
 ## Cùng Khối, Nhiều Không Gian Hơn
 
-Người chơi mở rương Ender đúng theo cách họ vẫn làm, bằng cách chuột phải vào khối rương Ender, và nhận được kho đồ lớn hơn thay vì màn hình vanilla.
+Người chơi mở rương Ender đúng theo cách họ vẫn làm, bằng cách chuột phải vào rương Ender, và nhận được kho đồ lớn hơn thay vì màn hình vanilla.
 
 - Mở bằng chuột phải hoặc qua `/ec`
 - Khối rương Ender vẫn giữ hiệu ứng đóng/mở nắp
@@ -14,7 +14,7 @@ Người chơi mở rương Ender đúng theo cách họ vẫn làm, bằng các
 
 ## Kích Thước Tùy Chỉnh
 
-Kích thước mặc định cho rương đầu tiên của người chơi được đặt bằng `enderchest.default-size` trong `config.yml`. Quản trị viên cũng có thể đổi kích thước từng rương bằng `/ee resize`, và bạn có thể ghi đè kích thước rương cơ bản **theo từng rank** bằng quyền `enhancedechest.default_size.<size>`.
+Kích thước mặc định cho rương đầu tiên của người chơi được đặt bằng `default-size` trong `config.yml`. Quản trị viên cũng có thể đổi kích thước từng rương bằng `/ee resize`, và bạn có thể ghi đè kích thước rương cơ bản **theo từng rank** bằng quyền `enhancedechest.default_size.<size>`.
 
 - Kích thước hợp lệ: `9`, `18`, `27`, `36`, `45`, `54`
 - Giá trị không hợp lệ được làm tròn về kích thước gần nhất

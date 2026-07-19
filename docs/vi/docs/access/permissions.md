@@ -5,15 +5,15 @@ Mọi node quyền mặc định là `op`. Hãy cấp chúng qua plugin quyền 
 ## Người Chơi
 
 **`enhancedechest.command.open`**
-Cho phép dùng `/ec` và `/eclist` bằng lệnh, và đặt rương chính. Chuột phải vào khối rương Ender không bao giờ cần quyền này.
+Cho phép dùng `/ec` và `/eclist`, và đặt rương chính. Chuột phải vào rương Ender không cần quyền này.
 
 **`enhancedechest.default_size.<size>`**
-Ghi đè kích thước rương Ender **cơ bản** (rương đầu tiên) của người chơi theo rank, độc lập với `enderchest.default-size` toàn cục. Ví dụ, `enhancedechest.default_size.54` cho rương cơ bản của người chơi đó 54 ô. Nếu người chơi giữ nhiều node, node có kích thước **lớn nhất** sẽ thắng.
+Ghi đè kích thước rương Ender **cơ bản** (rương đầu tiên) của người chơi theo rank, bỏ qua giá trị `default-size` đặt trong `config.yml`. Ví dụ, `enhancedechest.default_size.54` cho rương cơ bản của người chơi đó 54 ô. Nếu người chơi giữ nhiều node, node có kích thước **lớn nhất** sẽ được áp dụng.
 
 Xem [Kích Thước Rương Cơ Bản Theo Quyền](/vi/docs/access/permission-chests#default-size-permission) để biết chi tiết.
 
 **`enhancedechest.additional_amount.<count>.slot.<size>`**
-Cấp rương **bổ sung** theo rank, ngoài rương cơ bản. Ví dụ, `enhancedechest.additional_amount.2.slot.54` cho người chơi hai rương 54 ô. Nhiều node cộng dồn. Xóa node sẽ xóa các rương đó; vật phẩm dồn sang rương tạm có thể khôi phục từ `/eclist`.
+Cấp rương **bổ sung** theo rank, ngoài rương cơ bản. Ví dụ, `enhancedechest.additional_amount.2.slot.54` cho người chơi hai rương 54 ô. Nhiều node cộng dồn. Xóa node sẽ xóa các rương đó; vật phẩm được dồn sang một rương tạm. Khi người chơi đang có rương tạm, chuột phải vào rương Ender sẽ mở danh sách rương để họ lấy lại vật phẩm.
 
 Xem [Rương Cấp Theo Quyền](/vi/docs/access/permission-chests#permission-granted-chests) để biết chi tiết.
 
@@ -44,5 +44,3 @@ Mỗi lệnh `/ee` chỉ cần đúng node riêng của lệnh đó. Không còn
 ::: tip
 Để cấp toàn quyền quản trị một lần, cấp `enhancedechest.admin.*` (nếu plugin quyền của bạn hỗ trợ wildcard).
 :::
-
-Hai quyền cấp rương theo rank (`default_size` và `additional_amount`) có trang riêng: xem [Rương Theo Quyền](/vi/docs/access/permission-chests).
