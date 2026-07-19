@@ -21,17 +21,17 @@ Use `enhancedechest.additional_amount.<count>.slot.<size>` to grant **extra** ch
 
 - **`<count>`**: number of chests to grant. **`<size>`**: slot count, a multiple of 9 from 9 to 54.
 - **Nodes stack**: granting `...1.slot.9` and `...2.slot.9` gives the player three 9-slot chests total.
-- **Revocation is clean**: losing a node removes those chests, spilling items to a recoverable temporary chest. The base chest is never touched.
+- **Revocation is clean**: losing a node removes those chests, moving items to a temporary chest the player can take them back from. The base chest is never touched.
 
 ::: warning
-Permission grants only apply while `permission-chests.enabled: true` in `config.yml`. Disabling it stops syncing but leaves already-granted chests in place.
+Permission grants only apply while `enabled` under `permission-chests` is `true` in `config.yml`. Disabling it stops syncing but leaves already-granted chests in place.
 :::
 
 ## Permission Chests vs. `/ee add` Chests
 
 A player can gain extra chests two ways:
 
-- **Permission chests** (`additional_amount`) come and go with the player's rank: they appear as soon as the permission applies and are removed as soon as it is lost, spilling items to a recoverable temporary chest. Admins cannot resize or delete them, since the permission owns them.
+- **Permission chests** (`additional_amount`) come and go with the player's rank: they appear as soon as the permission applies and are removed as soon as it is lost, moving items to a temporary chest the player can take them back from. Admins cannot resize or delete them, since the permission owns them.
 - **Command chests** (`/ee add`) are permanent. They stay until an admin resizes (`/ee resize`) or deletes (`/ee delete`) them; a rank change never touches them.
 
 To the player both work identically in `/eclist`: open, rename, choose an icon, sort, set as main. A removed permission chest loses its custom name and icon with it; a command chest keeps them until an admin removes it.

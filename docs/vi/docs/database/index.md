@@ -1,6 +1,6 @@
 # Cơ Sở Dữ Liệu
 
-EnhancedEchest lưu nội dung của mọi rương Ender vào cơ sở dữ liệu. Chọn backend bằng tùy chọn `database.type` trong `config.yml`: [SQLite](/vi/docs/database/sqlite), [MySQL / MariaDB](/vi/docs/database/mysql-mariadb), hoặc [PostgreSQL](/vi/docs/database/postgresql).
+EnhancedEchest lưu nội dung của mọi rương Ender vào cơ sở dữ liệu. Chọn backend bằng tùy chọn `type` trong mục `database` của `config.yml`: [SQLite](/vi/docs/database/sqlite), [MySQL / MariaDB](/vi/docs/database/mysql-mariadb), hoặc [PostgreSQL](/vi/docs/database/postgresql).
 
 | Backend | Giá trị `type` | Phù hợp nhất cho |
 |---------|----------------|------------------|
@@ -21,7 +21,7 @@ Plugin giữ dữ liệu rương Ender của **từng người chơi đang trự
   lần duy nhất.
 - Mở và đóng rương hoạt động hoàn toàn từ bộ nhớ, không có truy vấn cơ sở dữ liệu nào trong lúc chơi.
 - Các thay đổi được ghi ngược về cơ sở dữ liệu tự động mỗi **3 phút** theo mặc định (cấu hình bằng
-  `database.autosave-interval` trong `config.yml`), vài giây sau khi người chơi thoát, và một lần cuối
+  `autosave-interval` trong mục `database` của `config.yml`), vài giây sau khi người chơi thoát, và một lần cuối
   khi máy chủ tắt.
 - Sau khi người chơi thoát và thay đổi của họ đã được lưu, dữ liệu của họ được gỡ khỏi bộ nhớ, nên
   lượng RAM sử dụng tỉ lệ với số người chơi đang trực tuyến, không phải kích thước cơ sở dữ liệu.
@@ -50,7 +50,7 @@ và an toàn khi dùng chung một cơ sở dữ liệu với chúng:
 | `echest_players` | Tùy chọn của từng người chơi và tên trong game gần nhất của họ (dùng để tra cứu người chơi ngoại tuyến, xem bên dưới). |
 | `echest_schema_meta` | Phiên bản cơ sở dữ liệu, dùng cho việc nâng cấp tự động. |
 
-Bạn có thể đổi tiền tố bằng `database.table-prefix` trong `config.yml`, ví dụ khi chạy nhiều máy chủ
+Bạn có thể đổi tiền tố bằng `table-prefix` trong mục `database` của `config.yml`, ví dụ khi chạy nhiều máy chủ
 dùng chung một cơ sở dữ liệu và muốn mỗi máy chủ có một tiền tố riêng:
 
 ```yaml

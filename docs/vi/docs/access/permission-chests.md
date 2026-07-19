@@ -21,17 +21,17 @@ Dùng `enhancedechest.additional_amount.<count>.slot.<size>` để cấp rương
 
 - **`<count>`**: số rương cần cấp. **`<size>`**: số ô, bội số của 9 từ 9 đến 54.
 - **Node cộng dồn**: cấp `...1.slot.9` và `...2.slot.9` sẽ cho người chơi tổng cộng ba rương 9 ô.
-- **Thu hồi sạch sẽ**: mất một node sẽ xóa đúng các rương đó, dồn vật phẩm sang rương tạm khôi phục được. Rương cơ bản không bao giờ bị ảnh hưởng.
+- **Thu hồi sạch sẽ**: mất một node sẽ xóa đúng các rương đó, dồn vật phẩm sang một rương tạm để người chơi lấy lại. Rương cơ bản không bao giờ bị ảnh hưởng.
 
 ::: warning
-Việc cấp theo quyền chỉ hoạt động khi `permission-chests.enabled: true` trong `config.yml`. Tắt nó dừng đồng bộ nhưng giữ nguyên các rương đã cấp.
+Việc cấp theo quyền chỉ hoạt động khi `enabled` trong mục `permission-chests` là `true` ở `config.yml`. Tắt nó dừng đồng bộ nhưng giữ nguyên các rương đã cấp.
 :::
 
 ## Rương Theo Quyền So Với Rương `/ee add`
 
 Một người chơi có thể nhận thêm rương theo hai cách:
 
-- **Rương theo quyền** (`additional_amount`) đến và đi theo rank của người chơi: xuất hiện ngay khi quyền được áp dụng và bị xóa ngay khi mất quyền, dồn vật phẩm sang rương tạm khôi phục được. Quản trị viên không thể đổi kích thước hay xóa chúng, vì quyền sở hữu chúng.
+- **Rương theo quyền** (`additional_amount`) đến và đi theo rank của người chơi: xuất hiện ngay khi quyền được áp dụng và bị xóa ngay khi mất quyền, dồn vật phẩm sang một rương tạm để người chơi lấy lại. Quản trị viên không thể đổi kích thước hay xóa chúng, vì quyền sở hữu chúng.
 - **Rương lệnh** (`/ee add`) là vĩnh viễn. Chúng ở lại cho đến khi quản trị viên đổi kích thước (`/ee resize`) hoặc xóa (`/ee delete`); đổi rank không bao giờ ảnh hưởng đến chúng.
 
 Với người chơi, cả hai hoạt động y hệt nhau trong `/eclist`: mở, đổi tên, chọn biểu tượng, sắp xếp, đặt làm rương chính. Rương theo quyền bị xóa sẽ mất luôn tên và biểu tượng tùy chỉnh; rương lệnh giữ chúng cho đến khi quản trị viên xóa.

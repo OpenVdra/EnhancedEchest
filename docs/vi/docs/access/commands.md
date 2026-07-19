@@ -74,7 +74,7 @@ Mở menu từng rương của người chơi khác (hoạt động kể cả kh
 
 <CommandRow commands="/ee transfer &lt;from&gt; &lt;to&gt; &lt;#index | name | all&gt; [override | temp]" permission="enhancedechest.admin.transfer">
 
-Chuyển rương của một người chơi sang tài khoản khác, dùng khi ai đó đổi tài khoản. Dùng `all` để chuyển mọi rương (tài khoản đích sẽ có đúng các rương của nguồn), hoặc `#index` / tên rương để chỉ chuyển một rương. Nếu tài khoản đích đã có vật phẩm trong rương sẽ bị thay thế, thêm `override` để bỏ chúng đi hoặc `temp` để chuyển sang kho tạm khôi phục được. Rương của nguồn sẽ bị xóa nên vật phẩm không bao giờ bị nhân đôi.
+Chuyển rương của một người chơi sang tài khoản khác, dùng khi ai đó đổi tài khoản. Dùng `all` để chuyển mọi rương (tài khoản đích sẽ có đúng các rương của nguồn), hoặc `#index` / tên rương để chỉ chuyển một rương. Nếu tài khoản đích đã có vật phẩm trong rương sẽ bị thay thế, thêm `override` để bỏ chúng đi hoặc `temp` để chuyển sang một rương tạm để người chơi lấy lại. Rương của nguồn sẽ bị xóa nên vật phẩm không bao giờ bị nhân đôi.
 
 </CommandRow>
 

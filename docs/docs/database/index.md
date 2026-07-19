@@ -1,6 +1,6 @@
 # Database
 
-EnhancedEchest stores every ender chest's contents in a database. You choose the backend with the `database.type` option in `config.yml`: [SQLite](/docs/database/sqlite), [MySQL / MariaDB](/docs/database/mysql-mariadb), or [PostgreSQL](/docs/database/postgresql).
+EnhancedEchest stores every ender chest's contents in a database. You choose the backend with the `type` option in the `database` section of `config.yml`: [SQLite](/docs/database/sqlite), [MySQL / MariaDB](/docs/database/mysql-mariadb), or [PostgreSQL](/docs/database/postgresql).
 
 | Backend | `type` value | Best for |
 |---------|--------------|----------|
@@ -20,7 +20,7 @@ The plugin keeps each **online player's** ender chest data in memory:
 - When a player joins, their chests are loaded from the database once.
 - Opening and closing chests works entirely from memory, with no database queries during gameplay.
 - Changes are written back to the database automatically every **3 minutes** by default (configurable
-  with `database.autosave-interval` in `config.yml`), a few seconds after a player quits, and one
+  with `autosave-interval` under `database` in `config.yml`), a few seconds after a player quits, and one
   final time when the server shuts down.
 - After a player quits and their changes are saved, their data is removed from memory, so memory use
   grows with how many players are online, not with how big your database is.
@@ -49,7 +49,7 @@ plugins' tables, and safe to keep in a database you share with them:
 | `echest_players` | Each player's settings and their last known username (used for offline lookups, see below). |
 | `echest_schema_meta` | The database version, used for automatic upgrades. |
 
-You can change the prefix with `database.table-prefix` in `config.yml`, for example if you run several
+You can change the prefix with `table-prefix` under `database` in `config.yml`, for example if you run several
 servers sharing one database and want a different prefix per server:
 
 ```yaml

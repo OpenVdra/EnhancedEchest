@@ -25,7 +25,7 @@ Sau khi mọi người đã đăng nhập, bạn có thể tắt lại.
 | `/ee migrate vanilla all` | Chuyển mọi người chơi hiện đang trực tuyến |
 
 ::: warning Chỉ người chơi trực tuyến
-Việc chuyển đọc rương Ender vanilla trực tiếp của người chơi, nên chỉ hoạt động với người **đang trực tuyến**. Người chơi ngoại tuyến sẽ được chuyển tự động ở lần vào tiếp theo nếu `migration.enabled` là `true`.
+Việc chuyển đọc rương Ender vanilla trực tiếp của người chơi, nên chỉ hoạt động với người **đang trực tuyến**. Người chơi ngoại tuyến sẽ được chuyển tự động ở lần vào tiếp theo nếu `enabled` trong mục `migration` là `true`.
 :::
 
 ### Purpur (và các bản fork của Paper) {#purpur}
@@ -39,7 +39,7 @@ Nhập kho từ [AxVaults](https://modrinth.com/plugin/axvaults), bao gồm mọ
 ### Trước Khi Bắt Đầu
 
 - **Lưu AxVaults trước.** Hãy chạy `/vaultadmin save` một lần để mọi kho đang mở được ghi xuống đĩa trước khi chuyển.
-- **AxVaults phải dùng SQLite.** EnhancedEchest đọc thẳng tệp `data.db` của AxVaults. Nếu AxVaults của bạn đang dùng cơ sở dữ liệu khác, hãy đặt `database.type: sqlite` trong `AxVaults/config.yml` rồi khởi động lại server nguồn để nó tạo `data.db`.
+- **AxVaults phải dùng SQLite.** EnhancedEchest đọc thẳng tệp `data.db` của AxVaults. Nếu AxVaults của bạn đang dùng cơ sở dữ liệu khác, hãy đặt `type: sqlite` trong mục `database` của `AxVaults/config.yml` rồi khởi động lại server nguồn để nó tạo `data.db`.
 
 ### Cách Chạy
 
@@ -54,7 +54,7 @@ Nhập rương Ender từ [CustomEnderChest](https://modrinth.com/plugin/custom-
 
 ### Trước Khi Bắt Đầu
 
-- **CustomEnderChest phải dùng lưu trữ YAML.** EnhancedEchest đọc các tệp theo từng người chơi trong `CustomEnderChest/playerdata/`, chỉ tồn tại khi `storage.type: yml` được đặt trong `CustomEnderChest/config.yml` (mặc định plugin dùng cơ sở dữ liệu `h2` tích hợp sẵn). Hãy chuyển sang `yml` và khởi động lại server nguồn trước; backend `mysql` cũng không được đọc.
+- **CustomEnderChest phải dùng lưu trữ YAML.** EnhancedEchest đọc các tệp theo từng người chơi trong `CustomEnderChest/playerdata/`, chỉ tồn tại khi `type: yml` được đặt trong mục `storage` của `CustomEnderChest/config.yml` (mặc định plugin dùng cơ sở dữ liệu `h2` tích hợp sẵn). Hãy chuyển sang `yml` và khởi động lại server nguồn trước; backend `mysql` cũng không được đọc.
 
 ### Cách Chạy
 

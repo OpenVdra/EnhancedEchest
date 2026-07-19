@@ -5,7 +5,7 @@ You can move all of your existing data from one backend to another with the buil
 The idea is simple: you make the **new** backend the active one, then import the **old** one into it.
 
 1. Stop the server and make sure **no players are online** during the whole process.
-2. Edit `config.yml` so `database.type` (and the connection fields) point at the **new** backend, the one you want to move to. Leave the old backend's files/database untouched.
+2. Edit `config.yml` so `type` under `database` (and the connection fields) point at the **new** backend, the one you want to move to. Leave the old backend's files/database untouched.
 3. Start the server. The plugin creates its empty tables in the new backend.
 4. Run `/ee import`. A form opens; fill in the connection details of the **old** backend you are copying *from*:
    - **Type**: click the button to toggle between **SQLite** (a file) and **Server**. The three server engines (MySQL, MariaDB, PostgreSQL) share the same form, so they are one choice; the engine is picked from the port (use **5432** for PostgreSQL, otherwise it connects as MySQL/MariaDB).

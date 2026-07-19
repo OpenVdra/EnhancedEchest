@@ -25,7 +25,7 @@ Once everyone you care about has logged in, you can turn it back off.
 | `/ee migrate vanilla all` | Migrate every player currently online |
 
 ::: warning Online players only
-Migration reads the player's live vanilla ender chest, so it only works while they are **online**. Offline players are migrated automatically on their next join if `migration.enabled` is `true`.
+Migration reads the player's live vanilla ender chest, so it only works while they are **online**. Offline players are migrated automatically on their next join if `enabled` under `migration` is `true`.
 :::
 
 ### Purpur (and Paper forks) {#purpur}
@@ -39,7 +39,7 @@ Imports vaults from [AxVaults](https://modrinth.com/plugin/axvaults), including 
 ### Before You Start
 
 - **Save AxVaults first.** Run `/vaultadmin save` so every open vault is flushed to disk before migrating.
-- **AxVaults must use SQLite.** EnhancedEchest reads its `data.db` file directly. If AxVaults is on a different database, set `database.type: sqlite` in `AxVaults/config.yml` and restart the source server first so it creates `data.db`.
+- **AxVaults must use SQLite.** EnhancedEchest reads its `data.db` file directly. If AxVaults is on a different database, set `type: sqlite` under `database` in `AxVaults/config.yml` and restart the source server first so it creates `data.db`.
 
 ### Running It
 
@@ -54,7 +54,7 @@ Imports ender chests from [CustomEnderChest](https://modrinth.com/plugin/custom-
 
 ### Before You Start
 
-- **CustomEnderChest must use YAML storage.** EnhancedEchest reads the per-player files under `CustomEnderChest/playerdata/`, which only exist when `storage.type: yml` is set in `CustomEnderChest/config.yml` (it defaults to an embedded `h2` database instead). Switch it to `yml` and restart the source server first; the `mysql` backend isn't read either.
+- **CustomEnderChest must use YAML storage.** EnhancedEchest reads the per-player files under `CustomEnderChest/playerdata/`, which only exist when `type: yml` is set under `storage` in `CustomEnderChest/config.yml` (it defaults to an embedded `h2` database instead). Switch it to `yml` and restart the source server first; the `mysql` backend isn't read either.
 
 ### Running It
 

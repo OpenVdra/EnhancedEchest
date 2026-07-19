@@ -1,6 +1,6 @@
 # Cross-Server Support
 
-Several servers behind a proxy (Velocity, BungeeCord) can share one database, so a player's ender chests follow them between servers. This is off by default. Turn it on with `cross-server.enabled` in `config.yml`.
+Several servers behind a proxy (Velocity, BungeeCord) can share one database, so a player's ender chests follow them between servers. This is off by default. Turn it on with `enabled` in the `cross-server` section of `config.yml`.
 
 Every server of the network needs two things:
 

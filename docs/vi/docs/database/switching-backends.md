@@ -5,7 +5,7 @@ Bạn có thể chuyển toàn bộ dữ liệu hiện có từ backend này san
 Ý tưởng rất đơn giản: bạn đặt backend **mới** làm backend đang dùng, rồi nhập backend **cũ** vào đó.
 
 1. Tắt máy chủ và đảm bảo **không có người chơi nào trực tuyến** trong suốt quá trình.
-2. Sửa `config.yml` để `database.type` (và các trường kết nối) trỏ tới backend **mới**, tức backend bạn muốn chuyển sang. Giữ nguyên tệp/cơ sở dữ liệu của backend cũ.
+2. Sửa `config.yml` để `type` trong mục `database` (và các trường kết nối) trỏ tới backend **mới**, tức backend bạn muốn chuyển sang. Giữ nguyên tệp/cơ sở dữ liệu của backend cũ.
 3. Khởi động máy chủ. Plugin tạo các bảng trống trong backend mới.
 4. Chạy `/ee import`. Một biểu mẫu mở ra; điền thông tin kết nối của backend **cũ** mà bạn sao chép *từ đó*:
    - **Loại**: bấm nút để chuyển giữa **SQLite** (một tệp) và **Máy chủ**. Ba engine máy chủ (MySQL, MariaDB, PostgreSQL) dùng chung một biểu mẫu nên chỉ là một lựa chọn; engine được chọn theo cổng (dùng **5432** cho PostgreSQL, còn lại sẽ kết nối dạng MySQL/MariaDB).

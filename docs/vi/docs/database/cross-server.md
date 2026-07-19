@@ -1,6 +1,6 @@
 # Hỗ Trợ Liên Máy Chủ (Cross-Server)
 
-Nhiều máy chủ đứng sau proxy (Velocity, BungeeCord) có thể dùng chung một cơ sở dữ liệu, để rương Ender của người chơi đi theo họ giữa các máy chủ. Tính năng này mặc định tắt. Bật bằng `cross-server.enabled` trong `config.yml`.
+Nhiều máy chủ đứng sau proxy (Velocity, BungeeCord) có thể dùng chung một cơ sở dữ liệu, để rương Ender của người chơi đi theo họ giữa các máy chủ. Tính năng này mặc định tắt. Bật bằng `enabled` trong mục `cross-server` của `config.yml`.
 
 Mọi máy chủ trong mạng cần hai điều kiện:
 

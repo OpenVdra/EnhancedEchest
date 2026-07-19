@@ -85,7 +85,7 @@ Cho phép người chơi tô màu tên rương hay không. Khi <code>true</code>
 </template>
 
 <ConfigProperty name="enabled" value="true" type="boolean">
-Khi <code>true</code>, người chơi được cấp các rương Ender từ quyền <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> (ví dụ <code>enhancedechest.additional_amount.2.slot.54</code> → hai rương 54 ô). Các node khớp sẽ <strong>cộng dồn</strong>. Việc cấp được đồng bộ mỗi lần người chơi mở rương Ender; mất một node sẽ xóa các rương đó, dồn mọi vật phẩm sang một rương tạm khôi phục được. Người chơi luôn giữ rương cơ bản của mình. Đặt thành <code>false</code> sẽ dừng đồng bộ nhưng giữ nguyên các rương đã cấp.<br><br>
+Khi <code>true</code>, người chơi được cấp các rương Ender từ quyền <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> (ví dụ <code>enhancedechest.additional_amount.2.slot.54</code> → hai rương 54 ô). Các node khớp sẽ <strong>cộng dồn</strong>. Việc cấp được đồng bộ mỗi lần người chơi mở rương Ender; mất một node sẽ xóa các rương đó, dồn mọi vật phẩm sang một rương tạm để người chơi lấy lại. Người chơi luôn giữ rương cơ bản của mình. Đặt thành <code>false</code> sẽ dừng đồng bộ nhưng giữ nguyên các rương đã cấp.<br><br>
 Xem trang <a href="/vi/docs/access/permission-chests#permission-granted-chests">Rương Theo Quyền</a> để biết đầy đủ chi tiết.
 </ConfigProperty>
 

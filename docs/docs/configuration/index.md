@@ -85,7 +85,7 @@ Controls ender chests granted automatically from permissions. See the <a href="/
 </template>
 
 <ConfigProperty name="enabled" value="true" type="boolean">
-When <code>true</code>, players are granted ender chests from <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> permissions. Grants are synced each time a player opens their ender chest; losing a node removes those chests, spilling any items into a recoverable temporary chest. Players always keep their base chest. Setting this to <code>false</code> stops syncing but leaves already-granted chests in place.<br><br>
+When <code>true</code>, players are granted ender chests from <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> permissions. Grants are synced each time a player opens their ender chest; losing a node removes those chests, moving any items into a temporary chest the player can take them back from. Players always keep their base chest. Setting this to <code>false</code> stops syncing but leaves already-granted chests in place.<br><br>
 See the <a href="/docs/access/permission-chests#permission-granted-chests">Permission Chests</a> page for full details.
 </ConfigProperty>
 

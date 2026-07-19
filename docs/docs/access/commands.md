@@ -74,7 +74,7 @@ Opens a per-chest menu for another player's chests (works offline). From the men
 
 <CommandRow commands="/ee transfer &lt;from&gt; &lt;to&gt; &lt;#index | name | all&gt; [override | temp]" permission="enhancedechest.admin.transfer">
 
-Moves a player's chests onto another account, for when someone switches accounts. Use `all` to move every chest (the destination ends up with exactly the source's chests), or a `#index` or chest name to move just one. If the destination already has items in a chest this would replace, add `override` to discard them or `temp` to move them to recoverable temporary storage. The source's chests are removed, so items are never duplicated.
+Moves a player's chests onto another account, for when someone switches accounts. Use `all` to move every chest (the destination ends up with exactly the source's chests), or a `#index` or chest name to move just one. If the destination already has items in a chest this would replace, add `override` to discard them or `temp` to move them into a temporary chest the player can take them back from. The source's chests are removed, so items are never duplicated.
 
 </CommandRow>
 
