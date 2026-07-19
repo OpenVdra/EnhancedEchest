@@ -47,6 +47,17 @@ migrate:
   import-player-done: '{prefix}{source} import for {player}: {vaults} vault(s) imported, {skipped} skipped.'
   import-failed: '{prefix}{source} import failed: {error}'
 
+# In-game config editor (/ee config).
+config:
+  # {count} = how many settings actually changed. Saving also applies them, so no /ee reload is needed.
+  saved: '{prefix}Saved. {count} setting(s) are now active.'
+  no-changes: '{prefix}Nothing changed.'
+  # Shown after saving a connection setting, which is bound when the server starts.
+  restart-required: '{prefix}<yellow>Some of those settings only take effect after a full server restart.'
+  # {fields} = the rejected field labels. Nothing is written when a value is invalid.
+  invalid: '{prefix}<red>Invalid value for: {fields}. Nothing was saved.'
+  save-failed: '{prefix}<red>Could not write config.yml. See the server console.'
+
 # Database-to-database import (/ee import): copies an old backend into the active one.
 import:
   # Validation of the dialog form before anything runs.
@@ -103,10 +114,13 @@ admin:
   transfer-displaced-override: '{prefix}{player}''s previous items were discarded.'
 
 update:
-  available: '{prefix}A new update is available. You are on {current}, and the latest is {latest}.'
+  available: '{prefix}A new version is available: <green>{latest}</green> <gray>(you are on {current})'
   # {url} is supplied as a ready-made clickable component from code, so keep it in text position
   # (a placeholder inside a <click:...> attribute is not substituted per-viewer).
-  download: '{prefix}<gray>Download: {url}'
+  download: '{prefix}{url}'
+  # Text of that clickable component. The address itself is not shown: it only opens on click, and hovering
+  # reveals where it goes. Keep it short, it has to fit one chat line next to the prefix.
+  download-label: 'Click here to download the update.'
 
 # Duration unit labels, used to build the "time remaining" text shown wherever a chest expires
 # (the /eclist expiry line, the sort cooldown message, /ee add with a duration, ...). Only the two most

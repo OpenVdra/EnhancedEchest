@@ -86,6 +86,14 @@ Reloads config and language files without restarting.
 
 </CommandRow>
 
+### /ee config
+
+<CommandRow commands="/ee config" permission="enhancedechest.admin.config">
+
+Opens the in-game settings menu: one page per section of `config.yml` (General, Ender Chests, Player Features, Temporary Chests, Backups, Database, Cross-Server). Saving a page writes the values into `config.yml`, keeping all its comments, and applies them straight away, so no `/ee reload` is needed. Connection settings still need a full server restart and the menu says so when you save one.
+
+</CommandRow>
+
 ### /ee import
 
 <CommandRow commands="/ee import" permission="enhancedechest.admin.import">

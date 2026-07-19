@@ -8,6 +8,10 @@ Bấm vào bất kỳ tùy chọn hoặc nhóm nào để xem thêm thông tin.
 Sau khi sửa `config.yml`, chạy `/ee reload` trong game hoặc từ console để áp dụng thay đổi.
 :::
 
+::: tip Sửa ngay trong game
+`/ee config` mở menu thiết lập với mỗi mục bên dưới là một trang riêng. Khi lưu một trang, giá trị được ghi vào `config.yml`, giữ nguyên mọi dòng chú thích, và áp dụng ngay nên bạn không cần `/ee reload`. Riêng thiết lập kết nối vẫn cần khởi động lại server, và menu sẽ báo khi bạn vừa đổi một thiết lập như vậy.
+:::
+
 <div style="background-color: var(--vp-c-bg-alt); padding: 20px; border-radius: 12px; margin-top: 20px;">
 
 <ConfigProperty name="language" value="en_US" type="string">

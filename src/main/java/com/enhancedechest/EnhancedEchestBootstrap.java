@@ -6,6 +6,7 @@ import com.enhancedechest.command.admin.MigrateAxVaultsCommand;
 import com.enhancedechest.command.admin.MigrateCustomEnderChestCommand;
 import com.enhancedechest.command.admin.MigratePlayerVaultsXCommand;
 import com.enhancedechest.command.admin.ChestTransferCommand;
+import com.enhancedechest.command.admin.ConfigCommand;
 import com.enhancedechest.command.admin.ImportCommand;
 import com.enhancedechest.command.admin.MigrateVanillaCommand;
 import com.enhancedechest.command.admin.ReloadCommand;
@@ -45,6 +46,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     private static final String ADMIN_DELETE_PERMISSION = "enhancedechest.admin.delete";
     private static final String ADMIN_TRANSFER_PERMISSION = "enhancedechest.admin.transfer";
     private static final String ADMIN_IMPORT_PERMISSION = "enhancedechest.admin.import";
+    private static final String ADMIN_CONFIG_PERMISSION = "enhancedechest.admin.config";
     // /ee view requires this; modifying (take/add) further requires enhancedechest.admin.edit,
     // checked per-click in EnderChestGuiListener so a view-only admin can look but not touch.
     private static final String ADMIN_VIEW_PERMISSION = "enhancedechest.admin.view";
@@ -427,6 +429,10 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                         .then(Commands.literal("import")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_IMPORT_PERMISSION))
                                 .executes(ctx -> ImportCommand.execute(ctx.getSource())))
+                        // /ee config — open the in-game config.yml editor (one dialog page per section).
+                        .then(Commands.literal("config")
+                                .requires(src -> src.getSender().hasPermission(ADMIN_CONFIG_PERMISSION))
+                                .executes(ctx -> ConfigCommand.execute(ctx.getSource())))
                         // /ee add <player> <size> [count] [duration] — a single linear chain so each
                         // node has one argument child (two sibling argument children break Brigadier's
                         // suggestions, since word() matches the empty trailing token).

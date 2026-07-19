@@ -46,6 +46,17 @@ migrate:
   import-player-done: '{prefix}Nhập {source} cho {player}: {vaults} kho đã nhập, {skipped} bỏ qua.'
   import-failed: '{prefix}Nhập {source} thất bại: {error}'
 
+# Trình chỉnh sửa cấu hình trong game (/ee config).
+config:
+  # {count} = số thiết lập thực sự thay đổi. Lưu xong sẽ tự áp dụng, không cần /ee reload.
+  saved: '{prefix}Đã lưu. {count} thiết lập đã có hiệu lực.'
+  no-changes: '{prefix}Không có gì thay đổi.'
+  # Hiện sau khi lưu một thiết lập kết nối, loại chỉ được đọc lúc server khởi động.
+  restart-required: '{prefix}<yellow>Một số thiết lập vừa lưu chỉ có hiệu lực sau khi khởi động lại server.'
+  # {fields} = nhãn của các ô bị từ chối. Không ghi gì khi có giá trị không hợp lệ.
+  invalid: '{prefix}<red>Giá trị không hợp lệ ở: {fields}. Chưa lưu gì cả.'
+  save-failed: '{prefix}<red>Không ghi được config.yml. Xem console của server.'
+
 # Nhập cơ sở dữ liệu sang cơ sở dữ liệu (/ee import): sao chép backend cũ vào backend đang dùng.
 import:
   # Kiểm tra biểu mẫu trong hộp thoại trước khi chạy.
@@ -102,10 +113,13 @@ admin:
   transfer-displaced-override: '{prefix}Vật phẩm cũ của {player} đã bị bỏ đi.'
 
 update:
-  available: '{prefix}Đã có bản cập nhật mới. Bạn đang dùng {current}, bản mới nhất là {latest}.'
+  available: '{prefix}Đã có phiên bản mới: <green>{latest}</green> <gray>(bạn đang dùng {current})'
   # {url} được cấp sẵn dạng component bấm được từ code, nên để ở vị trí văn bản
   # (placeholder nằm trong thuộc tính <click:...> sẽ không được thay theo từng người xem).
-  download: '{prefix}<gray>Tải về: {url}'
+  download: '{prefix}{url}'
+  # Chữ của component bấm được đó. Địa chỉ không hiện ra: chỉ mở khi bấm, và rê chuột vào sẽ thấy nó dẫn
+  # đi đâu. Viết ngắn thôi, vì phải vừa một dòng chat cạnh phần tiền tố.
+  download-label: 'Bấm vào đây để tải bản cập nhật.'
 
 # Nhãn đơn vị thời gian, dùng để dựng chuỗi "thời gian còn lại" ở mọi nơi rương hết hạn
 # (dòng hết hạn trong /eclist, thông báo chờ sắp xếp, /ee add có thời hạn, ...). Chỉ hiển thị hai đơn vị

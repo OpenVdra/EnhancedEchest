@@ -41,6 +41,8 @@ Mỗi lệnh `/ee` chỉ cần đúng node riêng của lệnh đó. Không còn
 
 **`enhancedechest.admin.import`** - `/ee import`: sao chép toàn bộ dữ liệu từ một backend cơ sở dữ liệu cũ vào backend đang dùng.
 
+**`enhancedechest.admin.config`** - `/ee config`: chỉnh `config.yml` từ menu thiết lập trong game.
+
 ::: tip
 Để cấp toàn quyền quản trị một lần, cấp `enhancedechest.admin.*` (nếu plugin quyền của bạn hỗ trợ wildcard).
 :::

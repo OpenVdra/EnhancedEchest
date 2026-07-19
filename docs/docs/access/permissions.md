@@ -41,6 +41,8 @@ Each `/ee` command requires only its own node. There is no separate base permiss
 
 **`enhancedechest.admin.import`** - `/ee import`: copy all data from an old database backend into the active one.
 
+**`enhancedechest.admin.config`** - `/ee config`: edit `config.yml` from the in-game settings menu.
+
 ::: tip
 To grant full admin access in one go, give `enhancedechest.admin.*` (if your permission plugin supports wildcards).
 :::

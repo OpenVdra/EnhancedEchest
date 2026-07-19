@@ -14,7 +14,7 @@ dialog:
   list-body: 'Select a chest to open or manage.'
   # When ticked, clicking a chest opens its management menu; unticked (default), opens it directly.
   edit-mode: 'Edit mode (manage chests on click)'
-  close: '<red>✖ <reset>Close'
+  close: '<red>← <reset>Close'
   # Hover tooltip on each chest button. {size} = slot count.
   slots: '{size} slots'
   # Appended to the main chest's label so the list marks which chest /ec opens.
@@ -32,7 +32,7 @@ dialog:
   # it as a privileged action; it opens a confirmation before wiping anything.
   admin-clear: '<red>(Admin) <reset>Clear chest'
   admin-clear-desc: 'Permanently empty every item from this chest.'
-  # Confirmation dialog: a dedicated title + warning body, then a clear yes/no pair (✔ confirm / ✖ cancel).
+  # Confirmation dialog: a dedicated title + warning body, then a clear yes/no pair (✔ confirm / ← cancel).
   admin-clear-confirm-title: 'Clear this chest?'
   admin-clear-confirm-body: '<gray>Every item in this chest will be <red>permanently deleted</red>.<newline><gray>This cannot be undone.'
   admin-clear-confirm: '<green>✔ <reset>Clear chest'
@@ -54,13 +54,13 @@ dialog:
   sort: 'Sort'
   sort-desc: 'Merge identical items into full stacks and reorder this chest by item type.'
   # Returns to the previous dialog; reused by the icon picker.
-  back: 'Back'
+  back: '<yellow>← <reset>Back'
 
   # ===== Rename dialog =====
   rename-body: 'Enter a new display name for this chest.'
   name-label: 'Display name'
   save-name: '<green>✔ <reset>Save'
-  cancel: '<red>✖ <reset>Cancel'
+  cancel: '<red>← <reset>Cancel'
 
   # ===== Icon picker dialog =====
   icon-title: 'Choose Icon'
@@ -81,6 +81,11 @@ dialog:
   import-username-label: 'Username'
   import-password-label: 'Password'
   # Buttons.
+  # Documentation button, same shape as the one in /ee config: the label is what admins see, -url is the
+  # address it opens. Point it at your own translation if you host one.
+  import-docs: 'Documentation'
+  import-docs-desc: 'Read the guide for switching database backends.'
+  import-docs-url: 'https://openvdra.github.io/EnhancedEchest/docs/database/switching-backends'
   import-run: '<green>✔ <reset>Start import'
   import-run-desc: 'Copy every chest from the source database into the active one.'
   # Source-type toggle (top button of the column, above Start import + Cancel). Its label shows the
@@ -89,3 +94,83 @@ dialog:
   import-type-sqlite: 'Type: <yellow>SQLite'
   import-type-server: 'Type: <yellow>Server'
   import-type-desc: 'Source database type. Click to switch.<newline><gray>SQLite reads a file; Server reads a MySQL, MariaDB or PostgreSQL host (use port 5432 for PostgreSQL).'
+
+  # ===== In-game config editor (/ee config) =====
+  # Root menu: one button per section, each opening its own form.
+  config-title: 'EnhancedEchest Settings'
+  config-body: '<gray>These sections mirror the groups in config.yml. Pick one to edit.'
+  # Documentation button. The label is what players see; config-docs-url is the address it opens, kept
+  # out of the label so the menu is not filled with a long link. Point it at your own translation if you
+  # host one; the tooltip shows the address before anyone clicks it.
+  config-docs: 'Documentation'
+  config-docs-desc: 'Open the online configuration guide.'
+  config-docs-url: 'https://openvdra.github.io/EnhancedEchest/docs/configuration/'
+  # Body of a section form. The -restart variant is used on pages holding connection settings.
+  config-section-body: '<gray>Changes apply as soon as you save.'
+  config-section-body-restart: '<yellow>Connection settings on this page need a full server restart to take effect.'
+  config-save: '<green>✔ <reset>Save'
+  config-save-desc: 'Save these changes.'
+
+  # Section names, doubling as the button label and the form title. The -body line is the button tooltip.
+  config-general: 'General'
+  config-general-body: '<gray>Language of messages and menus.'
+  config-enderchest: 'Ender Chests'
+  config-enderchest-body: '<gray>Chest size, how the list opens, permission chests, vanilla migration.'
+  config-features: 'Player Features'
+  config-features-body: '<gray>Which chest-management buttons players may use.'
+  config-temp: 'Temporary Chests'
+  config-temp-body: '<gray>Overflow chests: how long they last, sounds and login reminders.'
+  config-backup: 'Backups'
+  config-backup-body: '<gray>Automatic SQLite backups.'
+  config-database: 'Database'
+  config-database-body: '<gray>Which backend to use and how often it is saved.'
+  config-db-connection: 'Database Connection'
+  config-db-connection-body: '<gray>Address and credentials of a remote MySQL, MariaDB or PostgreSQL server.'
+  config-cross-server: 'Cross-Server'
+  config-cross-server-body: '<gray>Share one database between several servers, through Redis.'
+
+  # Field labels. Inputs have no tooltip, so each label states its accepted format or range.
+  config-language: 'Language (e.g. en_US, vi_VN)'
+  config-language-auto-detect: 'Use each player''s own client language'
+  config-default-size: 'Default chest size'
+  config-list-menu: 'Chest list style'
+  config-shift-click-list: 'Shift + right-click opens the ender chest list'
+  config-permission-chests: 'Grant chests from permissions'
+  config-migration: 'Import the vanilla ender chest on join'
+  config-feature-rename: 'Players may rename a chest'
+  config-feature-icon: 'Players may set a chest icon'
+  config-feature-sort: 'Players may sort a chest'
+  config-sort-cooldown: 'Sort cooldown (e.g. 10s, 5m)'
+  config-rename-colors: 'Players may use colour codes and MiniMessage in chest names'
+  config-rename-blacklist: 'Banned name words (comma separated)'
+  config-temp-expiry: 'Temporary chest lifetime (e.g. 7d)'
+  config-temp-check-interval: 'Expiry check interval (e.g. 5m)'
+  config-temp-deny-sound: 'Play a sound on a blocked deposit'
+  config-temp-deny-sound-key: 'Deny sound id'
+  config-temp-join-notify: 'Remind players at login'
+  config-temp-join-sound: 'Play a sound with the reminder'
+  config-temp-join-sound-key: 'Reminder sound id'
+  config-backup-enabled: 'Automatic backups (SQLite only)'
+  config-backup-interval: 'Backup interval (e.g. 6h)'
+  config-backup-keep: 'Backups to keep (0 = keep all)'
+  config-backup-on-startup: 'Also back up at startup'
+  config-backup-folder: 'Backup folder'
+  config-autosave-interval: 'Save interval (minimum 30s)'
+  config-db-type: 'Database type'
+  config-table-prefix: 'Table prefix'
+  config-sqlite-file: 'SQLite file'
+  config-db-host: 'Host'
+  config-db-port: 'Port (1-65535)'
+  config-db-name: 'Database name'
+  config-db-username: 'Username'
+  config-db-password: 'Password'
+  config-db-ssl: 'TLS mode'
+  config-db-pool-size: 'Connection pool size'
+  config-cross-enabled: 'Enable cross-server mode'
+  config-cross-server-id: 'This server''s name (empty = auto)'
+  config-redis-host: 'Redis host'
+  config-redis-port: 'Redis port (1-65535)'
+  config-redis-password: 'Redis password'
+  config-redis-ssl: 'Connect to Redis over TLS'
+  config-redis-database: 'Redis database number'
+  config-redis-key-prefix: 'Redis key prefix'

@@ -77,8 +77,8 @@ public final class ChestDialogs {
     private static final String[] IMPORT_TYPE_IDS = {"sqlite", "mysql", "mariadb", "postgres"};
 
     private static final int IMPORT_INPUT_WIDTH = 220;
-    /** Full width: buttons stack in a single column (columns = 1), aligned with the inputs above. */
-    private static final int IMPORT_BUTTON_WIDTH = IMPORT_INPUT_WIDTH;
+    /** Half the input width: the four buttons sit in a 2x2 grid whose outer edges line up with the inputs. */
+    private static final int IMPORT_BUTTON_WIDTH = IMPORT_INPUT_WIDTH / 2;
     private static final int IMPORT_FIELD_MAX_LENGTH = 256;
 
     private final ChestOpener opener;
@@ -526,8 +526,9 @@ public final class ChestDialogs {
      * is a simple two-way toggle — <b>SQLite</b> (a file) or <b>Server</b> (a MySQL/MariaDB/PostgreSQL
      * host) — because the three server engines share the exact same connection form; the concrete engine
      * is resolved from the port on submit (5432 → PostgreSQL, otherwise MySQL/MariaDB). The type button is
-     * shown <i>above</i> Start import and Cancel; clicking it reads whatever has been typed, flips the
-     * type, and re-pushes this dialog, so typed values survive the switch.
+     * shown on the <i>top</i> row, beside the documentation link and above Start import and Cancel; clicking
+     * it reads whatever has been typed, flips the type, and re-pushes this dialog, so typed values survive
+     * the switch.
      *
      * <p>The password is a plain text input, so it is visible on screen while typing — documented in the
      * database docs, so the dialog itself does not repeat the warning.
@@ -550,9 +551,8 @@ public final class ChestDialogs {
             inputs.add(importText(locale, IMPORT_PASSWORD_INPUT, "dialog.import-password-label", orEmpty(spec.password())));
         }
 
-        // Buttons stack in a single full-width column (columns = 1): the type toggle on top, then Start
-        // import and Cancel. The type button's own label already flips on click (tooltip says so), so no
-        // separate "Switch" button is needed — this keeps the dialog narrow and the buttons aligned.
+        // The type button's own label flips on click (its tooltip says so), so no separate "Switch" button
+        // is needed — which is what keeps the button count at four and the grid below even.
         ActionButton typeButton = toggleTypeButton(locale,
                 lang.getGui(locale, server ? "dialog.import-type-server" : "dialog.import-type-sqlite"), server, spec);
         ActionButton start = ActionButton.create(lang.getGui(locale, "dialog.import-run"), lang.getGui(locale, "dialog.import-run-desc"),
@@ -563,12 +563,18 @@ public final class ChestDialogs {
         ActionButton cancel = ActionButton.create(lang.getGui(locale, "dialog.cancel"), null, IMPORT_BUTTON_WIDTH,
                 click((view, audience) -> { /* dismiss only */ }));
 
+        // 2x2 grid, filled row by row: the two "before you run it" buttons on top (pick the source type,
+        // read the guide), the two actions below. Four buttons is what makes an even grid possible at all —
+        // with three, one would have to sit alone on its own row.
+        ActionButton docs = DialogLinks.docsButton(lang, locale, "dialog.import-docs", "dialog.import-docs-desc",
+                "dialog.import-docs-url", IMPORT_BUTTON_WIDTH);
+
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(lang.getGui(locale, "dialog.import-title"))
                         .body(List.of(DialogBody.plainMessage(lang.getGui(locale, "dialog.import-body"), IMPORT_INPUT_WIDTH)))
                         .inputs(inputs)
                         .build())
-                .type(DialogType.multiAction(List.of(typeButton, start, cancel), null, 1)));
+                .type(DialogType.multiAction(List.of(typeButton, docs, start, cancel), null, 2)));
     }
 
     /** Default import spec: SQLite selected, with the same starter values as {@code config.yml}. */

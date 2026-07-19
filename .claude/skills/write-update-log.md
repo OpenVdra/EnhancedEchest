@@ -90,6 +90,24 @@ importing data from other vault plugins."). Otherwise go straight to the section
 - Group sub-points under a bullet with an indented list only when a single feature has several
   facets (for example, one migration source with both an all-players and a single-player command).
 
+### Length budget
+
+Brevity is a hard requirement, not a preference. A reader skims; a paragraph gets skipped entirely, so a
+long entry communicates *less* than a short one. Hold each release to:
+
+- **At most 3 sub-bullets per feature.** More than that means you are documenting the feature rather than
+  announcing it. Pick the three the reader would act on and drop the rest; the docs site carries the detail.
+- **Roughly 25 words per bullet.** If a bullet needs a comma-spliced second clause to finish a thought,
+  cut the thought.
+- **No restating the lead bullet.** If the lead says a setting exists, a sub-bullet saying you can turn it
+  off names only the key: "On by default; turn it off with `enderchest.shift-click-list`."
+- **No mechanism, only outcome.** "Saving applies the change straight away" is the outcome; *how* the file
+  is written, validated, or reloaded is not the reader's problem.
+
+**Too long:** "Saving a page writes the values straight into `config.yml` and keeps every comment in the
+file, then applies them, so `/ee reload` is no longer needed after an edit from the menu."
+**Right:** "Saving applies the change straight away, so `/ee reload` is not needed."
+
 ### Breaking changes
 
 Any renamed or removed command, permission node, or config key is breaking. Call it out explicitly:
@@ -128,3 +146,5 @@ body; those belong outside it.
 - [ ] No docs-site-only or purely internal commits included
 - [ ] No emoji, no em dash, no `---` rules
 - [ ] One sentence per bullet, second sentence only for an upgrade action or caveat
+- [ ] At most 3 sub-bullets per feature, ~25 words per bullet, no sub-bullet restating its lead
+- [ ] Outcomes only: no file formats, validation rules, or internal mechanics

@@ -121,6 +121,15 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
     args back to the deferred form — it reintroduces the raw-key bug.
 - **Config / language migrations:** `ConfigMigrations` + `YamlMigrator` rename keys on load so existing
   installs upgrade cleanly. Add a rename rule there rather than silently changing a key name.
+- **In-game config editor (`/ee config`):** `ConfigSchema` is the **single source of truth** — one `Field`
+  entry (path + `FieldType` + `gui.yml` label + `needsRestart()`) per editable key, grouped into `Section`
+  pages; `ConfigEditor` validates/writes and `ConfigDialogs` builds the forms generically from it, so a new
+  editable setting is one schema entry + one `gui.yml` label in each bundled locale, **no dialog code**.
+  `ConfigSchemaTest` fails the build on a path/label typo. Writing goes through Bukkit's
+  `FileConfiguration` (verified to preserve all comments) and is **all-or-nothing per page**; a successful
+  save then calls the plugin's own `reload()` (that's why `/ee reload` isn't needed). Keys bound at startup
+  (the `database` connection block, all of `cross-server`) are flagged `needsRestart()` and only warn.
+  Dialog input keys can't be config paths — the client only accepts `[A-Za-z0-9_]`, hence `Field.inputKey()`.
 - **Telemetry (FastStats):** `com.enhancedechest.telemetry.Telemetry` is the only telemetry type the rest
   of the plugin may depend on — handled-error reports via `telemetry.error(e, "site-label")` (rate-limited
   per (site, exception class), always **alongside** the log line, never instead). Everything

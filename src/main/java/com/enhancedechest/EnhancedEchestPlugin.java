@@ -2,11 +2,13 @@ package com.enhancedechest;
 
 import com.enhancedechest.backup.BackupService;
 import com.enhancedechest.config.ConfigMigrations;
+import com.enhancedechest.config.ConfigEditor;
 import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.config.YamlMigrator;
 import com.enhancedechest.crossserver.CrossServerCoordinator;
 import com.enhancedechest.crossserver.RedisCoordinator;
 import com.enhancedechest.expiry.ExpirySweeper;
+import com.enhancedechest.gui.dialog.ConfigDialogs;
 import com.enhancedechest.gui.dialog.IconCatalog;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.listener.ChestListMenuListener;
@@ -68,6 +70,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     private PermissionChestService permissionChestService;
     private DatabaseImportService databaseImportService;
     private ChestOpener chestOpener;
+    /** In-game config.yml editor behind {@code /ee config}. */
+    private ConfigDialogs configDialogs;
     private ExpirySweeper expirySweeper;
     private BackupService backupService;
     private MigrationService migrationService;
@@ -203,6 +207,11 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         chestOpener    = new ChestOpener(sessionManager, storageGateway, settingsCache, storage,
                 dbExecutor, languageManager, scheduler, getSLF4JLogger(), pluginConfig.getDefaultSize(),
                 permissionChestService, spillService, pluginConfig, databaseImportService, telemetry);
+
+        // In-game config editor (/ee config). Saving writes config.yml and then runs this same reload(),
+        // which is why an edit from the menu needs no /ee reload afterwards.
+        configDialogs = new ConfigDialogs(new ConfigEditor(this::getConfig, this::saveConfig), languageManager, scheduler,
+                getSLF4JLogger(), this::reload);
 
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger(),
                 sessionManager, scheduler, telemetry, pluginConfig.getTempExpiryMillis());

@@ -35,6 +35,9 @@ permissions:
   enhancedechest.admin.import:
     description: Use /ee import (copy an old database backend into the active one)
     default: op
+  enhancedechest.admin.config:
+    description: Use /ee config (edit config.yml from the in-game menu)
+    default: op
   enhancedechest.admin.add:
     description: Use /ee add
     default: op

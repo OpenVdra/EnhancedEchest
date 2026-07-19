@@ -8,6 +8,10 @@ Click any option or group below for more details.
 After editing `config.yml`, run `/ee reload` in-game or from the console to apply your changes.
 :::
 
+::: tip Edit it in-game instead
+`/ee config` opens a settings menu with one page per section below. Saving a page writes the values into `config.yml`, keeps all its comments, and applies them straight away, so you do not need `/ee reload`. Connection settings still need a full server restart, and the menu tells you when you have changed one.
+:::
+
 <div style="background-color: var(--vp-c-bg-alt); padding: 20px; border-radius: 12px; margin-top: 20px;">
 
 <ConfigProperty name="language" value="en_US" type="string">

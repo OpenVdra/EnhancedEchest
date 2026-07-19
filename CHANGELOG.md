@@ -6,13 +6,21 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 ### Added
 
-- **Shift + right-click an ender chest to open your chest list.** Holding shift while right-clicking an ender chest block now opens the same list `/eclist` shows, so a player who has set a main chest can still reach their other chests without typing a command. A plain right-click keeps opening a chest as before.
-  - On by default; turn it off with the new `enderchest.shift-click-list` setting to make shift + right-click behave exactly like a normal right-click.
-  - The list respects your `enderchest.list-menu` style, so servers using the `inventory` style get the inventory chooser here too.
+- **`/ee config` opens a settings menu in-game**, one page per section of `config.yml`, so you no longer have to edit the file by hand. Needs the new `enhancedechest.admin.config` permission.
+  - Saving applies the change straight away, so `/ee reload` is not needed. Connection settings still need a full server restart, and the menu tells you when you changed one.
+  - A bad value is refused before anything is saved, and the form comes back with what you typed still in it.
+  - Passwords on the two database pages are shown as plain text, so avoid opening them while sharing your screen.
+
+- **Shift + right-click an ender chest opens your chest list**, the same one `/eclist` shows. A plain right-click still opens a chest as before.
+  - On by default; turn it off with the new `enderchest.shift-click-list` setting.
 
 ### Changed
 
-- Menu buttons that start with a coloured symbol (Set as main, Unset main, Close, Cancel, Save, Start import, Clear chest) now colour only the symbol and leave their label in the default colour, so the menus read more evenly. Existing installs keep their current `gui.yml`; copy the new lines from the bundled file if you want the change.
+- The `/ee import` form now has a Documentation button linking to the backend-switching guide, with its four buttons laid out two per row.
+- The update notice now shows a clickable "Click here to download the update." line instead of the raw release link, which used to wrap over two chat lines. Hover it to see where it leads.
+- The Back, Close and Cancel buttons now show a left arrow instead of a cross.
+- Menu buttons now colour only their leading symbol and leave the label in the default colour.
+- Both menu changes only affect fresh installs, since your `gui.yml` is never overwritten. Copy the new lines from the bundled file to get them.
 
 ## 1.0.11 - 2026-07-16
 
