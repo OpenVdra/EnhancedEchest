@@ -182,8 +182,15 @@ jobs:
             { "PAPER": ["1.21.11", "26.1", "26.1.1", "26.1.2", "26.2"] }
 
       # Build the Discord embed body: the changelog followed by a download-links
-      # section and a documentation link. The GitHub link is the resolved release URL;
-      # Modrinth and the docs site URL come from the same badges linked in README.md.
+      # section. The GitHub link is the resolved release URL; Modrinth and Hangar
+      # come from the same badges linked in README.md.
+      #
+      # Discord embed descriptions are capped at 4096 characters; past that Discord
+      # silently truncates the *whole* string, which can chop off the download
+      # links at the bottom instead of just the changelog. So we measure the footer
+      # (download links) first, and if the changelog would overflow the remaining
+      # budget, truncate the changelog ourselves and append a "read full changelog
+      # on GitHub" pointer — the footer always survives intact.
       - name: Compose Discord message
         id: discord
         if: ${{ !cancelled() && steps.meta.outcome == 'success' }}
@@ -194,16 +201,28 @@ jobs:
           MODRINTH="https://modrinth.com/plugin/enhancedechest"
           SPIGOT="https://www.spigotmc.org/resources/enhancedechest-double-echest-plugin-%E2%9C%A8-26-1-2-26-2-%EF%B8%8F.136442/"
           HANGAR="https://hangar.papermc.io/Nighter/EnhancedEchest"
-          DOCS="https://openvdra.github.io/EnhancedEchest/"
+
+          FOOTER=$(printf '\n\n**📥 Download**\n[Modrinth](%s) · [Hangar](%s) · [Spigot](%s) · [GitHub Release](%s)' \
+            "$MODRINTH" "$HANGAR" "$SPIGOT" "$RELEASE_URL")
+          TRUNCATED_NOTE=$(printf '\n\n*… Read full changelog on [GitHub](%s)*' "$RELEASE_URL")
+
+          # Discord's real limit is 4096; leave headroom since bash's character count
+          # (locale-dependent) can differ slightly from Discord's own count.
+          MAX_LEN=4000
+          AVAILABLE=$((MAX_LEN - ${#FOOTER}))
+
+          if [ "${#CHANGELOG}" -gt "$AVAILABLE" ]; then
+            BUDGET=$((AVAILABLE - ${#TRUNCATED_NOTE}))
+            if [ "$BUDGET" -lt 0 ]; then
+              BUDGET=0
+            fi
+            CHANGELOG="${CHANGELOG:0:$BUDGET}${TRUNCATED_NOTE}"
+          fi
+
           {
             echo "description<<__DISCORD_EOF__"
             echo "$CHANGELOG"
-            echo ""
-            echo "**📥 Download**"
-            echo "[Modrinth]($MODRINTH) · [Hangar]($HANGAR) · [Spigot]($SPIGOT) · [GitHub Release]($RELEASE_URL)"
-            echo ""
-            echo "**📖 Documentation**"
-            echo "[Docs]($DOCS)"
+            echo "$FOOTER"
             echo "__DISCORD_EOF__"
           } >> "$GITHUB_OUTPUT"
 
