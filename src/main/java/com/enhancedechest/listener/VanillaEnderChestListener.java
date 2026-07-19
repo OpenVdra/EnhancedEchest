@@ -1,5 +1,6 @@
 package com.enhancedechest.listener;
 
+import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.service.ChestOpener;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.EquipmentSlot;
 public final class VanillaEnderChestListener implements Listener {
 
     private final ChestOpener opener;
+    private final PluginConfig config;
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
@@ -38,6 +40,14 @@ public final class VanillaEnderChestListener implements Listener {
         // EnderChestGuiListener), not eagerly here: a single chest opens straight to its inventory,
         // whereas several chests open a dialog first — and dialogs have no close event to pair an
         // eager open() with, which would otherwise leave the lid stuck open.
+        // Shift + right-click is a shortcut to the chest list (same menu as /eclist), so a player with a
+        // main chest set can still reach their other chests without typing a command. Gated by
+        // enderchest.shift-click-list; when off, a sneaking click opens a chest like any other click.
+        if (config.isShiftClickListEnabled() && player.isSneaking()) {
+            opener.openListDialog(player, blockLoc);
+            return;
+        }
+
         opener.open(player, blockLoc);
     }
 }

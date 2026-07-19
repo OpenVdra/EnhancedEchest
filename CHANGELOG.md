@@ -2,6 +2,18 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.0.12 - 2026-07-19
+
+### Added
+
+- **Shift + right-click an ender chest to open your chest list.** Holding shift while right-clicking an ender chest block now opens the same list `/eclist` shows, so a player who has set a main chest can still reach their other chests without typing a command. A plain right-click keeps opening a chest as before.
+  - On by default; turn it off with the new `enderchest.shift-click-list` setting to make shift + right-click behave exactly like a normal right-click.
+  - The list respects your `enderchest.list-menu` style, so servers using the `inventory` style get the inventory chooser here too.
+
+### Changed
+
+- Menu buttons that start with a coloured symbol (Set as main, Unset main, Close, Cancel, Save, Start import, Clear chest) now colour only the symbol and leave their label in the default colour, so the menus read more evenly. Existing installs keep their current `gui.yml`; copy the new lines from the bundled file if you want the change.
+
 ## 1.0.11 - 2026-07-16
 
 ### Added

@@ -233,7 +233,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         autosaveService.start();
 
         var pm = getServer().getPluginManager();
-        pm.registerEvents(new VanillaEnderChestListener(chestOpener), this);
+        pm.registerEvents(new VanillaEnderChestListener(chestOpener, pluginConfig), this);
         pm.registerEvents(new EnderChestGuiListener(sessionManager, scheduler, languageManager, pluginConfig), this);
         pm.registerEvents(new ChestListMenuListener(chestOpener), this);
         pm.registerEvents(new PlayerQuitListener(sessionManager, scheduler), this);

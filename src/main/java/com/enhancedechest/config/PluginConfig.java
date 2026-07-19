@@ -33,6 +33,13 @@ public final class PluginConfig {
      */
     private volatile ListMenuType listMenuType;
 
+    /**
+     * When on (default), shift + right-clicking an ender chest block opens the chest list instead of a
+     * chest, the same menu {@code /eclist} shows. Read live when routing an open, so volatile for
+     * visibility after a {@code /ee reload} mutates it on the main thread.
+     */
+    private volatile boolean shiftClickListEnabled;
+
     // Chest-management features (global toggles; read live by the dialogs, so volatile for cross-thread
     // visibility after a /ee reload mutates them on the main thread).
     private volatile boolean renameEnabled;
@@ -126,6 +133,7 @@ public final class PluginConfig {
 
         defaultSize = sanitizeSize(config.getInt("enderchest.default-size", 54));
         listMenuType = parseListMenuType(config.getString("enderchest.list-menu", "dialog"));
+        shiftClickListEnabled = config.getBoolean("enderchest.shift-click-list", true);
 
         renameEnabled      = config.getBoolean("enderchest.features.rename", true);
         iconEnabled        = config.getBoolean("enderchest.features.icon", true);

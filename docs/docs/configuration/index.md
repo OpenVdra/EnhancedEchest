@@ -53,6 +53,10 @@ How the <code>/eclist</code> chest list is shown to players. This is also the li
 
 </ConfigProperty>
 
+<ConfigProperty name="shift-click-list" value="true" type="boolean">
+Whether holding <strong>shift</strong> while right-clicking an ender chest block opens the chest list (the same menu as <code>/eclist</code>) instead of a chest. A plain right-click still opens a chest as usual, so a player who has set a main chest can reach their other chests without typing a command. Turn this off to make shift + right-click behave exactly like a normal right-click.
+</ConfigProperty>
+
 <ConfigProperty name="features.rename" value="true" type="boolean">
 Whether players may give a chest a custom display name from the <strong>Edit mode</strong> menu. Turning this off hides the <strong>Rename</strong> button; chests that already have a name keep it. This is a <strong>global</strong> switch, it applies to every player the same way.
 </ConfigProperty>
@@ -268,6 +272,9 @@ enderchest:
   # that only lists chests; click to open). The inventory menu grows 27 -> 36 -> 45 -> 54 slots and
   # holds up to 28 chests; players with more than 28 chests always get the dialog menu.
   list-menu: dialog
+
+  # Open the chest list (same menu as /eclist) with shift + right-click on an ender chest block.
+  shift-click-list: true
 
   # Server-wide switches for the "Edit mode" buttons (Rename / Choose icon / Sort).
   features:

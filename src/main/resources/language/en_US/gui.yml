@@ -14,7 +14,7 @@ dialog:
   list-body: 'Select a chest to open or manage.'
   # When ticked, clicking a chest opens its management menu; unticked (default), opens it directly.
   edit-mode: 'Edit mode (manage chests on click)'
-  close: '<red>✖ Close'
+  close: '<red>✖ <reset>Close'
   # Hover tooltip on each chest button. {size} = slot count.
   slots: '{size} slots'
   # Appended to the main chest's label so the list marks which chest /ec opens.
@@ -30,21 +30,21 @@ dialog:
   # ===== Admin detail dialog (per chest, /ee view) =====
   # The Clear button only appears for admins with enhancedechest.admin.clear. The red (Admin) tag marks
   # it as a privileged action; it opens a confirmation before wiping anything.
-  admin-clear: '<red>(Admin) Clear chest'
+  admin-clear: '<red>(Admin) <reset>Clear chest'
   admin-clear-desc: 'Permanently empty every item from this chest.'
   # Confirmation dialog: a dedicated title + warning body, then a clear yes/no pair (✔ confirm / ✖ cancel).
   admin-clear-confirm-title: 'Clear this chest?'
   admin-clear-confirm-body: '<gray>Every item in this chest will be <red>permanently deleted</red>.<newline><gray>This cannot be undone.'
-  admin-clear-confirm: '<green>✔ Clear chest'
+  admin-clear-confirm: '<green>✔ <reset>Clear chest'
 
   # ===== Detail dialog (a single chest) =====
   # Centred text under the title. {size} = slot count.
   detail-body: '{size} slots'
   open: 'Open'
   open-desc: 'Open this chest.'
-  set-main: '<gold>★ Set as main'
+  set-main: '<gold>★ <reset>Set as main'
   set-main-desc: 'Make this the chest opened by /ec and by right-clicking an ender chest block.'
-  unset-main: '<gray>☆ Unset main'
+  unset-main: '<gray>☆ <reset>Unset main'
   unset-main-desc: 'Stop using this chest as your main. /ec will open the management menu again.'
   rename: 'Rename'
   rename-desc: 'Give this chest a custom display name.'
@@ -59,8 +59,8 @@ dialog:
   # ===== Rename dialog =====
   rename-body: 'Enter a new display name for this chest.'
   name-label: 'Display name'
-  save-name: '<green>✔ Save'
-  cancel: '<red>✖ Cancel'
+  save-name: '<green>✔ <reset>Save'
+  cancel: '<red>✖ <reset>Cancel'
 
   # ===== Icon picker dialog =====
   icon-title: 'Choose Icon'
@@ -81,7 +81,7 @@ dialog:
   import-username-label: 'Username'
   import-password-label: 'Password'
   # Buttons.
-  import-run: '<green>✔ Start import'
+  import-run: '<green>✔ <reset>Start import'
   import-run-desc: 'Copy every chest from the source database into the active one.'
   # Source-type toggle (top button of the column, above Start import + Cancel). Its label shows the
   # current type and clicking it flips the type; the detail is in the tooltip below. Two types only:

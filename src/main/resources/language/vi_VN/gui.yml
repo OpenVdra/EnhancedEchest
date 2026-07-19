@@ -14,7 +14,7 @@ dialog:
   list-body: 'Chọn một rương để mở hoặc chỉnh sửa.'
   # Khi được tích, bấm vào rương sẽ mở menu chỉnh sửa; khi bỏ tích (mặc định), mở rương trực tiếp.
   edit-mode: 'Chế độ chỉnh sửa (bấm để chỉnh sửa rương)'
-  close: '<red>✖ Đóng'
+  close: '<red>✖ <reset>Đóng'
   # Chú thích khi rê chuột lên mỗi nút rương. {size} = số ô.
   slots: '{size} ô'
   # Thêm vào nhãn của rương chính để danh sách đánh dấu rương mà /ec sẽ mở.
@@ -30,21 +30,21 @@ dialog:
   # ===== Hộp thoại chi tiết của quản trị viên (mỗi rương, /ee view) =====
   # Nút Dọn chỉ hiện với quản trị viên có quyền enhancedechest.admin.clear. Thẻ (Admin) đỏ đánh dấu đây là
   # hành động đặc quyền; nút này mở hộp xác nhận trước khi xóa.
-  admin-clear: '<red>(Admin) Dọn rương'
+  admin-clear: '<red>(Admin) <reset>Dọn rương'
   admin-clear-desc: 'Xóa vĩnh viễn mọi vật phẩm trong rương này.'
   # Hộp xác nhận: tiêu đề riêng + nội dung cảnh báo, rồi cặp đồng ý/hủy rõ ràng (✔ xác nhận / ✖ hủy).
   admin-clear-confirm-title: 'Dọn rương này?'
   admin-clear-confirm-body: '<gray>Mọi vật phẩm trong rương sẽ bị <red>xóa vĩnh viễn</red>.<newline><gray>Không thể hoàn tác.'
-  admin-clear-confirm: '<green>✔ Dọn rương'
+  admin-clear-confirm: '<green>✔ <reset>Dọn rương'
 
   # ===== Hộp thoại chi tiết (một rương duy nhất) =====
   # Văn bản căn giữa dưới tiêu đề. {size} = số ô.
   detail-body: '{size} ô'
   open: 'Mở'
   open-desc: 'Mở rương này.'
-  set-main: '<gold>★ Đặt làm rương chính'
+  set-main: '<gold>★ <reset>Đặt làm rương chính'
   set-main-desc: 'Đặt đây làm rương được mở bằng /ec và khi chuột phải vào khối rương ender.'
-  unset-main: '<gray>☆ Bỏ rương chính'
+  unset-main: '<gray>☆ <reset>Bỏ rương chính'
   unset-main-desc: 'Ngừng dùng rương này làm rương chính. /ec sẽ mở lại menu chỉnh sửa.'
   rename: 'Đổi tên'
   rename-desc: 'Đặt tên hiển thị tùy chỉnh cho rương này.'
@@ -59,8 +59,8 @@ dialog:
   # ===== Hộp thoại đổi tên =====
   rename-body: 'Nhập tên hiển thị mới cho rương này.'
   name-label: 'Tên hiển thị'
-  save-name: '<green>✔ Lưu'
-  cancel: '<red>✖ Hủy'
+  save-name: '<green>✔ <reset>Lưu'
+  cancel: '<red>✖ <reset>Hủy'
 
   # ===== Hộp thoại chọn biểu tượng =====
   icon-title: 'Chọn Biểu Tượng'
@@ -81,7 +81,7 @@ dialog:
   import-username-label: 'Tên đăng nhập'
   import-password-label: 'Mật khẩu'
   # Các nút.
-  import-run: '<green>✔ Bắt đầu nhập'
+  import-run: '<green>✔ <reset>Bắt đầu nhập'
   import-run-desc: 'Sao chép mọi rương từ cơ sở dữ liệu nguồn vào cơ sở dữ liệu đang dùng.'
   # Nút chọn loại nguồn (nút trên cùng của cột, trên nút Bắt đầu nhập + Hủy). Nhãn hiển thị loại hiện tại và
   # bấm vào để chuyển loại; chi tiết nằm trong tooltip bên dưới. Chỉ 2 loại: SQLite (một tệp) hoặc Máy chủ

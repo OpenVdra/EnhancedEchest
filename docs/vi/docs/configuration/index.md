@@ -53,6 +53,10 @@ Cách hiển thị danh sách rương của <code>/eclist</code> cho người ch
 
 </ConfigProperty>
 
+<ConfigProperty name="shift-click-list" value="true" type="boolean">
+Cho phép giữ <strong>shift</strong> khi chuột phải vào khối rương ender để mở danh sách rương (cùng menu với <code>/eclist</code>) thay vì mở một rương. Chuột phải bình thường vẫn mở rương như cũ, nên người chơi đã đặt rương chính vẫn tới được các rương khác mà không cần gõ lệnh. Tắt tùy chọn này để shift + chuột phải hoạt động y hệt chuột phải thường.
+</ConfigProperty>
+
 <ConfigProperty name="features.rename" value="true" type="boolean">
 Cho phép người chơi đặt tên hiển thị tùy chỉnh cho rương từ menu <strong>Chế độ chỉnh sửa</strong>. Tắt sẽ ẩn nút <strong>Đổi tên</strong>; rương đã có tên vẫn giữ tên. Đây là công tắc <strong>toàn cục</strong>, áp dụng cho mọi người chơi như nhau.
 </ConfigProperty>
@@ -269,6 +273,9 @@ enderchest:
   # đơn giản chỉ liệt kê rương; bấm để mở). Menu inventory lớn dần 27 -> 36 -> 45 -> 54 ô và chứa tối đa
   # 28 rương; người chơi có hơn 28 rương luôn nhận menu dialog.
   list-menu: dialog
+
+  # Mở danh sách rương (cùng menu với /eclist) bằng shift + chuột phải vào khối rương ender.
+  shift-click-list: true
 
   # Công tắc toàn cục cho các nút trong "Chế độ chỉnh sửa" (Đổi tên / Chọn biểu tượng / Sắp xếp).
   features:

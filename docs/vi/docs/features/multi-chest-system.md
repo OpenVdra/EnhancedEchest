@@ -9,7 +9,7 @@ Người chơi không còn bị giới hạn ở một rương Ender. Mỗi ngư
 
 ## Menu Danh Sách Rương
 
-Chạy `/eclist` để mở menu liệt kê mọi rương người chơi sở hữu, kèm số ô của từng rương. Ô tích **Chế độ chỉnh sửa** thay đổi điều xảy ra khi bấm vào rương: khi tắt (mặc định) rương mở ngay; khi bật, bấm vào rương sẽ mở màn hình quản lý để đổi tên, gán biểu tượng, hoặc đặt làm rương chính. Ô tích chuyển trạng thái tại chỗ, không mở lại menu.
+Chạy `/eclist`, hoặc giữ shift khi chuột phải vào rương Ender, để mở menu liệt kê mọi rương người chơi sở hữu, kèm số ô của từng rương. Ô tích **Chế độ chỉnh sửa** thay đổi điều xảy ra khi bấm vào rương: khi tắt (mặc định) rương mở ngay; khi bật, bấm vào rương sẽ mở màn hình quản lý để đổi tên, gán biểu tượng, hoặc đặt làm rương chính. Ô tích chuyển trạng thái tại chỗ, không mở lại menu.
 
 ## Rương Chính
 

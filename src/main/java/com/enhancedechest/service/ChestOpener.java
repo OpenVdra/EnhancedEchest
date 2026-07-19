@@ -285,8 +285,18 @@ public final class ChestOpener {
 
     /** Loads the player's chests and shows the /eclist management dialog, seeding edit mode from their saved preference. */
     public void openListDialog(Player player) {
+        openListDialog(player, (Location) null);
+    }
+
+    /**
+     * Same as {@link #openListDialog(Player)}, but remembers the ender chest block the list was opened
+     * from (shift + right-click) so a chest picked from it still animates that block's lid.
+     *
+     * @param sourceBlock ender chest block location, or null when opened by command
+     */
+    public void openListDialog(Player player, @Nullable Location sourceBlock) {
         settings.loadSettingsAsync(player.getUniqueId())
-                .thenAccept(s -> openListDialog(player, s.editMode(), null))
+                .thenAccept(s -> openListDialog(player, s.editMode(), sourceBlock))
                 .exceptionally(e -> reportOpenFailure(player, e));
     }
 

@@ -26,6 +26,11 @@ enderchest:
   #                anyone with more still gets the dialog menu.
   list-menu: dialog
 
+  # Let players open the chest list (the same menu as /eclist) by holding shift while right-clicking an
+  # ender chest block. A plain right-click still opens a chest as usual. Turn this off to make shift +
+  # right-click behave exactly like a normal right-click.
+  shift-click-list: true
+
   # Which chest-management buttons players may use in the "Edit mode" menu (Rename / Choose icon / Sort).
   # These are GLOBAL switches: they apply to every player the same way, not per-player and not per-chest.
   # Turning one off simply hides its button from the menu; existing names/icons are kept, just no longer

@@ -10,7 +10,7 @@ defineProps({
 // Custom click-to-open version menu (airi-style). VitePress's own flyout opens
 // on hover; this one only opens on click, closes on click-outside / Escape, and
 // reveals with a downward slide + subtle fade (airi's slideUpAndFade).
-const VERSION = 'v1.0.11'
+const VERSION = 'v1.0.12'
 const REPO = 'https://github.com/OpenVdra/EnhancedEchest'
 
 const { lang, page } = useData()

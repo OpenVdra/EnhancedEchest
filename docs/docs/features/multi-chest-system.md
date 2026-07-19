@@ -9,7 +9,7 @@ Players are no longer limited to one ender chest. Each player can own several, m
 
 ## Chest List Menu
 
-Run `/eclist` to open a menu listing every chest the player owns, each showing its slot count. An **Edit mode** checkbox switches what clicking a chest does: off by default, a chest opens straight away; tick it and clicking a chest opens its management screen where players can rename it, give it a custom icon, or set it as their main. The checkbox toggles in place without reopening the menu.
+Run `/eclist`, or hold shift while right-clicking an ender chest, to open a menu listing every chest the player owns, each showing its slot count. An **Edit mode** checkbox switches what clicking a chest does: off by default, a chest opens straight away; tick it and clicking a chest opens its management screen where players can rename it, give it a custom icon, or set it as their main. The checkbox toggles in place without reopening the menu.
 
 ## Main Chest
 
