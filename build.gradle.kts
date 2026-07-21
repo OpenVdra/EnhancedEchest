@@ -55,7 +55,7 @@ dependencies {
     shade("redis.clients:jedis:7.5.3")
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
-    compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
+    compileOnly("org.xerial:sqlite-jdbc:3.53.2.1")
 
     compileOnly("org.projectlombok:lombok:1.18.46")
     annotationProcessor("org.projectlombok:lombok:1.18.46")
@@ -65,7 +65,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.slf4j:slf4j-simple:2.0.18")
-    testRuntimeOnly("org.xerial:sqlite-jdbc:3.53.2.0")
+    testRuntimeOnly("org.xerial:sqlite-jdbc:3.53.2.1")
 
     // MockBukkit — mocks the Bukkit/Paper server so Bukkit-dependent code (listeners, scheduler,
     // commands) can run under plain JUnit instead of a live server. Pinned to the "v1.21" artifact
