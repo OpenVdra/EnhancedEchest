@@ -182,4 +182,9 @@ onMounted(async () => {
 .contributors-cta:hover {
   background-color: var(--vp-c-brand-soft);
 }
+
+.contributors-cta :deep(.vp-external-link-icon),
+.contributors-cta::after {
+  display: none !important;
+}
 </style>
