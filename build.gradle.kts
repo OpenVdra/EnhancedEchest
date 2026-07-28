@@ -69,7 +69,7 @@ dependencies {
     // 26.x). Used by IconCatalog and by the shaded Jedis, both of which resolve it from there.
     // NOTE: this one must NOT be relocated in shadowJar — relocation would rewrite the references
     // to a package that no longer exists in the jar.
-    compileOnly("com.google.code.gson:gson:2.13.2")
+    compileOnly("com.google.code.gson:gson:2.14.0")
 
     compileOnly("org.projectlombok:lombok:1.18.46")
     annotationProcessor("org.projectlombok:lombok:1.18.46")
