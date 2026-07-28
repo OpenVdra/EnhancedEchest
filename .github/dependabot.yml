@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: "daily"
     assignees:
-      - "ptthanh02"
+      - "Nighterezi"
     commit-message:
       prefix: "chore"
 
@@ -19,6 +19,6 @@ updates:
     schedule:
       interval: "daily"
     assignees:
-      - "ptthanh02"
+      - "Nighterezi"
     commit-message:
       prefix: "chore"
