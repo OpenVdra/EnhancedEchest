@@ -114,6 +114,32 @@ final class ChestCacheState {
         return (owned == null || owned.isEmpty()) ? 0 : owned.lastKey();
     }
 
+    /**
+     * The lowest index (from 1) the owner does not currently occupy — where a newly created permanent
+     * chest goes. Filling the gap left by a delete rather than taking {@code maxIndex + 1} is what keeps
+     * the numbering dense: the index <i>is</i> the number the player reads on the chest ("Ender Chest 3"),
+     * so an ever-climbing counter would show a player with three chests numbers like 1, 5, 9.
+     *
+     * <p>Temp chests deliberately keep taking {@code maxIndex + 1} ({@link #insertTempRow}) so they stay
+     * at the end of the list instead of appearing between the player's real chests.
+     */
+    int lowestFreeIndex(UUID owner) {
+        TreeMap<Integer, ChestRow> owned = chests.get(owner);
+        if (owned == null || owned.isEmpty()) {
+            return 1;
+        }
+        int free = 1;
+        for (int index : owned.navigableKeySet()) {
+            if (index > free) {
+                break;                 // the gap at `free` is the first one available
+            }
+            if (index == free) {
+                free++;
+            }
+        }
+        return free;
+    }
+
     /** Applies {@code action} to every resident owner's rows (the {@link CachedStorage#findExpired} scan). */
     void forEachRow(RowVisitor action) {
         chests.forEach((owner, owned) -> owned.forEach((index, row) -> action.visit(owner, index, row)));

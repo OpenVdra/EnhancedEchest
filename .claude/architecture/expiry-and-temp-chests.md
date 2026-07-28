@@ -13,6 +13,26 @@ being lost silently.
 - **Expiring normal chest** — `/ee add <player> <size> <duration>` grants a `kind = NORMAL` chest with an
   `expires_at`. On expiry its items spill into a temp chest, then the chest is removed.
 
+## Auto-reclaim (the reverse of a spill)
+
+`ChestSpillService.reclaimTempInto(owner, targetIndex)` moves **one** temp chest back into a **newly
+created, still-empty** chest, then deletes the temp row. Called right after a chest is granted:
+`PermissionChestService.reconcile` (every fresh PERM chest) and `/ee add` **without** a duration — an
+expiring grant is skipped on purpose, it is a loan, not a home for items that would spill again when it
+runs out. Gated by `temp-enderchest.auto-reclaim` (default on, live via `setTempConfig`).
+
+Three rules make it safe and predictable, don't relax them:
+
+1. **Only a temp chest whose size ≤ the target's** is eligible, and the stored bytes are copied
+   **verbatim** — no decode, no merge, no repack — so every item keeps the exact slot it had. Nothing is
+   ever split across several chests; a temp chest that does not fit is simply left alone.
+2. **One temp chest per new chest.** When several fit, the one **expiring soonest** goes first (it is the
+   closest to being lost); ties break on the lowest index.
+3. Dupe-safety is the usual model widened to two chests: `forceCloseAll` on both, then
+   `runExclusiveAcross(temp, target)`, and `CachedStorage.reclaimTemp` re-checks every precondition
+   (both rows exist, kinds, target still empty, size fits) under the cache lock — any failed check is a
+   no-op returning `false`, never a partial move.
+
 ## Sweeper (`expiry/ExpirySweeper`)
 
 An async repeating timer (via `Scheduler`) at `temp-enderchest.check-interval` (default `5m`). Each tick runs

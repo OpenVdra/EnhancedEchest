@@ -145,6 +145,7 @@ dialog:
   config-rename-blacklist: 'Từ cấm đặt tên (ngăn cách bằng dấu phẩy)'
   config-temp-expiry: 'Thời gian tồn tại của rương tạm (ví dụ 7d)'
   config-temp-check-interval: 'Chu kỳ quét hết hạn (ví dụ 5m)'
+  config-temp-auto-reclaim: 'Tự chuyển đồ sang rương mới'
   config-temp-deny-sound: 'Phát âm thanh khi bị chặn bỏ đồ vào'
   config-temp-deny-sound-key: 'Mã âm thanh khi bị chặn'
   config-temp-join-notify: 'Nhắc người chơi khi đăng nhập'

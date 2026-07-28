@@ -95,7 +95,7 @@ public final class ChestAdminCommand {
                     }
                     return;
                 }
-                String range = "#" + indices.get(0) + "–#" + indices.get(indices.size() - 1);
+                String range = describeIndices(indices);
                 if (label == null) {
                     ctx.sender.sendMessage(ctx.lang.get("admin.chests-added",
                             "player", playerName,
@@ -116,18 +116,45 @@ public final class ChestAdminCommand {
     }
 
     /**
+     * Renders the indices just created for the confirmation message: {@code #4–#6} while they run
+     * consecutively, {@code #2, #4, #7} when they do not. New chests take the lowest free index, so a
+     * player with gaps in their numbering gets a non-consecutive set and a range would misreport it.
+     */
+    private static String describeIndices(List<Integer> indices) {
+        boolean consecutive = true;
+        for (int i = 1; i < indices.size(); i++) {
+            if (indices.get(i) != indices.get(i - 1) + 1) {
+                consecutive = false;
+                break;
+            }
+        }
+        if (consecutive) {
+            return "#" + indices.get(0) + "–#" + indices.get(indices.size() - 1);
+        }
+        return indices.stream().map(i -> "#" + i).collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    /**
      * Creates {@code count} chests one after another (not concurrently): each {@code createChest}
      * allocates the next free index as {@code max(index)+1}, so running them in parallel would race
      * and could collide on that index. Returns the assigned indices in creation order.
+     *
+     * <p>Each permanent chest created here then pulls one fitting temp chest back in
+     * ({@link ChestSpillService#reclaimTempInto}), so granting a player a chest hands them back items an
+     * earlier shrink or delete parked in a temp chest. An <i>expiring</i> grant is skipped: it is a loan,
+     * not a home for items that would then have to spill a second time when it runs out.
      */
     private static CompletableFuture<List<Integer>> createChests(Ctx ctx, int count, int size,
                                                                  @Nullable Long expiresAt) {
         CompletableFuture<List<Integer>> chain = CompletableFuture.completedFuture(new ArrayList<>());
         for (int i = 0; i < count; i++) {
             chain = chain.thenCompose(indices ->
-                    ctx.storageGateway.createChestAsync(ctx.target, size, expiresAt).thenApply(index -> {
+                    ctx.storageGateway.createChestAsync(ctx.target, size, expiresAt).thenCompose(index -> {
                         indices.add(index);
-                        return indices;
+                        if (expiresAt != null) {
+                            return CompletableFuture.completedFuture(indices);
+                        }
+                        return ctx.spillService.reclaimTempInto(ctx.target, index).thenApply(x -> indices);
                     }));
         }
         return chain;

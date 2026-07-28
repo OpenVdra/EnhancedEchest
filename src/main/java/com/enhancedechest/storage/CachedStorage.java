@@ -271,7 +271,7 @@ public final class CachedStorage implements EnderChestStorage {
     @Override
     public int createChest(UUID owner, int size, @Nullable Long expiresAt) {
         return cache.withOwner(owner, () -> {
-            int newIndex = state.maxIndex(owner) + 1;
+            int newIndex = state.lowestFreeIndex(owner);
             state.insertRow(owner, newIndex, size, null, false, null, false, ChestKind.NORMAL.code(),
                     expiresAt, null);
             return newIndex;
@@ -281,7 +281,7 @@ public final class CachedStorage implements EnderChestStorage {
     @Override
     public int createPermChest(UUID owner, int size) {
         return cache.withOwner(owner, () -> {
-            int newIndex = state.maxIndex(owner) + 1;
+            int newIndex = state.lowestFreeIndex(owner);
             state.insertRow(owner, newIndex, size, null, false, null, false, ChestKind.PERM.code(),
                     null, null);
             return newIndex;
@@ -353,6 +353,39 @@ public final class CachedStorage implements EnderChestStorage {
                 state.insertTempRow(owner, tempSize, items, tempExpiresAt);
             }
             state.removeRow(owner, index);
+        });
+    }
+
+    @Override
+    public boolean reclaimTemp(UUID owner, int tempIndex, int targetIndex) {
+        return cache.withOwner(owner, () -> {
+            if (tempIndex == targetIndex) {
+                return false;
+            }
+            ChestRow temp   = state.row(owner, tempIndex);
+            ChestRow target = state.row(owner, targetIndex);
+            if (temp == null || target == null) {
+                return false;                                     // one of them was deleted meanwhile
+            }
+            if (temp.kind != ChestKind.TEMP.code() || target.kind == ChestKind.TEMP.code()) {
+                return false;                                     // only TEMP → non-TEMP
+            }
+            if (temp.data == null || temp.data.length == 0) {
+                return false;                                     // nothing to move
+            }
+            if (target.data != null && target.data.length > 0) {
+                return false;                                     // target no longer empty
+            }
+            if (temp.size > target.size) {
+                return false;                                     // would not fit slot-for-slot
+            }
+            // Verbatim byte handover: slot positions are preserved exactly, and the bytes are treated as
+            // immutable by convention so the two rows never share a mutable array (the temp row goes away).
+            target.data = temp.data;
+            target.lastUpdated = System.currentTimeMillis();
+            state.markChestDirty(owner, targetIndex);
+            state.removeRow(owner, tempIndex);
+            return true;
         });
     }
 

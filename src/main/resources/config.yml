@@ -81,6 +81,13 @@ temp-enderchest:
   expiry: 7d
   # How often the plugin scans for expired chests.
   check-interval: 5m
+  # Move a temporary chest's items back into a chest the player is granted later, automatically.
+  # When a player gains a new, empty chest (from a permission, or from /ee add without a duration)
+  # that has at least as many slots as one of their temporary chests, that temporary chest's items
+  # are moved into it and the temporary chest disappears. Every item keeps the exact slot it was in,
+  # one temporary chest goes into one new chest, and a temporary chest that does not fit is left
+  # alone rather than split across several chests. The soonest to expire is moved first.
+  auto-reclaim: true
   # Sound played to a player who tries to deposit into a take-only temporary chest.
   deny-sound:
     # Set to false to play no sound.

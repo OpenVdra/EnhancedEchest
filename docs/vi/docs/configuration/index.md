@@ -112,6 +112,10 @@ Thời gian tồn tại của một rương tạm trước khi nó hết hạn, 
 Bao lâu plugin quét rương hết hạn một lần. Giá trị thấp hơn xóa rương hết hạn sớm hơn; giá trị mặc định phù hợp với hầu hết máy chủ.
 </ConfigProperty>
 
+<ConfigProperty name="auto-reclaim" value="true" type="boolean">
+Vật phẩm trong rương tạm có tự chuyển sang rương mới hay không. Khi người chơi được cấp một rương mới còn trống có số ô bằng hoặc lớn hơn một rương tạm của họ, vật phẩm sẽ chuyển vào rương đó và rương tạm biến mất. Mỗi vật phẩm giữ nguyên ô cũ. Rương tạm không vừa sẽ được giữ nguyên thay vì bị chia nhỏ sang nhiều rương, và rương tạm sắp hết hạn nhất được chuyển trước.
+</ConfigProperty>
+
 <ConfigProperty name="deny-sound.enabled" value="true" type="boolean">
 Có phát âm thanh khi người chơi cố bỏ vật phẩm vào rương tạm chỉ-cho-lấy-ra hay không. Đặt thành <code>false</code> để tắt âm thanh.
 </ConfigProperty>
@@ -307,6 +311,8 @@ temp-enderchest:
   expiry: 7d
   # Bao lâu plugin quét rương hết hạn một lần.
   check-interval: 5m
+  # Chuyển đồ trong rương tạm sang một rương mới còn trống đủ chỗ chứa.
+  auto-reclaim: true
   # Âm thanh phát cho người chơi cố bỏ đồ vào rương tạm chỉ-cho-lấy-ra.
   deny-sound:
     enabled: true

@@ -2,6 +2,24 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.0.13 - 2026-07-27
+
+### Added
+
+- **Items waiting in a temporary chest now move into a new chest on their own.** A player granted a new, empty chest with at least as many slots gets those items back automatically.
+  - Every item keeps the slot it was on. A temporary chest that does not fit is left alone instead of being split across several chests.
+  - The temporary chest closest to expiring moves first. On by default; turn it off with the new `auto-reclaim` setting in `config.yml`.
+  - Applies to chests granted by a permission and to `/ee add` without a duration.
+
+### Changed
+
+- Chest numbers no longer climb forever. Deleting a chest frees its number, and the next chest the player gets takes it, so someone with three chests sees 1, 2 and 3 instead of 1, 5 and 9.
+- The plugin file is about half a megabyte smaller.
+
+### Notes
+
+- Existing chests keep the numbers they already have. Gaps close as new chests are created.
+
 ## 1.0.12 - 2026-07-19
 
 ### Added

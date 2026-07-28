@@ -33,7 +33,9 @@ import java.util.regex.Pattern;
  * PERM chest, and never deletes a NORMAL chest, so a player can never be left with no chests.
  *
  * <p>All deletions/shrinks go through {@link ChestSpillService}, so any items that no longer fit spill
- * into a temp chest (recoverable from {@code /eclist}) rather than being lost.
+ * into a temp chest (recoverable from {@code /eclist}) rather than being lost. The move back is
+ * automatic too: a chest granted here pulls one fitting temp chest's items back in
+ * ({@link ChestSpillService#reclaimTempInto}), so a re-granted rank restores what its revoke parked.
  */
 public final class PermissionChestService {
 
@@ -258,8 +260,11 @@ public final class PermissionChestService {
                     int index = leftover.get(i++).index();
                     chain = chain.thenCompose(v -> spillService.resizeOrSpill(owner, index, size));
                 } else {
-                    chain = chain.thenCompose(v ->
-                            storageGateway.createPermChestAsync(owner, size).thenApply(x -> null));
+                    // A freshly granted chest is empty, so it is the natural home for items a previous
+                    // revoke parked in a temp chest: pull one back in whole if it fits (no-op otherwise).
+                    chain = chain.thenCompose(v -> storageGateway.createPermChestAsync(owner, size)
+                            .thenCompose(newIndex -> spillService.reclaimTempInto(owner, newIndex))
+                            .thenApply(x -> null));
                 }
             }
             // 4) True surplus (no missing size left to absorb it) → remove with spill, highest index first.

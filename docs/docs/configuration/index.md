@@ -112,6 +112,10 @@ How long a temporary chest lasts before it expires, along with any items still i
 How often the plugin scans for expired chests. Lower values remove expired chests sooner; the default is fine for almost every server.
 </ConfigProperty>
 
+<ConfigProperty name="auto-reclaim" value="true" type="boolean">
+Whether a temporary chest's items move into a new chest on their own. When a player is granted a new, empty chest with at least as many slots as one of their temporary chests, the items move in and the temporary chest disappears. Every item keeps the slot it was on. A temporary chest that does not fit is left alone rather than split across several chests, and the one closest to expiring moves first.
+</ConfigProperty>
+
 <ConfigProperty name="deny-sound.enabled" value="true" type="boolean">
 Whether to play a sound when a player tries to put an item into a take-only temporary chest. Set to <code>false</code> for no sound.
 </ConfigProperty>
@@ -301,6 +305,8 @@ temp-enderchest:
   expiry: 7d
   # How often the plugin scans for expired chests.
   check-interval: 5m
+  # Move a temporary chest's items into a new, empty chest that is large enough for them.
+  auto-reclaim: true
   # Sound played to a player who tries to deposit into a take-only temporary chest.
   deny-sound:
     enabled: true

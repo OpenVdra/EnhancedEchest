@@ -168,6 +168,7 @@ public final class ConfigSchema {
             new Section("temp", "dialog.config-temp", List.of(
                     Field.duration("temp-enderchest.expiry", "dialog.config-temp-expiry"),
                     Field.duration("temp-enderchest.check-interval", "dialog.config-temp-check-interval"),
+                    Field.bool("temp-enderchest.auto-reclaim", "dialog.config-temp-auto-reclaim"),
                     Field.bool("temp-enderchest.deny-sound.enabled", "dialog.config-temp-deny-sound"),
                     Field.text("temp-enderchest.deny-sound.key", "dialog.config-temp-deny-sound-key"),
                     Field.bool("temp-enderchest.join-notify.enabled", "dialog.config-temp-join-notify"),

@@ -31,7 +31,7 @@ methods all run under the engine's lock. The behaviour below is unchanged by tha
   backend for non-resident owners). Concurrent misses on one owner collapse to a single backend read
   (the `loading` future map).
 - Every interface method keeps **identical semantics** to the SQL implementation it replaced — index
-  allocation (`max+1`), primary fallback, the transfer collision rules, targeted settings upserts,
+  allocation, primary fallback, the transfer collision rules, targeted settings upserts,
   `saveChest` being a no-op on a deleted row, and so on. Writes mark the row **dirty**.
 - `flush()` snapshots dirty rows under the lock, then writes them to SQL **outside** it —
   `flushDirty` on `AbstractSqlStorage` writes chests **and** players in one connection acquisition,
@@ -84,7 +84,7 @@ The SQL side implements the deliberately narrow **`StorageBackend`** interface (
 `importRows`, per-player reads `loadChests`/`loadPlayer`, the whole-database reads
 `findExpired`/`countChests`/`findUuidByName`/`loadAllPlayers`, and the batched
 `flushChests`/`flushPlayers`) — nothing outside the cache layer holds a `StorageBackend` reference, and
-`AbstractSqlStorage` holds **no per-row write DML**; all row-level semantics (index allocation `max+1`,
+`AbstractSqlStorage` holds **no per-row write DML**; all row-level semantics (index allocation,
 primary resolution, transfer collision rules, targeted settings upserts) live in `CachedStorage`. Only
 `CREATE TABLE` statements are dialect-specific, injected by each subclass (`SqliteStorage`,
 `MysqlStorage`, `PostgresStorage`) as a `String...` of DDL run in order by `init()` (currently
@@ -145,7 +145,7 @@ verbatim `/ee import` copy keeps the plain `INSERT` (a duplicate key must fail t
 | Column | Notes |
 |--------|-------|
 | `player_uuid` | part of PK |
-| `chest_index` | part of PK; per-player 1-based index |
+| `chest_index` | part of PK; per-player 1-based index — **it is the number the player reads on the chest**, so a permanent chest is created at the **lowest free** index (`ChestCacheState.lowestFreeIndex`) and a delete frees its number for the next one. Temp chests alone are appended at `max+1` so they sort last |
 | `size` | slot count (multiple of 9, 9–54) |
 | `custom_name` | nullable; null → default numbered title |
 | `is_primary` | the player's chosen main; **zero or one** per player (set only by "Set as main") |

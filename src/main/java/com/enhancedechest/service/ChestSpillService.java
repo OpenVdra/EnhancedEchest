@@ -16,7 +16,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Item-moving chest operations: shrink-spill, delete (spill or force), and bulk delete. Each first
+ * Item-moving chest operations: shrink-spill, delete (spill or force), bulk delete, and the reverse
+ * move that pulls a temp chest back into a newly granted chest ({@link #reclaimTempInto}). Each first
  * force-closes every viewer's GUI via {@link ChestSessionManager#forceCloseAll} (flushing the live
  * session), then runs the load-decode-split exclusively per (owner, index) via
  * {@link ChestSessionManager#runExclusive} so no concurrent open sees a half-applied state — keeping
@@ -30,28 +31,32 @@ public final class ChestSpillService {
     private final ContainerCodec codec;
     private final StorageGateway storageGateway;
 
-    // Runtime-tunable via /ee reload (see setTempExpiry). volatile so the value written on the main
-    // thread during a reload is visible to the async threads that stamp a freshly spilled temp chest.
+    // Runtime-tunable via /ee reload (see setTempConfig). volatile so the values written on the main
+    // thread during a reload are visible to the async threads that stamp a freshly spilled temp chest.
     /** Lifetime, in milliseconds, of a temp chest created when items spill on shrink/delete/expire. */
     private volatile long tempExpiryMillis;
+    /** Config {@code temp-enderchest.auto-reclaim}: gates {@link #reclaimTempInto}. */
+    private volatile boolean autoReclaim;
 
     public ChestSpillService(ChestSessionManager sessions, EnderChestStorage storage,
                              ContainerCodec codec, StorageGateway storageGateway,
-                             long tempExpiryMillis) {
+                             long tempExpiryMillis, boolean autoReclaim) {
         this.sessions         = sessions;
         this.storage          = storage;
         this.codec            = codec;
         this.storageGateway   = storageGateway;
         this.tempExpiryMillis = tempExpiryMillis;
+        this.autoReclaim      = autoReclaim;
     }
 
     /**
-     * Re-applies the runtime-tunable temp-chest lifetime after a {@code /ee reload}. Only affects temp
-     * chests stamped <i>after</i> this call, so it is dupe-safe to set on the main thread while async
-     * storage work is pending.
+     * Re-applies the runtime-tunable temp-chest settings after a {@code /ee reload}. Only affects temp
+     * chests stamped (and reclaims started) <i>after</i> this call, so it is dupe-safe to set on the main
+     * thread while async storage work is pending.
      */
-    public void setTempExpiry(long tempExpiryMillis) {
+    public void setTempConfig(long tempExpiryMillis, boolean autoReclaim) {
         this.tempExpiryMillis = tempExpiryMillis;
+        this.autoReclaim      = autoReclaim;
     }
 
     /**
@@ -108,6 +113,60 @@ public final class ChestSpillService {
             return null;
         }));
     }
+
+    /**
+     * The inverse of a spill: moves one temp chest's items <b>whole</b> into the freshly created,
+     * still-empty chest at {@code targetIndex}, then deletes the temp chest. Called right after a new
+     * chest is granted (a permission reconcile, {@code /ee add}), so a player who lost a chest and got
+     * its items parked in a temp chest gets them back automatically when a chest of at least that size
+     * comes back. A no-op (completing {@code false}) when the feature is off, when the target is gone or
+     * is itself a temp chest, or when no temp chest fits.
+     *
+     * <p><b>One temp chest, one target, no repacking.</b> Only a temp chest whose slot count is {@code <=}
+     * the target's is eligible, and its stored bytes are copied verbatim, so every item lands on the exact
+     * slot it already occupied. Items are never split across several chests and an existing layout is
+     * never reshuffled — a partially fitting temp chest is left alone rather than merged in. When several
+     * temp chests fit, the one expiring soonest is taken first: it is the one closest to being lost.
+     *
+     * <p>Dupe-safety follows the same model as the spills above, widened to the two chests involved:
+     * both GUIs are force-closed (flushing any live session), then the swap runs behind the pending saves
+     * of <i>both</i> keys via {@link ChestSessionManager#runExclusiveAcross}, and the storage call
+     * re-checks every precondition under the cache lock.
+     */
+    public CompletableFuture<Boolean> reclaimTempInto(UUID owner, int targetIndex) {
+        if (!autoReclaim) {
+            return CompletableFuture.completedFuture(false);
+        }
+        return storageGateway.listChestsAsync(owner).thenCompose(chests -> {
+            ChestSummary target = chests.stream()
+                    .filter(c -> c.index() == targetIndex)
+                    .findFirst()
+                    .orElse(null);
+            if (target == null || target.kind() == ChestKind.TEMP) {
+                return CompletableFuture.completedFuture(false);
+            }
+            ChestSummary temp = chests.stream()
+                    .filter(c -> c.kind() == ChestKind.TEMP && c.size() <= target.size())
+                    .min(SOONEST_EXPIRY)
+                    .orElse(null);
+            if (temp == null) {
+                return CompletableFuture.completedFuture(false);
+            }
+            int tempIndex = temp.index();
+            List<ChestSessionManager.ChestRef> refs = List.of(
+                    new ChestSessionManager.ChestRef(owner, tempIndex),
+                    new ChestSessionManager.ChestRef(owner, targetIndex));
+            return sessions.forceCloseAll(owner, tempIndex)
+                    .thenCompose(v -> sessions.forceCloseAll(owner, targetIndex))
+                    .thenCompose(v -> sessions.runExclusiveAcross(refs,
+                            () -> storage.reclaimTemp(owner, tempIndex, targetIndex)));
+        });
+    }
+
+    /** Reclaim order: the temp chest closest to expiry first, then the lowest index. */
+    private static final Comparator<ChestSummary> SOONEST_EXPIRY =
+            Comparator.comparingLong((ChestSummary c) -> c.expiresAt() == null ? Long.MAX_VALUE : c.expiresAt())
+                    .thenComparingInt(ChestSummary::index);
 
     /**
      * Empties a chest's contents (admin "clear chest" action), keeping the chest itself (size, name,
@@ -203,7 +262,7 @@ public final class ChestSpillService {
                     .thenComparing(Comparator.comparingInt(ItemStack::getAmount).reversed());
 
     /**
-     * Bulk-removes the {@code count} newest (highest-index) NORMAL chests a player owns, spilling (or
+     * Bulk-removes the {@code count} highest-numbered NORMAL chests a player owns, spilling (or
      * force-discarding) each, and completes with the number actually removed. The player's <i>first</i>
      * chest — the lowest-indexed NORMAL chest — is always protected, so a player can never be left with
      * no chests; deleting fewer than {@code count} when that is all that is eligible is not an error.

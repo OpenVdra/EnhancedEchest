@@ -196,7 +196,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
             });
         }
         spillService   = new ChestSpillService(sessionManager, storage, codec, storageGateway,
-                pluginConfig.getTempExpiryMillis());
+                pluginConfig.getTempExpiryMillis(), pluginConfig.isTempAutoReclaim());
         chestTransferService = new ChestTransferService(sessionManager, storage, codec, storageGateway,
                 languageManager, scheduler, dbExecutor, getSLF4JLogger(), telemetry,
                 pluginConfig.getTempExpiryMillis());
@@ -335,7 +335,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         // without a restart. These touch only work started after this point, so they are dupe-safe
         // even while async saves are in flight.
         chestOpener.setDefaultSize(pluginConfig.getDefaultSize());
-        spillService.setTempExpiry(pluginConfig.getTempExpiryMillis());
+        spillService.setTempConfig(pluginConfig.getTempExpiryMillis(), pluginConfig.isTempAutoReclaim());
         chestTransferService.setTempExpiry(pluginConfig.getTempExpiryMillis());
         migrationService.setTempExpiry(pluginConfig.getTempExpiryMillis());
         permissionChestService.setConfig(pluginConfig.isPermissionChestsEnabled(),

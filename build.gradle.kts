@@ -12,7 +12,7 @@ configurations {
 }
 
 group = "com.enhancedechest"
-version = "1.0.12"
+version = "1.0.13"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -48,14 +48,28 @@ dependencies {
     // Shaded and relocated — no server-side drivers required
     shade("com.zaxxer:HikariCP:7.1.0")
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.9")   // compatible with MySQL 5.7+ and 8.x
-    shade("org.postgresql:postgresql:42.7.13")
+    shade("org.postgresql:postgresql:42.7.13") {
+        // checker-qual is annotations only (CLASS retention, nothing reads them at runtime), and
+        // the driver carries ~280 KB of them. The JVM silently ignores a missing annotation class.
+        exclude(group = "org.checkerframework")
+    }
     shade("org.bstats:bstats-bukkit:3.2.1")
     shade("dev.faststats.metrics:bukkit:0.28.0")
     // Redis client for the cross-server owner-lock coordination (cross-server.enabled)
-    shade("redis.clients:jedis:7.5.3")
+    shade("redis.clients:jedis:7.5.3") {
+        // Jedis pulls gson, but the server already has it (see the compileOnly below) — carrying a
+        // second, relocated copy costs ~240 KB of jar for nothing.
+        exclude(group = "com.google.code.gson", module = "gson")
+    }
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.1")
+
+    // Same deal for gson: Paper ships 2.13.2 on the server classpath (verified on both 1.21.11 and
+    // 26.x). Used by IconCatalog and by the shaded Jedis, both of which resolve it from there.
+    // NOTE: this one must NOT be relocated in shadowJar — relocation would rewrite the references
+    // to a package that no longer exists in the jar.
+    compileOnly("com.google.code.gson:gson:2.13.2")
 
     compileOnly("org.projectlombok:lombok:1.18.46")
     annotationProcessor("org.projectlombok:lombok:1.18.46")
@@ -134,6 +148,13 @@ tasks.shadowJar {
     exclude("META-INF/LICENSE*")
     exclude("META-INF/NOTICE*")
     exclude("org/slf4j/**")
+    // Build-tool metadata for GraalVM / ProGuard consumers, plus the annotation-only artifacts the
+    // drivers depend on. None of it is read at runtime by a Paper server.
+    exclude("META-INF/native-image/**")
+    exclude("META-INF/proguard/**")
+    exclude("META-INF/licenses/**")
+    exclude("org/checkerframework/**")
+    exclude("com/google/errorprone/**")
 
     relocate("com.zaxxer.hikari", "com.enhancedechest.libs.hikari")
     relocate("org.mariadb.jdbc", "com.enhancedechest.libs.mariadb")
@@ -144,7 +165,7 @@ tasks.shadowJar {
     relocate("redis.clients",       "com.enhancedechest.libs.jedis")
     relocate("org.apache.commons.pool2", "com.enhancedechest.libs.commonspool2")
     relocate("org.json",            "com.enhancedechest.libs.json")
-    relocate("com.google.gson",     "com.enhancedechest.libs.gson")
+    // No gson relocation on purpose — gson is compileOnly and comes from the server classpath.
 
     mergeServiceFiles()
     // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\Folia\\plugins"))

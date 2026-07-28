@@ -145,6 +145,7 @@ dialog:
   config-rename-blacklist: 'Banned name words (comma separated)'
   config-temp-expiry: 'Temporary chest lifetime (e.g. 7d)'
   config-temp-check-interval: 'Expiry check interval (e.g. 5m)'
+  config-temp-auto-reclaim: 'Move items into a new chest automatically'
   config-temp-deny-sound: 'Play a sound on a blocked deposit'
   config-temp-deny-sound-key: 'Deny sound id'
   config-temp-join-notify: 'Remind players at login'

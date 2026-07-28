@@ -101,8 +101,9 @@ public interface EnderChestStorage {
     void saveChest(UUID owner, int index, byte[] containerData);
 
     /**
-     * Creates a new permanent chest with the next free index (max+1, or 1 if the player has none).
-     * No chest is ever auto-flagged primary; the main chest is set only via {@link #setPrimary}.
+     * Creates a new permanent chest at the <b>lowest free index</b>, so a number freed by a delete is
+     * reused instead of the numbering climbing forever (the index is the number the player reads on the
+     * chest). No chest is ever auto-flagged primary; the main chest is set only via {@link #setPrimary}.
      *
      * @return the index assigned to the new chest
      */
@@ -111,7 +112,7 @@ public interface EnderChestStorage {
     }
 
     /**
-     * Creates a new NORMAL chest with the next free index. If {@code expiresAt} is non-null the
+     * Creates a new NORMAL chest at the lowest free index. If {@code expiresAt} is non-null the
      * chest expires at that epoch-millis instant (an expirable granted chest); null = never expires.
      * No chest is ever auto-flagged primary; the main chest is set only via {@link #setPrimary}.
      *
@@ -120,7 +121,7 @@ public interface EnderChestStorage {
     int createChest(UUID owner, int size, @Nullable Long expiresAt);
 
     /**
-     * Creates a permission-granted chest (kind=PERM) with the next free index. PERM chests carry no
+     * Creates a permission-granted chest (kind=PERM) at the lowest free index. PERM chests carry no
      * expiry and are never auto-flagged primary; they are granted/removed by the reconcile of
      * {@code com.enhancedechest.service.PermissionChestService} and are invisible to admin commands.
      *
@@ -131,8 +132,9 @@ public interface EnderChestStorage {
     /**
      * Shrinks a chest and spills any cut-off items into a new temp chest, in one transaction.
      * The original row is updated to {@code newSize} with {@code visible} as its new contents; if
-     * {@code overflow} is non-null a temp chest (kind=TEMP, next free index, expiring at
-     * {@code tempExpiresAt}) is inserted holding it. Never leaves items in two rows at once.
+     * {@code overflow} is non-null a temp chest (kind=TEMP, appended after the highest index so it sorts
+     * last, expiring at {@code tempExpiresAt}) is inserted holding it. Never leaves items in two rows
+     * at once.
      *
      * @param tempSize slot count of the temp chest created for the overflow (ignored if no overflow)
      */
@@ -147,6 +149,22 @@ public interface EnderChestStorage {
      * @param tempSize slot count of the temp chest created for the items (ignored if {@code items} is null)
      */
     void spillRemove(UUID owner, int index, @Nullable byte[] items, int tempSize, long tempExpiresAt);
+
+    /**
+     * Moves a temp chest's contents into an empty chest and deletes the temp row, in one transaction —
+     * the inverse of a spill, used when a player is granted a new chest that can hold a temp chest whole
+     * (see {@code ChestSpillService#reclaimTempInto}).
+     *
+     * <p>The stored bytes are copied <b>verbatim</b>: nothing is decoded, merged or re-packed, so every
+     * item keeps the exact slot it occupied in the temp chest. That is only sound while the target is at
+     * least as large as the temp chest and is itself empty, so both are re-checked here under the lock
+     * along with the two kinds — the caller picked the pair from a list it fetched earlier, and an expiry
+     * sweep or a concurrent op may have invalidated it since. Any failed check is a no-op returning
+     * {@code false}, never a partial move.
+     *
+     * @return true if the contents were moved and the temp row deleted, false if a check failed
+     */
+    boolean reclaimTemp(UUID owner, int tempIndex, int targetIndex);
 
     /** Returns every chest whose expiry is set and at or before {@code now}. */
     List<ExpiredRef> findExpired(long now);

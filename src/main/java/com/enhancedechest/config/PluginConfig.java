@@ -72,6 +72,12 @@ public final class PluginConfig {
      * chat + action-bar reminder to collect them before the temp chest expires.
      */
     private volatile boolean tempJoinNotifyEnabled;
+    /**
+     * When on (default), a newly granted empty chest with at least as many slots as one of the player's
+     * temp chests absorbs that temp chest whole (slot positions kept), instead of leaving the items to
+     * expire. Read live by {@code ChestSpillService#reclaimTempInto}, so volatile.
+     */
+    private volatile boolean tempAutoReclaim;
     /** Sound played alongside the join reminder above; null when disabled. */
     private Sound tempJoinNotifySound;
 
@@ -150,6 +156,7 @@ public final class PluginConfig {
         tempExpiryMillis          = parseDuration(config.getString("temp-enderchest.expiry", "7d"), "7d");
         expiryCheckIntervalMillis = parseDuration(config.getString("temp-enderchest.check-interval", "5m"), "5m");
         tempDenySound             = parseSound(config, "temp-enderchest.deny-sound", "minecraft:entity.villager.no");
+        tempAutoReclaim           = config.getBoolean("temp-enderchest.auto-reclaim", true);
         tempJoinNotifyEnabled     = config.getBoolean("temp-enderchest.join-notify.enabled", true);
         tempJoinNotifySound       = parseSound(config, "temp-enderchest.join-notify.sound",
                 "minecraft:block.note_block.pling");

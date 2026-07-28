@@ -18,15 +18,8 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
 - Output jar: `EnhancedEchest-<version>.jar`. `build.gradle.kts` also copies it to a local
   `TestServer/plugins` directory (`shadowJar.destinationDirectory`) — adjust that path if your
   test server lives elsewhere.
-- **Test suite is still thin** — most verification is still done by running on a Paper/Folia server.
-  Pure-Java logic (storage cache, codec, merge logic) gets plain JUnit 5 tests. Bukkit/Paper-dependent
-  code (listeners, scheduler, dialogs, commands) can be unit-tested with **MockBukkit**
-  (`testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:...")` — pinned to the `v1.21`
-  artifact line specifically, since it targets paper-api 1.21.11 on Java 21, matching this project;
-  the newer `v26.x` artifact line needs Java 25). MockBukkit mocks the Bukkit singleton — sync work
-  needs an explicit `server.getScheduler().performOneTick()`/`performTicks(n)`, async work needs
-  `server.getScheduler().waitAsyncTasksFinished()`; nothing runs on its own like a real tick loop. See
-  `src/test/java/com/enhancedechest/scheduler/SchedulerTest.java` for a working example.
+- **Verification is done by running on a Paper/Folia server.** Assume nothing is covered automatically:
+  check a change by running it.
 
 ## Stack & constraints
 
@@ -37,9 +30,13 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   the plugin requires **Paper** (or a Paper-compatible fork such as Purpur / Folia) and does not run
   on CraftBukkit.
 - All third-party libs are **shaded and relocated** under `com.enhancedechest.libs.*`
-  (HikariCP, MariaDB driver, PostgreSQL driver). SQLite driver is `compileOnly`
-  (Paper bundles it). Never reference these libs by their original package in new code without
-  matching the relocation.
+  (HikariCP, MariaDB driver, PostgreSQL driver, Jedis). Never reference these libs by their original
+  package in new code without matching the relocation. Two exceptions are `compileOnly` and come from
+  the **server classpath** instead — the SQLite driver (Paper bundles `org.xerial:sqlite-jdbc:3.49.1.0`;
+  verified present in both 1.21.11 and 26.x) and **gson** (Paper bundles `2.13.2`; used by `IconCatalog`
+  and by the shaded Jedis). Neither may be relocated: relocation would rewrite the references to a
+  package that is not in the jar. Annotation-only artifacts (`org.checkerframework`,
+  `com.google.errorprone`) are excluded from the shadow jar.
 - Base package: `com.enhancedechest`.
 
 ## Conventions
@@ -84,7 +81,7 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   locks expire via TTL. Requires mysql/mariadb/postgres + reachable Redis, else the plugin disables
   itself at startup. Single-server mode is `CrossServerCoordinator.NOOP` (never null-check — same
   pattern as `Telemetry`). Jedis is shaded/relocated (`libs.jedis` + `libs.commonspool2` / `libs.json`
-  / `libs.gson`). Unit tests: `storage/CrossServerCacheTest`.
+  / `libs.gson`).
 - **Dupe-safety is load-bearing** — do not "optimize" away the model: one **shared `Inventory` per open
   chest** (so concurrent viewers can't dupe), load-fresh on first open, save on **last** viewer close,
   pending-save-wait on reopen. All open paths must funnel through `ChestSessionManager.open`; session
@@ -125,7 +122,8 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   entry (path + `FieldType` + `gui.yml` label + `needsRestart()`) per editable key, grouped into `Section`
   pages; `ConfigEditor` validates/writes and `ConfigDialogs` builds the forms generically from it, so a new
   editable setting is one schema entry + one `gui.yml` label in each bundled locale, **no dialog code**.
-  `ConfigSchemaTest` fails the build on a path/label typo. Writing goes through Bukkit's
+  Nothing catches a path/label typo for you — check the key against `config.yml` and the label against
+  every bundled `gui.yml` by hand. Writing goes through Bukkit's
   `FileConfiguration` (verified to preserve all comments) and is **all-or-nothing per page**; a successful
   save then calls the plugin's own `reload()` (that's why `/ee reload` isn't needed). Keys bound at startup
   (the `database` connection block, all of `cross-server`) are flagged `needsRestart()` and only warn.
@@ -166,7 +164,10 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   `enhancedechest.additional_amount.<count>.slot.<size>` permissions (stacking, summed per size), gated by
   `permission-chests.enabled`. `PermissionChestService.reconcile` runs **on open** (via `ChestOpener`,
   reusing the already-fetched list) to grant/resize/revoke PERM chests against the player's permissions;
-  revoked chests spill items to a temp chest. The base NORMAL chest is inviolable (reconcile bootstraps it
+  revoked chests spill items to a temp chest — and a later grant pulls one fitting temp chest back in
+  (`ChestSpillService.reclaimTempInto`, gated by `temp-enderchest.auto-reclaim`; see
+  [architecture/expiry-and-temp-chests.md](architecture/expiry-and-temp-chests.md#auto-reclaim-the-reverse-of-a-spill)).
+  The base NORMAL chest is inviolable (reconcile bootstraps it
   first; never deleted/overridden). To players a PERM chest behaves **exactly** like NORMAL (no tag, no
   hidden buttons); admin commands skip it (`/ee resize` → `admin.cannot-modify-perm`, `/ee delete` is
   NORMAL-only). Reuses the existing `kind` column — no schema change. See
