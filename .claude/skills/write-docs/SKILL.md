@@ -45,7 +45,7 @@ You are writing for **server owners and players**, not developers. They install 
 
 - No `v` prefix on the version. Use only the sections you need (`Added`, `Changed`, `Fixed`, `Removed`, `Notes`). Skip empty ones.
 - Get the version from `build.gradle.kts` (`version = "..."`).
-- Build the change list from `git log <previous-tag-or-commit>..HEAD --format="%h %s%n%b"`, then drop every commit that only touches `docs/`, `.claude/`, or internals with no visible effect. Never copy a commit subject verbatim.
+- Build the change list from `git log <previous-tag-or-commit>..HEAD --format="%h %s%n%b"`, then drop every commit that only touches `docs/`, `.claude/`, any `CLAUDE.md`, or internals with no visible effect. Never copy a commit subject verbatim.
 - Each line is one user-facing outcome. Good: "Shift and right-click an ender chest now opens your chest list." Bad: "Refactored ConfigVersionService into YamlMigrator."
 - Roughly 25 words per bullet, at most 3 sub-bullets per feature. A sub-bullet must add something its lead bullet did not say.
 - Backticks for every command, permission node, config key, and plugin name.
