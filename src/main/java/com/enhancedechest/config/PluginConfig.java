@@ -59,6 +59,13 @@ public final class PluginConfig {
      */
     private volatile boolean renameColorsEnabled;
 
+    // Human-readable OPEN / ADD / TAKE / CLOSE audit log.
+    private volatile boolean activityLogEnabled;
+    private volatile boolean activityLogUnchanged;
+    private int activityLogQueueCapacity;
+    private int activityLogMaxFileSizeMb;
+    private int activityLogRetentionDays;
+
     // Permission-granted chests (enhancedechest.additional_amount.<count>.slot.<size>)
     private boolean permissionChestsEnabled;
 
@@ -150,6 +157,14 @@ public final class PluginConfig {
                 .map(s -> s.toLowerCase(Locale.ROOT).trim())
                 .toList();
         renameColorsEnabled = config.getBoolean("enderchest.features.rename-colors", true);
+        activityLogEnabled = config.getBoolean("activity-log.enabled", false);
+        activityLogUnchanged = config.getBoolean("activity-log.log-unchanged", false);
+        activityLogQueueCapacity = Math.max(256,
+                Math.min(65_536, config.getInt("activity-log.queue-capacity", 4096)));
+        activityLogMaxFileSizeMb = Math.max(1,
+                Math.min(1024, config.getInt("activity-log.max-file-size-mb", 64)));
+        activityLogRetentionDays = Math.max(1,
+                Math.min(3650, config.getInt("activity-log.retention-days", 14)));
 
         permissionChestsEnabled = config.getBoolean("permission-chests.enabled", true);
 

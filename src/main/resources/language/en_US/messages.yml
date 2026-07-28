@@ -1,10 +1,5 @@
-# ============================================================================
-#  Chat messages for EnhancedEchest
-#  {prefix} is replaced with the value below. Text uses MiniMessage tags
-#  (<red>, <gray>, <#RRGGBB>, ...) and {placeholder} tokens the plugin
-#  fills in. Legacy '&' colour codes still load too, so a custom line written
-#  the old way keeps working.
-# ============================================================================
+# Chat messages. {prefix} and {placeholder} tokens are filled in by the plugin.
+# MiniMessage tags (<red>, <#RRGGBB>) or legacy '&' colour codes both work.
 
 prefix: '<#9B59B6>EnhancedEchest <dark_gray>⏩ <reset>'
 
@@ -16,21 +11,19 @@ chest:
   not-found: '{prefix}That ender chest no longer exists.'
   # Shown (on the action bar) when a player tries to put an item into a temporary chest.
   temp-take-only: '<red>This is a temporary chest. You can only take items out, not put them in.'
-  # Reminder sent on join when the player has items waiting in temporary chest(s) (config
-  # temp-enderchest.join-notify). {count} = how many temp chests, {time} = time until the soonest one
-  # expires (e.g. "6d 23h"). The chat version below is the full message; the action-bar version is an
-  # even shorter one-liner shown at the same time.
+  # Join reminder. {count} = waiting temp chests, {time} = until the soonest expires. Chat and
+  # action bar are shown at the same time.
   temp-join-chat: '{prefix}<red>You have items in {count} temporary ender chest(s). Collect them before they expire. Soonest in {time}.'
   temp-join-actionbar: '<red>Items in a temporary ender chest. Collect within {time}!'
-  # Shown to an admin who tries to open a chest already in use (Folia allows only one viewer per chest).
+  # Folia only: an admin opening a chest someone else already has open.
   in-use: '{prefix}That ender chest is currently in use. Please try again in a moment.'
-  # Action bar shown to an admin who may view but not edit another player''s chest (no edit permission).
+  # Admin viewing another player's chest without the edit permission.
   view-only: '<gray>Read-only: you can view this chest but not change its contents.'
   # Shown after the Sort button finishes tidying a chest.
   sorted: '{prefix}Chest sorted.'
   # Shown when Sort is clicked again before its cooldown elapses. {time} = remaining time, e.g. "2s".
   sort-cooldown: '{prefix}Please wait {time} before sorting again.'
-  # Shown when a rename is rejected because the name contains a word from enderchest.features.rename-blacklist.
+  # Rename rejected by features.rename-blacklist.
   rename-blocked: '{prefix}<red>That name is not allowed. Please choose a different one.'
 
 migrate:
@@ -49,12 +42,12 @@ migrate:
 
 # In-game config editor (/ee config).
 config:
-  # {count} = how many settings actually changed. Saving also applies them, so no /ee reload is needed.
+  # {count} = settings changed. Saving applies them, so /ee reload is not needed.
   saved: '{prefix}Saved. {count} setting(s) are now active.'
   no-changes: '{prefix}Nothing changed.'
-  # Shown after saving a connection setting, which is bound when the server starts.
+  # Saved a setting that needs a server restart.
   restart-required: '{prefix}<yellow>Some of those settings only take effect after a full server restart.'
-  # {fields} = the rejected field labels. Nothing is written when a value is invalid.
+  # {fields} = rejected labels. Nothing is saved when a value is invalid.
   invalid: '{prefix}<red>Invalid value for: {fields}. Nothing was saved.'
   save-failed: '{prefix}<red>Could not write config.yml. See the server console.'
 
@@ -83,18 +76,18 @@ admin:
   invalid-size: '{prefix}Size must be a multiple of 9 between 9 and 54.'
   invalid-duration: '{prefix}Invalid duration "{duration}". Use a value like 20s, 5m, 1h, 7d, or 1d_2h_30m.'
   chest-not-found: '{prefix}{player} has no ender chest with index {index}.'
-  # /ee resize on a permission-granted chest: those are managed by permissions, not admin commands.
+  # /ee resize on a permission-granted chest.
   cannot-modify-perm: '{prefix}Ender chest {index} of {player} is granted by a permission and cannot be modified.'
-  # /ee resize on the base chest while its size is set by an enhancedechest.default_size.<size> permission.
+  # /ee resize on a base chest sized by an enhancedechest.default_size.<size> permission.
   cannot-modify-default-size: '{prefix}Ender chest {index} of {player} is sized by a permission and cannot be resized.'
-  # /ee view <player>: the target owns no chests yet, so there is nothing to open.
+  # /ee view <player>: the target owns no chests.
   view-no-chests: '{prefix}{player} does not have any ender chests yet.'
   chest-added: '{prefix}Added ender chest {index} with {size} slots to {player}.'
   chest-added-expiring: '{prefix}Added ender chest {index} with {size} slots to {player}. It will expire in {duration}.'
   chests-added: '{prefix}Added {count} ender chests ({range}) with {size} slots to {player}.'
   chests-added-expiring: '{prefix}Added {count} ender chests ({range}) with {size} slots to {player}. They will expire in {duration}.'
   chest-resized: '{prefix}Resized ender chest {index} of {player} to {size} slots.'
-  # /ee delete <player> <count> [force]: removes the newest chests; the first chest is always kept.
+  # /ee delete: removes the newest chests. The first chest is always kept.
   no-chests-deletable: '{prefix}{player} has only their first ender chest, which cannot be deleted.'
   chest-deleted-newest: '{prefix}Deleted the newest ender chest of {player}. Its items were discarded.'
   chest-deleted-newest-spilled: '{prefix}Deleted the newest ender chest of {player}. Any items it held were moved to a temporary chest.'
@@ -105,7 +98,7 @@ admin:
   transfer-same-player: '{prefix}The source and destination players must be different.'
   transfer-not-found: '{prefix}{player} has no ender chest matching "{target}".'
   transfer-no-source: '{prefix}{player} has no ender chests to transfer.'
-  # Shown when the destination already has items in chests this transfer would replace and no flag was given.
+  # Destination already holds items and no override/temp flag was given.
   transfer-needs-flag: '{prefix}{player} already has items in chests this would replace. Add "override" to discard them or "temp" to move them to temporary storage.'
   transfer-failed: '{prefix}The transfer failed. No chests were changed. Please check the console.'
   transfer-complete-all: '{prefix}Transferred all {count} ender chest(s) from {from} to {to}.'
@@ -115,18 +108,15 @@ admin:
 
 update:
   available: '{prefix}A new version is available: <green>{latest}</green> <gray>(you are on {current})'
-  # {url} is supplied as a ready-made clickable component from code, so keep it in text position
-  # (a placeholder inside a <click:...> attribute is not substituted per-viewer).
+  # {url} arrives as a ready-made clickable component: keep it in text position, never inside a
+  # <click:...> attribute.
   download: '{prefix}{url}'
-  # Text of that clickable component. The address itself is not shown: it only opens on click, and hovering
-  # reveals where it goes. Keep it short, it has to fit one chat line next to the prefix.
+  # Text of that clickable component. Keep it short, it shares a chat line with the prefix.
   download-label: 'Click here to download the update.'
 
-# Duration unit labels, used to build the "time remaining" text shown wherever a chest expires
-# (the /eclist expiry line, the sort cooldown message, /ee add with a duration, ...). Only the two most
-# significant non-zero units are shown, e.g. "1d 4h". {count} is the number; put a space before the unit
-# word if your language reads better that way (as vi_VN does). Do not add colour codes here; the text
-# inherits the colour of the message it is placed into.
+# Unit labels for every "time remaining" text. Only the two largest non-zero units show, e.g. "1d 4h".
+# {count} is the number; add a leading space if your language reads better that way. No colour codes:
+# the text inherits the colour of the message it sits in.
 duration:
   year: '{count}y'
   month: '{count}mo'

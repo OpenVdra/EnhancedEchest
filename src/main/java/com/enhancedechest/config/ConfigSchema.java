@@ -182,6 +182,17 @@ public final class ConfigSchema {
                     Field.bool("backup.on-startup", "dialog.config-backup-on-startup"),
                     Field.text("backup.folder", "dialog.config-backup-folder"))),
 
+            new Section("activity-log", "dialog.config-activity", List.of(
+                    Field.bool("activity-log.enabled", "dialog.config-activity-enabled"),
+                    Field.bool("activity-log.log-unchanged", "dialog.config-activity-log-unchanged"),
+                    // The three file keys are read once when the logger is constructed at startup.
+                    Field.integer("activity-log.queue-capacity",
+                            "dialog.config-activity-queue", 256, 65536).needsRestart(),
+                    Field.integer("activity-log.max-file-size-mb",
+                            "dialog.config-activity-max-size", 1, 1024).needsRestart(),
+                    Field.integer("activity-log.retention-days",
+                            "dialog.config-activity-retention", 1, 3650).needsRestart())),
+
             // Split in two so neither form runs longer than the screen: which backend and how often it is
             // written here, the credentials to reach a remote one on its own page. Only autosave-interval
             // applies live — every other database key is bound when the pool is built at startup, so it is

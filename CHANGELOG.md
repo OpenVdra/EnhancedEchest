@@ -2,9 +2,14 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
-## 1.0.13 - 2026-07-27
+## 1.0.13 - 2026-07-28
 
 ### Added
+
+- **A new activity log records who opened which chest and what they put in or took out**, as a readable text file at `plugins/EnhancedEchest/logs/echest-latest.log`. Off by default, turn it on with the new `activity-log` section in `config.yml`.
+  - Each entry records when the chest was opened and closed, with everything added and taken in between totalled per item.
+  - Visits where nothing changed are skipped so the file stays readable. Set `log-unchanged` to `true` under `activity-log` in `config.yml` to record every visit.
+  - Old files are compressed and deleted after `retention-days`, 14 by default. This is evidence for investigating theft, it does not restore items. It does not list what is inside a shulker box.
 
 - **Items waiting in a temporary chest now move into a new chest on their own.** A player granted a new, empty chest with at least as many slots gets those items back automatically.
   - Every item keeps the slot it was on. A temporary chest that does not fit is left alone instead of being split across several chests.

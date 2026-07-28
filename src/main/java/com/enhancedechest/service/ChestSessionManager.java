@@ -97,6 +97,13 @@ public final class ChestSessionManager {
         @Nullable Inventory inv;                 // null until the first DB load completes
         boolean ready;                           // inv is populated and viewers may attach
         boolean closing;                         // a force-close is persisting; new attaches are rejected
+        /**
+         * Set once any viewer performs a click or drag that reaches the shared inventory. Read by the
+         * activity log to skip capturing a chest nobody touched. Written from a viewer's region thread
+         * (the click listener) rather than the global thread, hence volatile — the one field of this
+         * class that escapes the single-threaded rule above.
+         */
+        volatile boolean touched;
         final Set<UUID> viewers = new HashSet<>();
         final Map<UUID, Location> viewerBlocks = new HashMap<>();  // per-viewer source block for lid animation
         final List<Pending> waiting = new ArrayList<>();           // opens queued until ready
@@ -114,6 +121,7 @@ public final class ChestSessionManager {
     private final Scheduler scheduler;
     private final DbExecutor db;
     private final Telemetry telemetry;
+    private final ChestActivityLogger activityLog;
 
     private final ConcurrentHashMap<SaveKey, CompletableFuture<Void>> pendingSaves =
             new ConcurrentHashMap<>();
@@ -123,7 +131,7 @@ public final class ChestSessionManager {
 
     public ChestSessionManager(LanguageManager lang, ContainerCodec codec,
                                EnderChestStorage storage, Logger logger, Scheduler scheduler,
-                               DbExecutor db, Telemetry telemetry) {
+                               DbExecutor db, Telemetry telemetry, ChestActivityLogger activityLog) {
         this.lang      = lang;
         this.codec     = codec;
         this.storage   = storage;
@@ -131,6 +139,7 @@ public final class ChestSessionManager {
         this.scheduler = scheduler;
         this.db        = db;
         this.telemetry = telemetry;
+        this.activityLog = activityLog;
     }
 
     /**
@@ -299,6 +308,9 @@ public final class ChestSessionManager {
                 return;
             }
             player.openInventory(inv);
+            // Record OPEN only after Bukkit has actually shown the GUI. Taking the baseline here also
+            // avoids creating an orphan audit cycle when the player disconnects between load and open.
+            activityLog.opened(player.getName(), uuid, s.owner, s.index, inv.getContents());
             if (sourceBlock != null) {
                 scheduler.runAtLocation(sourceBlock, lt ->
                         EnderChestAnimator.open(player, sourceBlock));
@@ -368,6 +380,13 @@ public final class ChestSessionManager {
 
             boolean wasViewer = s.viewers.remove(uuid);
             Location block = s.viewerBlocks.remove(uuid);
+            if (wasViewer && s.inv != null) {
+                if (activityLog.needsCapture(s.touched)) {
+                    activityLog.closed(player.getName(), uuid, s.owner, s.index, s.inv.getContents());
+                } else {
+                    activityLog.abandon(uuid, s.owner, s.index);
+                }
+            }
             if (wasViewer && block != null) {
                 scheduler.runAtLocation(block, lt ->
                         EnderChestAnimator.close(player, block));
@@ -549,12 +568,54 @@ public final class ChestSessionManager {
             }
             CompletableFuture.allOf(closes.toArray(new CompletableFuture[0])).whenComplete((v, e) ->
                     onGlobal(() -> {
+                        // Normally InventoryCloseEvent already removed/logged every viewer. This loop
+                        // covers an offline viewer or a platform where the forced close callback arrives
+                        // later; closed() is idempotent because it consumes the matching OPEN cycle.
+                        logRemainingViewersClosed(s);
                         persist(s);                        // authoritative state; all viewers now closed
                         sessions.remove(key, s);
                         done.complete(null);
                     }));
         });
         return done;
+    }
+
+    /**
+     * Marks a chest as edited during its current session, from the click/drag listener on the viewer's
+     * own thread. Only the activity log reads this, and only to decide whether capturing the closing
+     * contents is worth the work: a chest nobody touched cannot have changed, so its visit is dropped
+     * without building a snapshot at all. A no-op when the log is off or there is no live session.
+     */
+    public boolean isActivityRecording() {
+        return activityLog.isRecording();
+    }
+
+    public void markTouched(UUID owner, int index) {
+        if (!activityLog.isRecording()) return;
+        Session s = sessions.get(new SaveKey(owner, index));
+        if (s != null) s.touched = true;
+    }
+
+    /**
+     * Closes the audit cycle of every viewer still attached to a session that is being torn down
+     * without individual close events (force-close, shutdown). The shared inventory is captured
+     * <i>once</i> and reused for all of them — they are all looking at the same contents, and the
+     * capture is the expensive half — so the cost stays O(chest size), not O(viewers).
+     */
+    private void logRemainingViewersClosed(Session s) {
+        if (s.inv == null || s.viewers.isEmpty() || !activityLog.isRecording()) return;
+        if (!activityLog.needsCapture(s.touched)) {
+            for (UUID viewer : new ArrayList<>(s.viewers)) {
+                activityLog.abandon(viewer, s.owner, s.index);
+            }
+            return;
+        }
+        ChestActivityLogger.Snapshot snapshot = ChestActivityLogger.capture(s.inv.getContents());
+        for (UUID viewer : new ArrayList<>(s.viewers)) {
+            Player player = Bukkit.getPlayer(viewer);
+            activityLog.closed(player != null ? player.getName() : null,
+                    viewer, s.owner, s.index, snapshot);
+        }
     }
 
     private boolean isInventoryEmpty(Inventory inventory) {
@@ -574,6 +635,7 @@ public final class ChestSessionManager {
      */
     private void persistOpenSessions() {
         for (Session s : sessions.values()) {
+            if (s.ready) logRemainingViewersClosed(s);
             if (s.ready && !s.closing) persist(s);
         }
         sessions.clear();

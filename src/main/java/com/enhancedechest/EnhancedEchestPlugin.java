@@ -25,6 +25,7 @@ import com.enhancedechest.migration.MigrationService;
 import com.enhancedechest.migration.PlayerVaultsXMigrationService;
 import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.service.ChestOpener;
+import com.enhancedechest.service.ChestActivityLogger;
 import com.enhancedechest.service.ChestSessionManager;
 import com.enhancedechest.service.ChestSpillService;
 import com.enhancedechest.service.ChestTransferService;
@@ -65,6 +66,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     private PlayerNameIndex playerNameIndex;
     private PlayerSettingsCache settingsCache;
     private ChestSessionManager sessionManager;
+    private ChestActivityLogger activityLogger;
     private ChestSpillService spillService;
     private ChestTransferService chestTransferService;
     private PermissionChestService permissionChestService;
@@ -172,8 +174,12 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         playerNameIndex = new PlayerNameIndex(storageGateway, getSLF4JLogger(), telemetry);
         playerNameIndex.loadAll();
         settingsCache  = new PlayerSettingsCache(storage, dbExecutor, getSLF4JLogger(), playerNameIndex, telemetry);
+        activityLogger = new ChestActivityLogger(getDataFolder().toPath(), getSLF4JLogger(), telemetry,
+                pluginConfig.isActivityLogEnabled(), pluginConfig.isActivityLogUnchanged(),
+                pluginConfig.getActivityLogQueueCapacity(),
+                pluginConfig.getActivityLogMaxFileSizeMb(), pluginConfig.getActivityLogRetentionDays());
         sessionManager = new ChestSessionManager(languageManager, codec, storage,
-                getSLF4JLogger(), scheduler, dbExecutor, telemetry);
+                getSLF4JLogger(), scheduler, dbExecutor, telemetry, activityLogger);
 
         // Cross-server handover: when another server asks for an owner this one still holds, flush +
         // evict + release them — but only once the player is gone from here and no chest session of
@@ -296,6 +302,9 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         if (sessionManager != null) {
             sessionManager.shutdown();
         }
+        if (activityLogger != null) {
+            activityLogger.shutdown();
+        }
         // After the session flush, so a save failure during that flush is still reported before the
         // final telemetry submission goes out.
         if (telemetry != null) {
@@ -344,6 +353,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         backupService.reschedule(pluginConfig.isBackupEnabled(), pluginConfig.getBackupIntervalMillis(),
                 pluginConfig.getBackupKeep());
         autosaveService.reschedule(pluginConfig.getAutosaveIntervalMillis());
+        activityLogger.setEnabled(pluginConfig.isActivityLogEnabled());
+        activityLogger.setLogUnchanged(pluginConfig.isActivityLogUnchanged());
         // Re-reads plugins/EnhancedEchest/icons/lang/*.json, so a file added or edited since startup
         // (or since the last reload) takes effect immediately.
         IconCatalog.reloadLocaleNames();

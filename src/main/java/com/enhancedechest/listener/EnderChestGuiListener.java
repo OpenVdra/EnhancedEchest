@@ -32,7 +32,6 @@ public final class EnderChestGuiListener implements Listener {
     /** Minimum gap between deny sounds per player, so spam-clicking can't machine-gun the sound. */
     private static final long DENY_SOUND_COOLDOWN_MILLIS = 350L;
 
-    @SuppressWarnings("unused") // kept for constructor wiring; no longer needed since detach handles animation
     private final ChestSessionManager sessions;
     @SuppressWarnings("unused")
     private final Scheduler scheduler;
@@ -46,8 +45,8 @@ public final class EnderChestGuiListener implements Listener {
      */
     private final Map<UUID, Long> lastDenySoundAt = new ConcurrentHashMap<>();
 
-    // Wiring note: 'sessions' and 'scheduler' are still injected by the plugin; sessions is used by
-    // onClose, scheduler is retained so the constructor signature stays stable.
+    // Wiring note: 'scheduler' is still injected by the plugin and retained so the constructor
+    // signature stays stable; 'sessions' is used by onClose and the two touched-marking handlers.
 
     /**
      * Guards item moves on an open chest GUI:
@@ -76,6 +75,31 @@ public final class EnderChestGuiListener implements Listener {
         if (isDeposit(event, event.getView().getTopInventory())) {
             event.setCancelled(true);
             notifyTakeOnly(who);
+        }
+    }
+
+    /**
+     * Records that the shared chest was actually edited, for the activity log. Runs at
+     * {@code MONITOR} with {@code ignoreCancelled}, so it sees only clicks that survived every handler
+     * above (including this class's own read-only and take-only cancellations) and therefore really do
+     * reach the chest. Flagging here rather than diffing later lets the log skip building a snapshot at
+     * all for the many visits where a player just looks at their chest and closes it.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onClickMarkTouched(InventoryClickEvent event) {
+        if (!sessions.isActivityRecording()) return;   // one volatile read when the log is off
+        if (!(event.getView().getTopInventory().getHolder() instanceof EnderChestHolder holder)) return;
+        if (touchesTop(event)) sessions.markTouched(holder.getOwner(), holder.getIndex());
+    }
+
+    /** Same as {@link #onClickMarkTouched} for a drag that spreads items into the chest. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDragMarkTouched(InventoryDragEvent event) {
+        if (!sessions.isActivityRecording()) return;
+        if (!(event.getView().getTopInventory().getHolder() instanceof EnderChestHolder holder)) return;
+        int topSize = event.getView().getTopInventory().getSize();
+        if (event.getRawSlots().stream().anyMatch(rawSlot -> rawSlot < topSize)) {
+            sessions.markTouched(holder.getOwner(), holder.getIndex());
         }
     }
 

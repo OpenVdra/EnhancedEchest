@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 const REPO = 'https://github.com/OpenVdra/EnhancedEchest'
 const DISCORD = 'https://discord.com/invite/FJN7hJKPyb'
+const JAVADOCS = 'https://openvdra.github.io/EnhancedEchest/javadocs/'
 
 // Page paths (relative to /docs/ or /vi/docs/) grouped by folder, matching the
 // on-disk layout under docs/docs/ and docs/vi/docs/: access/, configuration/,
@@ -9,6 +10,7 @@ const DISCORD = 'https://discord.com/invite/FJN7hJKPyb'
 const manualPages = [
   'getting-started', 'access/commands', 'access/permissions', 'access/permission-chests',
   'configuration/', 'configuration/migration', 'configuration/language',
+  'configuration/activity-log',
   'database/', 'database/sqlite', 'database/mysql-mariadb', 'database/postgresql',
   'database/ssl-tls', 'database/cross-server', 'database/switching-backends'
 ]
@@ -66,7 +68,8 @@ const enManualSidebar = [
         items: [
           { text: 'Main Config', link: '/docs/configuration/' },
           { text: 'Migration', link: '/docs/configuration/migration' },
-          { text: 'Language', link: '/docs/configuration/language' }
+          { text: 'Language', link: '/docs/configuration/language' },
+          { text: 'Activity Log', link: '/docs/configuration/activity-log' }
         ]
       },
       {
@@ -111,7 +114,8 @@ const viManualSidebar = [
         items: [
           { text: 'Cấu hình chính', link: '/vi/docs/configuration/' },
           { text: 'Chuyển dữ liệu', link: '/vi/docs/configuration/migration' },
-          { text: 'Ngôn ngữ', link: '/vi/docs/configuration/language' }
+          { text: 'Ngôn ngữ', link: '/vi/docs/configuration/language' },
+          { text: 'Nhật ký hoạt động', link: '/vi/docs/configuration/activity-log' }
         ]
       },
       {
@@ -196,6 +200,7 @@ export default defineConfig({
           { text: 'Docs', link: '/docs/getting-started', activeMatch: '^/docs/(getting-started|access|configuration|database)(/|$)' },
           { text: 'Features', link: '/docs/features/', activeMatch: '^/docs/features(/|$)' },
           { text: 'SQLite Editor', link: '/docs/sqlite-editor', activeMatch: '^/docs/sqlite-editor(/|$)' },
+          { text: 'Javadocs', link: JAVADOCS },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],
@@ -218,6 +223,7 @@ export default defineConfig({
           { text: 'Tài liệu', link: '/vi/docs/getting-started', activeMatch: '^/vi/docs/(getting-started|access|configuration|database)(/|$)' },
           { text: 'Tính năng', link: '/vi/docs/features/', activeMatch: '^/vi/docs/features(/|$)' },
           { text: 'Sửa SQLite', link: '/vi/docs/sqlite-editor', activeMatch: '^/vi/docs/sqlite-editor(/|$)' },
+          { text: 'Javadocs', link: JAVADOCS },
           { component: 'VersionDropdown' },
           { component: 'LanguageDropdown' }
         ],

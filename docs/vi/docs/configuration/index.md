@@ -249,6 +249,34 @@ Thư mục (bên trong <code>plugins/EnhancedEchest/</code>) nơi lưu các file
 
 </ConfigGroup>
 
+<ConfigGroup name="activity-log">
+<template #info>
+Ghi lại ai đã mở rương nào và bỏ vào hay lấy ra thứ gì. Xem trang <a href="/vi/docs/configuration/activity-log">Nhật ký hoạt động</a> để biết cách đọc file.
+</template>
+
+<ConfigProperty name="enabled" value="false" type="boolean">
+Bật hoặc tắt nhật ký hoạt động. Mặc định tắt. Có hiệu lực khi chạy <code>/ee reload</code>.
+</ConfigProperty>
+
+<ConfigProperty name="log-unchanged" value="false" type="boolean">
+Khi để <code>false</code> (mặc định), lượt mở rương mà người chơi không thay đổi gì sẽ không được ghi. Phần lớn lượt mở chỉ là mở ra nhìn rồi đóng lại, và những dòng đó làm chìm mất các dòng thật sự đáng chú ý. Đặt <code>true</code> để ghi lại mọi lượt mở.<br><br>
+Chỉ bỏ qua khi giống hệt nhau, nên người chơi chỉ sắp xếp lại đồ vẫn được ghi.
+</ConfigProperty>
+
+<ConfigProperty name="queue-capacity" value="4096" type="number">
+Số lượt mở rương đã xong được phép chờ ghi xuống đĩa. Thiết lập này chỉ để giới hạn bộ nhớ khi đĩa bị nghẽn; nếu đầy, các lượt mới nhất bị bỏ qua và nhật ký sẽ ghi rõ bỏ bao nhiêu. Giá trị mặc định đủ cho server 300 đến 500 người chơi. Cần khởi động lại server.
+</ConfigProperty>
+
+<ConfigProperty name="max-file-size-mb" value="64" type="number">
+Bắt đầu file nhật ký mới khi file hiện tại vượt quá kích thước này. File cũ sau đó được nén lại còn khoảng một phần năm mươi. Cần khởi động lại server.
+</ConfigProperty>
+
+<ConfigProperty name="retention-days" value="14" type="number">
+Xóa các file nhật ký cũ đã nén sau bấy nhiêu ngày. File đang được ghi không bao giờ bị xóa. Cần khởi động lại server.
+</ConfigProperty>
+
+</ConfigGroup>
+
 <ConfigGroup name="migration">
 <template #info>
 Điều khiển việc nhập tự động dữ liệu rương Ender vanilla sẵn có. Xem trang Chuyển dữ liệu để biết toàn bộ quy trình.

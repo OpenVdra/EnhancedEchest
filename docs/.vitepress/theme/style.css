@@ -313,3 +313,139 @@
     border: 1px solid var(--vp-c-border);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
 }
+
+/* Restrained motion system shared with the SmartSpawner docs. Elements reveal
+   once when a page mounts, while interaction feedback stays short and subtle. */
+@keyframes ee-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ee-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .VPHomeHero .name {
+        animation: ee-fade-up 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .VPHomeHero .text,
+    .VPHomeHero .tagline {
+        animation: ee-fade-up 0.46s 0.06s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .VPHomeHero .actions,
+    .VPHomeHero .image {
+        animation: ee-fade-up 0.46s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .VPFeatures .VPFeature {
+        animation: ee-fade-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .VPFeatures .item:nth-child(2) .VPFeature,
+    .card-grid > :nth-child(2) {
+        animation-delay: 0.04s;
+    }
+
+    .VPFeatures .item:nth-child(3) .VPFeature,
+    .card-grid > :nth-child(3) {
+        animation-delay: 0.08s;
+    }
+
+    .VPFeatures .item:nth-child(4) .VPFeature,
+    .card-grid > :nth-child(4) {
+        animation-delay: 0.12s;
+    }
+
+    .VPFeatures .item:nth-child(5) .VPFeature,
+    .card-grid > :nth-child(5) {
+        animation-delay: 0.16s;
+    }
+
+    .VPFeatures .item:nth-child(6) .VPFeature,
+    .card-grid > :nth-child(6) {
+        animation-delay: 0.20s;
+    }
+
+    .VPDoc .vp-doc > h1 {
+        animation: ee-fade-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .VPDoc .vp-doc > h1 + p,
+    .VPDoc .vp-doc > h1 + .custom-block {
+        animation: ee-fade-in 0.4s 0.06s ease both;
+    }
+
+    .card-grid > .doc-card,
+    .card-grid > .feature-card,
+    .command-section,
+    .base-table,
+    .page-banner,
+    .feature-shot,
+    .feature-figure,
+    .showcase-shot {
+        animation: ee-fade-up 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .usage-stats .usage-inner,
+    .contributors-section .contributors-inner {
+        animation: ee-fade-up 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .VPFeature,
+    .feature-card {
+        transition: transform 0.22s ease, border-color 0.25s ease, background-color 0.25s ease;
+    }
+
+    .VPFeature:hover {
+        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--vp-c-brand-1) 58%, var(--vp-c-border));
+        background-color: var(--vp-c-bg-mute);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .doc-card .card-icon,
+    .feature-card .fc-icon,
+    .VPFeature .icon {
+        transition: transform 0.22s ease;
+    }
+
+    .doc-card:hover .card-icon,
+    .feature-card:hover .fc-icon,
+    .VPFeature:hover .icon {
+        transform: translateY(-1px);
+    }
+
+    .aside-link svg,
+    .contributors-cta svg {
+        transition: transform 0.2s ease;
+    }
+
+    .aside-link:hover svg,
+    .contributors-cta:hover svg {
+        transform: translateX(2px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

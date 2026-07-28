@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  * Task scheduler built directly on Paper's own region-aware scheduler API
  * ({@code io.papermc.paper.threadedregions.scheduler.*}). Paper implements that API safely on both a
  * plain Paper server (as the main thread) and on Folia (as the entity/region-owning thread), so no
- * platform branching is needed here for dispatch — only {@link #isFolia()} exists, for the one genuine
+ * platform branching is needed here for dispatch — only {@code isFolia()} exists, for the one genuine
  * behavioral difference in {@code ChestSessionManager} (single-viewer vs concurrent-edit per chest).
  */
 public final class Scheduler {

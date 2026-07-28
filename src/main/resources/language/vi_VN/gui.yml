@@ -1,5 +1,4 @@
-# Văn bản GUI / hộp thoại cho EnhancedEchest.
-# Định dạng được tự nhận diện theo từng dòng: dòng chứa '<' là MiniMessage, ngược lại dùng mã '&' cũ.
+# Văn bản GUI và hộp thoại. Dòng chứa '<' là MiniMessage, ngược lại dùng mã màu '&' cũ.
 
 enderchest:
   # Tiêu đề cửa sổ kho đồ. {index} = số thứ tự rương.
@@ -12,14 +11,14 @@ dialog:
   # ===== Hộp thoại danh sách (mỗi rương sở hữu là một nút) =====
   list-title: 'Các rương Ender của bạn'
   list-body: 'Chọn một rương để mở hoặc chỉnh sửa.'
-  # Khi được tích, bấm vào rương sẽ mở menu chỉnh sửa; khi bỏ tích (mặc định), mở rương trực tiếp.
+  # Tích: bấm vào rương sẽ mở menu của nó. Bỏ tích (mặc định): mở thẳng rương.
   edit-mode: 'Chế độ chỉnh sửa (bấm để chỉnh sửa rương)'
   close: '<red>← <reset>Đóng'
   # Chú thích khi rê chuột lên mỗi nút rương. {size} = số ô.
   slots: '{size} ô'
-  # Thêm vào nhãn của rương chính để danh sách đánh dấu rương mà /ec sẽ mở.
+  # Đánh dấu rương mà /ec sẽ mở.
   main-tag: '<gold>★'
-  # Ảnh chụp "thời gian còn lại" tĩnh trên các rương sẽ hết hạn. {time} ví dụ "23h 45m".
+  # {time} ví dụ "23h 45m".
   expires-in: 'Hết hạn sau {time}'
 
   # ===== Danh sách xem của quản trị viên (/ee view <player> [list]) =====
@@ -28,11 +27,9 @@ dialog:
   admin-list-body: 'Chọn một rương để xem.'
 
   # ===== Hộp thoại chi tiết của quản trị viên (mỗi rương, /ee view) =====
-  # Nút Dọn chỉ hiện với quản trị viên có quyền enhancedechest.admin.clear. Thẻ (Admin) đỏ đánh dấu đây là
-  # hành động đặc quyền; nút này mở hộp xác nhận trước khi xóa.
+  # Nút Dọn cần quyền enhancedechest.admin.clear và luôn hỏi xác nhận trước.
   admin-clear: '<red>(Admin) <reset>Dọn rương'
   admin-clear-desc: 'Xóa vĩnh viễn mọi vật phẩm trong rương này.'
-  # Hộp xác nhận: tiêu đề riêng + nội dung cảnh báo, rồi cặp đồng ý/hủy rõ ràng (✔ xác nhận / ← hủy).
   admin-clear-confirm-title: 'Dọn rương này?'
   admin-clear-confirm-body: '<gray>Mọi vật phẩm trong rương sẽ bị <red>xóa vĩnh viễn</red>.<newline><gray>Không thể hoàn tác.'
   admin-clear-confirm: '<green>✔ <reset>Dọn rương'
@@ -50,10 +47,9 @@ dialog:
   rename-desc: 'Đặt tên hiển thị tùy chỉnh cho rương này.'
   choose-icon: 'Chọn biểu tượng'
   choose-icon-desc: 'Chọn một vật phẩm làm biểu tượng cho rương này trong danh sách.'
-  # Nút Sắp xếp; chỉ hiện khi enderchest.features.sort được bật trong config.yml.
+  # Chỉ hiện khi features.sort được bật trong config.yml.
   sort: 'Sắp xếp'
   sort-desc: 'Gộp các vật phẩm giống nhau thành stack và sắp xếp lại rương theo loại vật phẩm.'
-  # Quay lại hộp thoại trước; dùng lại cho bộ chọn biểu tượng.
   back: '<yellow>← <reset>Quay lại'
 
   # ===== Hộp thoại đổi tên =====
@@ -64,7 +60,7 @@ dialog:
 
   # ===== Hộp thoại chọn biểu tượng =====
   icon-title: 'Chọn biểu tượng'
-  # {count} = số vật phẩm khớp (cuộn danh sách để xem thêm).
+  # {count} = số vật phẩm khớp.
   icon-body: '{count} vật phẩm. Nhập tên rồi nhấn Tìm để lọc; cuộn để xem.'
   icon-search-label: 'Tìm'
   icon-search: 'Tìm'
@@ -74,75 +70,60 @@ dialog:
   # ===== Hộp thoại nhập (/ee import: sao chép backend cơ sở dữ liệu cũ vào backend đang dùng) =====
   import-title: 'Nhập từ cơ sở dữ liệu khác'
   import-body: '<gray>Chuyển dữ liệu từ cơ sở dữ liệu cũ sang cơ sở dữ liệu đã đặt trong config. Cơ sở dữ liệu mới phải trống trước khi bắt đầu.'
-  # Nhãn các trường (mỗi nhãn hiển thị phía trên một ô nhập, khớp hậu tố -label dùng ở nơi khác).
   import-sqlite-file-label: 'Tệp SQLite'
   import-host-label: 'Host (host hoặc host:port)'
   import-database-label: 'Tên cơ sở dữ liệu'
   import-username-label: 'Tên đăng nhập'
   import-password-label: 'Mật khẩu'
-  # Các nút.
-  # Nút tài liệu, giống nút trong /ee config: import-docs là chữ hiện ra, -url là địa chỉ được mở.
-  # Trỏ sang bản dịch của bạn nếu bạn tự host.
+  # -url là địa chỉ nút Tài liệu mở ra. Trỏ sang bản dịch của bạn nếu bạn tự host.
   import-docs: 'Tài liệu hướng dẫn'
   import-docs-desc: 'Đọc hướng dẫn chuyển đổi backend cơ sở dữ liệu.'
   import-docs-url: 'https://openvdra.github.io/EnhancedEchest/vi/docs/database/switching-backends'
   import-run: '<green>✔ <reset>Bắt đầu nhập'
   import-run-desc: 'Sao chép mọi rương từ cơ sở dữ liệu nguồn vào cơ sở dữ liệu đang dùng.'
-  # Nút chọn loại nguồn (nút trên cùng của cột, trên nút Bắt đầu nhập + Hủy). Nhãn hiển thị loại hiện tại và
-  # bấm vào để chuyển loại; chi tiết nằm trong tooltip bên dưới. Chỉ 2 loại: SQLite (một tệp) hoặc Máy chủ
-  # (MySQL / MariaDB / PostgreSQL; dùng chung một biểu mẫu).
+  # Chọn loại nguồn: SQLite (một tệp) hoặc Máy chủ (MySQL / MariaDB / PostgreSQL).
   import-type-sqlite: 'Loại: <yellow>SQLite'
   import-type-server: 'Loại: <yellow>Máy chủ'
   import-type-desc: 'Loại cơ sở dữ liệu nguồn. Bấm để đổi.<newline><gray>SQLite đọc một tệp; Máy chủ đọc host MySQL, MariaDB hoặc PostgreSQL (dùng cổng 5432 cho PostgreSQL).'
 
   # ===== Trình chỉnh sửa cấu hình trong game (/ee config) =====
-  # Menu gốc: mỗi mục là một nút, bấm vào sẽ mở biểu mẫu riêng.
   config-title: 'Thiết lập EnhancedEchest'
   config-body: '<gray>Các mục ở đây tương ứng với các nhóm trong config.yml. Chọn một mục để chỉnh.'
-  # Nút tài liệu. config-docs là chữ người chơi thấy, config-docs-url là địa chỉ được mở, để riêng ra để
-  # menu không bị chèn một đường link dài. Trỏ sang bản dịch của bạn nếu bạn tự host; địa chỉ vẫn hiện
-  # trong chú thích trước khi ai đó bấm vào.
+  # -url là địa chỉ nút Tài liệu mở ra.
   config-docs: 'Tài liệu hướng dẫn'
   config-docs-desc: 'Mở hướng dẫn cấu hình trực tuyến.'
   config-docs-url: 'https://openvdra.github.io/EnhancedEchest/vi/docs/configuration/'
-  # Nội dung biểu mẫu của một mục. Bản -restart dùng cho trang chứa thiết lập kết nối.
+  # -restart dùng cho trang chứa thiết lập cần khởi động lại server.
   config-section-body: '<gray>Thay đổi có hiệu lực ngay khi bạn lưu.'
   config-section-body-restart: '<yellow>Thiết lập kết nối ở trang này cần khởi động lại server mới có hiệu lực.'
   config-save: '<green>✔ <reset>Lưu'
   config-save-desc: 'Lưu các thay đổi này.'
 
-  # Tên các mục, vừa là nhãn nút vừa là tiêu đề biểu mẫu. Dòng -body là chú thích của nút.
+  # Tên mục rồi tới các trường của mục đó, theo đúng thứ tự menu hiển thị.
   config-general: 'Chung'
   config-general-body: '<gray>Ngôn ngữ của tin nhắn và menu.'
-  config-enderchest: 'Rương Ender'
-  config-enderchest-body: '<gray>Kích thước rương, cách mở danh sách, rương theo quyền, chuyển dữ liệu gốc.'
-  config-features: 'Tính năng người chơi'
-  config-features-body: '<gray>Người chơi được dùng những nút quản lý rương nào.'
-  config-temp: 'Rương tạm'
-  config-temp-body: '<gray>Rương chứa đồ dồn: thời gian tồn tại, âm thanh và nhắc khi đăng nhập.'
-  config-backup: 'Sao lưu'
-  config-backup-body: '<gray>Tự động sao lưu SQLite.'
-  config-database: 'Cơ sở dữ liệu'
-  config-database-body: '<gray>Dùng backend nào và bao lâu lưu một lần.'
-  config-db-connection: 'Kết nối cơ sở dữ liệu'
-  config-db-connection-body: '<gray>Địa chỉ và thông tin đăng nhập của máy chủ MySQL, MariaDB hoặc PostgreSQL từ xa.'
-  config-cross-server: 'Liên máy chủ'
-  config-cross-server-body: '<gray>Dùng chung một cơ sở dữ liệu cho nhiều server, qua Redis.'
-
-  # Nhãn các ô. Ô nhập không có chú thích, nên nhãn ghi luôn định dạng hoặc khoảng giá trị hợp lệ.
   config-language: 'Ngôn ngữ (ví dụ en_US, vi_VN)'
   config-language-auto-detect: 'Dùng ngôn ngữ client của từng người chơi'
+
+  config-enderchest: 'Rương Ender'
+  config-enderchest-body: '<gray>Kích thước rương, cách mở danh sách, rương theo quyền, chuyển dữ liệu gốc.'
   config-default-size: 'Kích thước rương mặc định'
   config-list-menu: 'Kiểu danh sách rương'
   config-shift-click-list: 'Shift + chuột phải mở danh sách rương Ender'
   config-permission-chests: 'Cấp rương theo quyền'
   config-migration: 'Nhập rương Ender gốc khi vào server'
+
+  config-features: 'Tính năng người chơi'
+  config-features-body: '<gray>Người chơi được dùng những nút quản lý rương nào.'
   config-feature-rename: 'Cho phép đổi tên rương'
   config-feature-icon: 'Cho phép đặt biểu tượng rương'
   config-feature-sort: 'Cho phép sắp xếp rương'
   config-sort-cooldown: 'Thời gian chờ giữa 2 lần sắp xếp (ví dụ 10s, 5m)'
   config-rename-colors: 'Cho phép dùng mã màu và định dạng MiniMessage trong tên rương'
   config-rename-blacklist: 'Từ cấm đặt tên (ngăn cách bằng dấu phẩy)'
+
+  config-temp: 'Rương tạm'
+  config-temp-body: '<gray>Rương chứa đồ dồn: thời gian tồn tại, âm thanh và nhắc khi đăng nhập.'
   config-temp-expiry: 'Thời gian tồn tại của rương tạm (ví dụ 7d)'
   config-temp-check-interval: 'Chu kỳ quét hết hạn (ví dụ 5m)'
   config-temp-auto-reclaim: 'Tự chuyển đồ sang rương mới'
@@ -151,15 +132,32 @@ dialog:
   config-temp-join-notify: 'Nhắc người chơi khi đăng nhập'
   config-temp-join-sound: 'Phát âm thanh kèm lời nhắc'
   config-temp-join-sound-key: 'Mã âm thanh của lời nhắc'
+
+  config-backup: 'Sao lưu'
+  config-backup-body: '<gray>Tự động sao lưu SQLite.'
   config-backup-enabled: 'Tự động sao lưu (chỉ SQLite)'
   config-backup-interval: 'Chu kỳ sao lưu (ví dụ 6h)'
   config-backup-keep: 'Số bản sao lưu giữ lại (0 = giữ tất cả)'
   config-backup-on-startup: 'Sao lưu thêm khi khởi động'
   config-backup-folder: 'Thư mục sao lưu'
+
+  config-activity: 'Nhật ký hoạt động'
+  config-activity-body: '<gray>Ghi lại ai mở rương nào và lấy đi thứ gì.'
+  config-activity-enabled: 'Ghi lại hoạt động rương'
+  config-activity-log-unchanged: 'Ghi cả lượt mở không thay đổi gì'
+  config-activity-queue: 'Số lượt mở chờ ghi xuống đĩa'
+  config-activity-max-size: 'Bắt đầu file mới khi đạt (MB)'
+  config-activity-retention: 'Xóa file nhật ký cũ sau (ngày)'
+
+  config-database: 'Cơ sở dữ liệu'
+  config-database-body: '<gray>Dùng backend nào và bao lâu lưu một lần.'
   config-autosave-interval: 'Chu kỳ lưu dữ liệu (tối thiểu 30s)'
   config-db-type: 'Loại cơ sở dữ liệu'
   config-table-prefix: 'Tiền tố bảng'
   config-sqlite-file: 'Tệp SQLite'
+
+  config-db-connection: 'Kết nối cơ sở dữ liệu'
+  config-db-connection-body: '<gray>Địa chỉ và thông tin đăng nhập của máy chủ MySQL, MariaDB hoặc PostgreSQL từ xa.'
   config-db-host: 'Host'
   config-db-port: 'Cổng (1-65535)'
   config-db-name: 'Tên cơ sở dữ liệu'
@@ -167,6 +165,9 @@ dialog:
   config-db-password: 'Mật khẩu'
   config-db-ssl: 'Chế độ TLS'
   config-db-pool-size: 'Số kết nối trong pool'
+
+  config-cross-server: 'Liên máy chủ'
+  config-cross-server-body: '<gray>Dùng chung một cơ sở dữ liệu cho nhiều server, qua Redis.'
   config-cross-enabled: 'Bật chế độ liên máy chủ'
   config-cross-server-id: 'Tên server này (để trống = tự sinh)'
   config-redis-host: 'Host Redis'

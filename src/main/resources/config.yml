@@ -1,208 +1,131 @@
 # EnhancedEchest configuration
+# Full guide: https://openvdra.github.io/EnhancedEchest/docs/configuration/
+# Most settings apply on /ee reload. Ones marked RESTART need a full server restart.
 
-# Language locale to load from language/<locale>/
-# Bundled locales: en_US (English), vi_VN (Tiếng Việt).
-# Add your own by copying a folder under language/ and translating it.
-# With language-auto-detect on (below), this is the fallback for clients whose language isn't bundled.
+# Language folder under language/. Bundled: en_US, vi_VN.
 language: en_US
-
-# When on, each player sees messages and menus in THEIR Minecraft client language, if a matching
-# translation exists (bundled, or added under language/). Clients with no matching translation fall
-# back to the 'language' locale above. Turn off to show every player that single locale instead.
+# Show each player their own Minecraft client language, falling back to the one above.
 language-auto-detect: true
 
 enderchest:
-  # Slot count of the chest auto-created the first time a player ever opens their ender chest.
-  # Must be a multiple of 9, between 9 and 54. Invalid values are rounded to the nearest valid size.
-  # Override per player with the enhancedechest.default_size.<size> permission (no config; see docs).
+  # Size of a player's first chest. Multiple of 9, from 9 to 54.
   default-size: 54
 
-  # How the /eclist chest list is shown to players (also the list opened by /ec or right-click when a
-  # player has 2+ chests and no main set):
-  #   dialog     - Paper's Dialog API menu (default): includes the Edit-mode actions (rename, set as
-  #                main, choose icon, sort).
-  #   inventory  - a plain chest GUI that only LISTS the chests; clicking a chest icon opens it straight
-  #                away, with no rename / main / icon / sort. Works for players with up to 28 chests;
-  #                anyone with more still gets the dialog menu.
+  # Chest list style: dialog (full menu) or inventory (click to open only, up to 28 chests).
   list-menu: dialog
 
-  # Let players open the chest list (the same menu as /eclist) by holding shift while right-clicking an
-  # ender chest block. A plain right-click still opens a chest as usual. Turn this off to make shift +
-  # right-click behave exactly like a normal right-click.
+  # Shift + right-click an ender chest opens the chest list instead of a chest.
   shift-click-list: true
 
-  # Which chest-management buttons players may use in the "Edit mode" menu (Rename / Choose icon / Sort).
-  # These are GLOBAL switches: they apply to every player the same way, not per-player and not per-chest.
-  # Turning one off simply hides its button from the menu; existing names/icons are kept, just no longer
-  # editable.
+  # Global switches for the buttons in the chest Edit mode menu.
   features:
-    # Let players give a chest a custom display name.
     rename: true
-    # Let players pick an item to show as a chest's icon in the list.
     icon: true
-    # Let players auto-sort a chest's contents: identical items are merged into full stacks and the
-    # whole chest is reordered by item type/name. Off by default.
+    # Merge identical items into full stacks and reorder the chest. Off by default.
     sort: false
-    # Smallest gap between two sorts by the same player, so the Sort button can't be spammed (each sort
-    # re-reads and re-writes the chest). Time format: 20s, 5m, 1h, ... Set to 0s to disable the cooldown.
+    # Smallest gap between two sorts by the same player. 0s disables it.
     sort-cooldown: 10s
-    # Words players may not use in a chest's custom name (via the Rename button). Matching is
-    # case-insensitive and by substring, so "admin" also blocks "iAmAdmin" and "ADMIN". A rename
-    # containing any listed word is rejected and the player is asked to choose another. Leave the list
-    # empty to allow any name. Clearing a name (saving it blank) is always allowed.
+    # Words banned from custom chest names. Case-insensitive, matched anywhere in the name.
     rename-blacklist:
       - server
       - admin
       - staff
       - owner
-    # Let players colour their chest names. When on, names accept legacy '&' colour codes, '&#RRGGBB'
-    # hex, and cosmetic MiniMessage tags (<red>, <gradient>, <rainbow>, <bold>, ...). Interactive tags
-    # (<click>, <hover>, <insertion>, ...) are ALWAYS stripped, so a name can never run a command or
-    # forge a tooltip. When off, names are shown exactly as typed (colour codes appear as plain text).
-    # The blacklist above is checked against the visible text, so colour codes can't hide a banned word.
+    # Allow colour codes and MiniMessage in chest names. Clickable tags are always stripped.
     rename-colors: true
 
 permission-chests:
-  # Grant ender chests from permissions of the form:
-  #   enhancedechest.additional_amount.<count>.slot.<size>
-  #   e.g. enhancedechest.additional_amount.2.slot.54  -> two 54-slot chests.
-  # Matching permissions STACK (summed per size). Losing a permission removes exactly that many
-  # chests of that size; any items they held spill into a temporary chest (recoverable in /eclist).
-  # Synced every time the player opens their ender chest. Players always keep at least one regular
-  # (base) chest; permissions never create, delete or override it.
+  # Grant chests from enhancedechest.additional_amount.<count>.slot.<size> permissions.
+  # Matching permissions stack. Removing one spills its items into a temporary chest.
   enabled: true
 
 temp-enderchest:
-  # When a chest is shrunk, deleted (without 'force'), or expires with items still inside, those
-  # items are moved into a temporary ender chest that disappears once emptied or once it expires.
-  #
-  # Time format: 20s, 5m, 1h, or complex 1d_2h_30m_15s. Units: s m h d w mo y (mo = 30d, y = 365d).
-  # Lifetime of a temp chest created on shrink/delete/expire-with-items.
+  # Items from a shrunk, deleted or expired chest go to a temporary chest players can empty.
+  # Time format: 20s, 5m, 1h, 7d, or 1d_2h_30m. Units: s m h d w mo y.
   expiry: 7d
-  # How often the plugin scans for expired chests.
+  # How often to scan for expired chests.
   check-interval: 5m
-  # Move a temporary chest's items back into a chest the player is granted later, automatically.
-  # When a player gains a new, empty chest (from a permission, or from /ee add without a duration)
-  # that has at least as many slots as one of their temporary chests, that temporary chest's items
-  # are moved into it and the temporary chest disappears. Every item keeps the exact slot it was in,
-  # one temporary chest goes into one new chest, and a temporary chest that does not fit is left
-  # alone rather than split across several chests. The soonest to expire is moved first.
+  # Move a temporary chest's items into a new chest of at least the same size, automatically.
   auto-reclaim: true
-  # Sound played to a player who tries to deposit into a take-only temporary chest.
+  # Sound when someone tries to put items into a take-only temporary chest.
   deny-sound:
-    # Set to false to play no sound.
     enabled: true
-    # Any Minecraft sound id. Default is the villager "no" grunt.
     key: minecraft:entity.villager.no
-  # Remind a player when they log in with items still waiting in a temporary chest, so they collect
-  # them before it expires. The reminder is shown BOTH in chat and on the action bar at once. Wording
-  # is in language/<locale>/messages.yml (chest.temp-join-chat / chest.temp-join-actionbar).
+  # Remind players at login that a temporary chest is waiting.
   join-notify:
-    # Set to false to disable the join reminder entirely.
     enabled: true
-    # Sound played together with the reminder.
     sound:
-      # Set to false to play no sound.
       enabled: true
-      # Any Minecraft sound id.
       key: minecraft:block.note_block.pling
 
 database:
-  # NOTE: changes to the CONNECTION settings in this section (type/file/host/port/database/username/
-  # password/ssl/pool-size) require a FULL SERVER RESTART. /ee reload will NOT apply them: the connection
-  # pool is built once at startup and is kept on the old settings, because rebuilding it live could
-  # drop connections mid-save and risk item dupes. (autosave-interval below IS applied by /ee reload.)
-  #
-  # Storage backend: sqlite | mysql | mariadb | postgres
+  # RESTART: every setting here except autosave-interval.
+  # Backend: sqlite | mysql | mariadb | postgres
   type: sqlite
-  # Prepended to every table this plugin creates (e.g. "echest_enderchests"), so its data is easy to
-  # tell apart from other plugins' tables and safe to keep in a database shared with them. Letters,
-  # digits and underscore only. If you change this on an existing install, the plugin renames its
-  # existing tables to match on the next startup.
+  # Prefix for this plugin's tables. Letters, digits and underscore. Existing tables are renamed
+  # automatically if you change it.
   table-prefix: echest_
-  # Each player's ender chest data is loaded into memory when they join and kept there while they are
-  # online; opening/closing chests never queries the database. Changes are written back to the database
-  # on this interval, a few seconds after a player quits, and one final time at shutdown. Lower = less
-  # data at risk if the server ever crashes hard; higher = fewer database writes. Minimum 30s.
-  # Time format: 30s, 5m, 1h, ... (units: s m h d)
+  # How often unsaved changes are written to the database. Minimum 30s.
   autosave-interval: 3m
-  # SQLite: path relative to plugin data folder (default: enderchests.db)
+  # SQLite: path relative to the plugin folder.
   sqlite-file: enderchests.db
-  # MySQL/MariaDB default port: 3306 | Postgres default port: 5432
+  # Remote backends. Default port: 3306 for MySQL/MariaDB, 5432 for Postgres.
   host: localhost
   port: 3306
   database: enhancedechest
   username: root
   password: ""
-  # TLS mode for a remote MySQL/MariaDB/PostgreSQL connection. Requires a full server restart.
-  #   disable      - no encryption (default)
-  #   require      - encrypt the connection, but do NOT verify the server certificate or hostname.
-  #                  Stops passive snooping, not an active man-in-the-middle.
-  #   verify-full  - encrypt AND verify the certificate chain + hostname. The only mode that defends
-  #                  against a man-in-the-middle; needs the server's CA to be trusted by the JVM.
+  # disable (no encryption) | require (encrypted, certificate not checked) |
+  # verify-full (encrypted and verified; the only mode safe against a man-in-the-middle).
   ssl: disable
   pool-size: 10
 
 cross-server:
-  # Let SEVERAL servers (e.g. behind a Velocity/BungeeCord proxy) share ONE database safely, so a
-  # player's ender chests follow them between servers. Requires BOTH of:
-  #   1. database.type mysql/mariadb/postgres, with every server pointing at the SAME database
-  #      (and the same table-prefix). SQLite cannot be shared — the plugin refuses to start
-  #      cross-server on it.
-  #   2. A Redis server reachable by every server (settings below). Redis stores no ender chest
-  #      data; it only coordinates which server currently "owns" a player's data, so two servers
-  #      can never overwrite each other.
-  # Changes here need a FULL SERVER RESTART (like the database connection settings above).
-  # When enabled and Redis is unreachable at startup, the plugin disables itself rather than run
-  # unsafely. Notes: run /ee import with only one server online; admin commands that target a
-  # player who is online on ANOTHER server will fail with an error (open/edit them there instead).
+  # RESTART: every setting here.
+  # Let several servers share one database, so chests follow players between them. Needs a
+  # mysql/mariadb/postgres database shared by every server, plus a reachable Redis. Redis stores no
+  # chest data, it only decides which server currently owns a player. SQLite cannot be shared.
   enabled: false
-  # A name for this server, unique across your network (e.g. "survival", "skyblock-2"). Leave empty
-  # to auto-generate one at every startup (works fine; a fixed name just makes logs easier to read
-  # and recovers locks faster after a crash). NEVER give two servers the same name.
+  # A name unique to this server. Leave empty to generate one each startup. Never reuse a name.
   server-id: ""
   redis:
     host: localhost
     port: 6379
-    # Leave empty when Redis has no password.
     password: ""
-    # Connect to Redis over TLS. When true, the certificate chain AND hostname are verified against the
-    # JVM truststore, so a self-signed certificate must be imported first or the connection will fail.
+    # TLS with full certificate and hostname verification. Self-signed certificates must be imported.
     ssl: false
-    # Redis database number (0-15 on a default Redis install).
     database: 0
-    # Prefix for the Redis keys/channel this plugin uses. Only change it if you run several
-    # SEPARATE networks on one Redis server (each network gets its own prefix).
+    # Only change this if one Redis server serves several separate networks.
     key-prefix: "echest:"
 
 backup:
-  # Automatically saves a copy of all ender chest data on a timer, so you can restore it if the
-  # database ever gets corrupted or something goes wrong.
-  #
-  # IMPORTANT: this only works with SQLite (the default storage). If you use mysql/mariadb/postgres,
-  # the plugin will NOT back up for you; use your database server's own backup tools instead.
+  # Timed copies of all chest data. SQLite only: on mysql/mariadb/postgres use your database's
+  # own backup tools instead.
   enabled: true
-
-  # How often to make a backup.
-  # Examples: 30m = every 30 minutes, 6h = every 6 hours, 1d = once a day.
-  # (units: s = seconds, m = minutes, h = hours, d = days, w = weeks, mo = months, y = years)
+  # How often to back up. Examples: 30m, 6h, 1d.
   interval: 6h
-
-  # How many backups to keep. Once there are more than this, the OLDEST ones are deleted
-  # automatically so the folder doesn't grow forever.
-  # Example: 10 keeps your 10 most recent backups. Use 0 to keep ALL backups and never delete any.
+  # How many to keep. Oldest are deleted first. 0 keeps every backup.
   keep: 10
-
-  # Make one extra backup right when the server starts up, on top of the normal timer.
+  # One extra backup at server start, on top of the timer.
   on-startup: false
-
-  # Folder (inside plugins/EnhancedEchest/) where backup files are saved.
-  # Each backup is named like: enderchests-20260625-143000.db  (date and time it was made).
+  # Folder inside plugins/EnhancedEchest/. Files are named enderchests-<date>-<time>.db.
   folder: backups
 
+activity-log:
+  # Records who opened which chest and what they added or took, to logs/echest-latest.log.
+  # Evidence for investigating theft; it does not restore items, use 'backup' for that.
+  enabled: false
+  # Also write visits where the player changed nothing. Off keeps the log readable.
+  log-unchanged: false
+  # RESTART: the three settings below.
+  # Finished visits allowed to wait for the disk. Only caps memory if the disk stalls.
+  queue-capacity: 4096
+  # Start a new log file past this size. The old one is renamed and compressed.
+  max-file-size-mb: 64
+  # Delete compressed old log files after this many days.
+  retention-days: 14
+
 migration:
-  # When true: un-migrated players have their vanilla enderchest imported on join.
-  # Note: changing this to true and reloading does NOT migrate players already online.
-  # Migration only fires on the join event, so current players must rejoin to be migrated
-  # (or use "/ee migrate vanilla <player>" / "/ee migrate vanilla all" for online players).
+  # Import a player's vanilla ender chest when they join, once per player.
+  # Already-online players must rejoin, or use /ee migrate vanilla <player>.
   enabled: false

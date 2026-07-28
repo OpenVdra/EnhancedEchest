@@ -43,7 +43,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
 
     protected final HikariDataSource dataSource;
 
-    /** Prepended to every table name (see {@link com.enhancedechest.config.PluginConfig#getTablePrefix()}). */
+    /** Prepended to every table name (see {@link com.enhancedechest.config.PluginConfig PluginConfig.getTablePrefix()}). */
     protected final String tablePrefix;
 
     // Dialect-specific schema-creation statements injected by subclasses to avoid calling abstract

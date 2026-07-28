@@ -249,6 +249,34 @@ Folder (inside <code>plugins/EnhancedEchest/</code>) where backup files are save
 
 </ConfigGroup>
 
+<ConfigGroup name="activity-log">
+<template #info>
+Records who opened which chest and what they put in or took out. See the <a href="/docs/configuration/activity-log">Activity Log</a> page for how to read the file.
+</template>
+
+<ConfigProperty name="enabled" value="false" type="boolean">
+Turn the activity log on or off. Off by default. Takes effect on <code>/ee reload</code>.
+</ConfigProperty>
+
+<ConfigProperty name="log-unchanged" value="false" type="boolean">
+When <code>false</code> (default), a visit where the player changed nothing at all is not written. Most visits are someone opening their chest, looking, and closing it, and those entries bury the ones that matter. Set to <code>true</code> to record every visit.<br><br>
+Only an exact match is skipped, so a player who merely moved items around is still recorded.
+</ConfigProperty>
+
+<ConfigProperty name="queue-capacity" value="4096" type="number">
+How many finished visits may wait to be written to disk. This only caps memory use if the disk stalls; if it ever fills, the newest visits are skipped and the log says how many. The default suits a 300 to 500 player server. Needs a server restart.
+</ConfigProperty>
+
+<ConfigProperty name="max-file-size-mb" value="64" type="number">
+Start a new log file once the current one passes this size. The old file is then compressed to roughly a fiftieth of its size. Needs a server restart.
+</ConfigProperty>
+
+<ConfigProperty name="retention-days" value="14" type="number">
+Delete compressed old log files after this many days. The file being written right now is never deleted. Needs a server restart.
+</ConfigProperty>
+
+</ConfigGroup>
+
 <ConfigGroup name="migration">
 <template #info>
 Controls automatic import of existing vanilla ender chest data. See the <a href="/docs/configuration/migration">Migration</a> page for the full workflow.
