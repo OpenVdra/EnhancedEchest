@@ -1,17 +1,15 @@
 name: Deploy VitePress docs to GitHub Pages
 
 on:
-  # Publish the documentation from the exact commit that successfully completed
-  # the Release workflow. Regular pushes never replace the released Javadocs.
-  workflow_run:
-    workflows: ["Release"]
-    types: [completed]
+  # Documentation is a living site: deploy the exact main-branch commit whenever
+  # its docs (or this workflow) change. A manual run deploys the selected branch's
+  # current commit instead of silently falling back to an older release tag.
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/deploy-docs.yml"
   workflow_dispatch:
-    inputs:
-      release_tag:
-        description: "Release tag to deploy (leave blank for the latest published release)"
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -20,40 +18,15 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
-    if: >-
-      github.repository == 'OpenVdra/EnhancedEchest' &&
-      (github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success')
+    if: github.repository == 'OpenVdra/EnhancedEchest'
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve released commit
-        id: release-ref
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          REQUESTED_TAG: ${{ inputs.release_tag }}
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            REF="${{ github.event.workflow_run.head_sha }}"
-          else
-            TAG="$REQUESTED_TAG"
-            if [ -z "$TAG" ]; then
-              TAG=$(gh release view --repo "$REPO" --json tagName --jq '.tagName')
-            else
-              gh release view "$TAG" --repo "$REPO" >/dev/null
-            fi
-            REF="$TAG"
-          fi
-          echo "ref=$REF" >> "$GITHUB_OUTPUT"
-
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.release-ref.outputs.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
