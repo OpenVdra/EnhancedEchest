@@ -6,107 +6,84 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 ### Added
 
-- **A new activity log records who opened which chest and what they put in or took out**, as a readable text file at `plugins/EnhancedEchest/logs/echest-latest.log`. Off by default, turn it on with the new `activity-log` section in `config.yml`.
-  - Each entry records when the chest was opened and closed, with everything added and taken in between totalled per item.
-  - Visits where nothing changed are skipped so the file stays readable. Set `log-unchanged` to `true` under `activity-log` in `config.yml` to record every visit.
-  - Old files are compressed and deleted after `retention-days`, 14 by default. This is evidence for investigating theft, it does not restore items. It does not list what is inside a shulker box.
-
-- **Items waiting in a temporary chest now move into a new chest on their own.** A player granted a new, empty chest with at least as many slots gets those items back automatically.
-  - Every item keeps the slot it was on. A temporary chest that does not fit is left alone instead of being split across several chests.
-  - The temporary chest closest to expiring moves first. On by default; turn it off with the new `auto-reclaim` setting in `config.yml`.
-  - Applies to chests granted by a permission and to `/ee add` without a duration.
+- Added optional activity logging for chest access and item changes. Configure the `activity-log` section in `config.yml`; logs are stored in `plugins/EnhancedEchest/logs/`.
+- Activity logs skip unchanged visits by default, rotate automatically, and retain files for 14 days. They provide audit evidence but do not restore items or inspect shulker contents.
+- Temporary chest items are now reclaimed automatically when a sufficiently large permanent chest is granted.
+- Reclaimed items keep their original slots. Chests that do not fit remain unchanged, with the closest to expiry processed first.
 
 ### Changed
 
-- Chest numbers no longer climb forever. Deleting a chest frees its number, and the next chest the player gets takes it, so someone with three chests sees 1, 2 and 3 instead of 1, 5 and 9.
-- The plugin file is about half a megabyte smaller.
+- Deleted chest numbers are now reused when granting new chests.
 
 ### Notes
 
-- Existing chests keep the numbers they already have. Gaps close as new chests are created.
+- Existing chest numbers remain unchanged. Numbering gaps close as new chests are granted.
+- Activity logging is disabled by default.
+- Automatic reclaim is enabled by default and can be disabled with `auto-reclaim` in `config.yml`.
 
 ## 1.0.12 - 2026-07-19
 
 ### Added
 
-- **`/ee config` opens a settings menu in-game**, one page per section of `config.yml`, so you no longer have to edit the file by hand. Needs the new `enhancedechest.admin.config` permission.
-  - Saving applies the change straight away, so `/ee reload` is not needed. Connection settings still need a full server restart, and the menu tells you when you changed one.
-  - A bad value is refused before anything is saved, and the form comes back with what you typed still in it.
-  - Passwords on the two database pages are shown as plain text, so avoid opening them while sharing your screen.
-
-- **Shift + right-click an ender chest opens your chest list**, the same one `/eclist` shows. A plain right-click still opens a chest as before.
-  - On by default; turn it off with the new `enderchest.shift-click-list` setting.
+- Added `/ee config` for editing `config.yml` through an in-game menu. Access requires `enhancedechest.admin.config`.
+- Configuration changes apply immediately, except connection settings which require a restart. Invalid values are rejected without discarding form input.
+- Shift and right-click an ender chest now opens the chest list. Configure this behavior with `shift-click-list` in `config.yml`.
 
 ### Changed
 
-- The `/ee import` form now has a Documentation button linking to the backend-switching guide, with its four buttons laid out two per row.
-- The update notice now shows a clickable "Click here to download the update." line instead of the raw release link, which used to wrap over two chat lines. Hover it to see where it leads.
-- The Back, Close and Cancel buttons now show a left arrow instead of a cross.
-- Menu buttons now colour only their leading symbol and leave the label in the default colour.
-- Both menu changes only affect fresh installs, since your `gui.yml` is never overwritten. Copy the new lines from the bundled file to get them.
+- Added a documentation link to the `/ee import` form and improved its button layout.
+- Update notifications now use a compact clickable download link.
+- Updated the default Back, Close, and Cancel icons and limited menu button colors to their leading symbols.
+
+### Notes
+
+- Database passwords are displayed as plain text in `/ee config`.
+- Default menu appearance changes only apply to fresh installations. Existing `gui.yml` files must be updated manually.
 
 ## 1.0.11 - 2026-07-16
 
 ### Added
 
-- **Automatic per-player language.** Messages and menus now show in each player's own Minecraft client language, so English and Vietnamese players on the same server each read it in their own language at the same time. On by default; turn it off with the new `language-auto-detect` setting to show everyone a single language instead.
-  - Clients whose language is not translated fall back to the `language` locale in `config.yml`.
-  - On upgrade, existing installs start auto-detecting automatically: set `language-auto-detect: false` to keep the previous behavior of showing every player the single `language` locale.
-  - A translation you add under `language/` is now served to matching clients on its own, without having to point `language` at it.
-
-- **Login reminder for temporary chests.** A player who logs in with items still waiting in a temporary chest now gets a reminder to collect them before it expires, shown in chat and on the action bar at once, with a sound. On by default.
-  - Turn the whole reminder off with `temp-enderchest.join-notify.enabled`, or silence just its sound with `temp-enderchest.join-notify.sound.enabled` (the sound is `temp-enderchest.join-notify.sound.key`).
-  - The reminder shows how many temporary chests are waiting and how long until the soonest one expires, and its wording lives in `messages.yml` under `chest.temp-join-chat` and `chest.temp-join-actionbar`. Existing installs get these keys added automatically.
+- Added automatic per-player language based on the Minecraft client locale. Unsupported locales fall back to the language selected in `config.yml`.
+- Custom translations under `language/` are now detected automatically for matching client locales.
+- Added a login reminder for temporary chests, including the number of waiting chests and the nearest expiry time.
 
 ### Changed
 
-- In the `inventory` style of the `/eclist` chest list, temporary overflow chests now show as a copper chest instead of an ender chest, so they stand out from your normal chests at a glance.
-- In the `inventory` style of the `/eclist` chest list, time-limited chests (a normal chest granted with an expiry) now show as a plain chest instead of an ender chest, so you can tell at a glance which of your chests will expire. A chest you have given a custom icon still shows that icon.
-- Renamed the five import-dialog field labels in `gui.yml` to end in `-label` (for example `dialog.import-host` is now `dialog.import-host-label`), so every input label is named consistently. Existing installs upgrade automatically on startup; only a fully custom `language/` folder needs these keys renamed by hand to stay translated.
-- The "time remaining" text on expiring chests (the `/eclist` expiry line, the sort cooldown message, and `/ee add` with a duration) now shows in each player's own language instead of always using the English `6d 23h` form. New `duration` keys in `messages.yml` let you translate the unit labels and set the spacing (Vietnamese now reads `6 ngày 23 giờ`); existing installs get these keys added automatically.
-
-### Performance
-
-- **Database writes are much faster.** Every write-back (the periodic autosave, the save a few seconds after a player quits, and the final save at shutdown) now writes all pending changes in a single transaction using the database's native upsert, instead of one transaction per table with a separate delete-then-insert pass. This matters most when many players quit at once (a restart, the end of an event): each departing player's data reaches the database in roughly half the time, so the write-back queue drains much faster. Applies to all four backends (SQLite, MySQL, MariaDB, PostgreSQL).
-- **Loading a player's data is faster.** The read that runs when a player joins (and when an admin command touches an offline player) now fetches the player's chests and settings over one database connection instead of two, roughly halving its latency. The difference is most noticeable on SQLite, where every database call shares a single connection.
-- Internal bookkeeping of unsaved changes is now tracked per player, so the quit-time "anything left to save?" check is constant-time no matter how many changes are waiting for the next autosave.
-- Measured in the 450-player load simulation (`./gradlew stressTest`): quit write-back latency dropped from ~9.6 ms to ~4 ms, admin reads on offline players from ~3.2 ms to ~1.4 ms, and overall storage throughput improved by roughly 40-70% run-over-run.
+- Temporary and time-limited chests now use distinct default icons in the inventory chest list. Custom icons remain unchanged.
+- Expiry times and cooldown durations now follow each player's language.
+- Renamed import dialog labels in `gui.yml` to use the consistent `-label` suffix.
+- Improved database read and write performance across SQLite, MySQL, MariaDB, and PostgreSQL.
 
 ### Fixed
 
-- Fixed the chest descriptions (slot count and expiry time) in the `inventory` style of the `/eclist` chest list showing in purple; they now use a neutral grey.
+- Chest descriptions in the inventory list now use the correct neutral grey color.
+
+### Notes
+
+- Automatic language detection is enabled after updating. Set `language-auto-detect` to `false` to retain a single server-wide language.
+- Fully custom language folders must rename the import dialog keys in `gui.yml` to include the `-label` suffix.
 
 ## 1.0.10 - 2026-07-12
 
 ### Changed
 
-- New default for `temp-enderchest.expiry` is now **7d** (was 24h), so temporary overflow chests keep their items for a week before expiring.
-- New default for `database.autosave-interval` is now **3m** (was 5m), narrowing the window of unsaved changes if the server is killed hard.
-- Both only affect fresh installs: existing `config.yml` files keep whatever value they already have. Edit those keys (and `/ee reload` for `autosave-interval`) to adopt the new values.
+- The default temporary chest expiry is now 7 days.
+- The default database autosave interval is now 3 minutes.
 
 ### Added
 
-- **Optional TLS encryption for remote databases.** A new `database.ssl` setting encrypts the connection to a remote MySQL, MariaDB, or PostgreSQL server. Off by default; requires a full server restart to change (like the other connection settings). SQLite is unaffected.
-  - `disable` (default) keeps the connection unencrypted.
-  - `require` encrypts the connection but does not verify the server's certificate or hostname; it stops passive snooping, not an active man-in-the-middle.
-  - `verify-full` encrypts and verifies the certificate chain and hostname; the database server's CA must be trusted by your Minecraft server's JVM. This is the only mode that defends against a man-in-the-middle.
-  - The Redis connection (`cross-server.redis.ssl`) verifies the certificate chain **and** hostname when enabled, matching database `verify-full`.
+- Added optional TLS encryption for remote MySQL, MariaDB, and PostgreSQL connections through the `ssl` setting in `config.yml`.
+- Added cross-server chest support for proxy networks using a shared database and Redis. SQLite is not supported in cross-server mode.
+- Added migration from `CustomEnderChest` YML storage through `/ee migrate customenderchest`.
+- Added an inventory-style chest list through the `list-menu` setting in `config.yml`. Lists above 28 chests continue using the dialog menu.
 
-- **Cross-server support.** Several servers behind a proxy (Velocity, BungeeCord) can now share one database, so a player's ender chests follow them between servers. Off by default; enable it with the new `cross-server.enabled` setting.
-  - Requires a MySQL, MariaDB, or PostgreSQL database shared by every server, plus a shared Redis server (`cross-server.redis.*`). SQLite cannot be shared.
-  - Redis stores no chest data. It only tracks which server currently holds a player's data, so fast server switching can never lose or duplicate items.
-  - Give each server a unique name with `cross-server.server-id`, or leave it empty to generate one automatically at every startup.
-  - If Redis is unreachable at startup, or cross-server is enabled with SQLite, the plugin disables itself instead of running unsafely on the shared database.
-  - Admin commands that target a player who is online on another server fail with an error: view or edit them on the server they are playing on. Run `/ee import` with only one server of the network online.
+### Notes
 
-- Added migration from the `CustomEnderChest` plugin. Items keep their custom names, lore, and enchantments. `CustomEnderChest` gives each player a single ender chest, so it imports into EnhancedEchest's chest #1, the same target vanilla migration uses.
-  - `/ee migrate customenderchest` imports every player with `CustomEnderChest` data.
-  - `/ee migrate customenderchest <player>` imports a single player, online or offline.
-  - `CustomEnderChest` must be set to `storage.type: yml` before migrating; its `h2` (default) and `mysql` backends are not read.
-  - Safe to re-run: a player's chest #1 is never overwritten once it already holds items.
-
-- Added a second style for the `/eclist` chest list. Set the new `enderchest.list-menu` option to `inventory` for a plain chest GUI that just lists your chests, where clicking a chest opens it right away, instead of the default `dialog` menu with the rename, set-main, icon, and sort buttons.
-  - The inventory list shows up to 28 chests. A player who owns more than 28 chests always gets the `dialog` menu instead, whatever this is set to.
+- New expiry and autosave defaults only apply to fresh installations.
+- Database TLS is disabled by default and requires a restart after changes.
+- Cross-server mode disables the plugin when Redis is unavailable or SQLite is selected.
+- Run `/ee import` with only one server in the network online.
 
 ## 1.0.9 - 2026-07-11
 

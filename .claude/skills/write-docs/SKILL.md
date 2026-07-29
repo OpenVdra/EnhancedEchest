@@ -46,11 +46,14 @@ You are writing for **server owners and players**, not developers. They install 
 - No `v` prefix on the version. Use only the sections you need (`Added`, `Changed`, `Fixed`, `Removed`, `Notes`). Skip empty ones.
 - Get the version from `build.gradle.kts` (`version = "..."`).
 - Build the change list from `git log <previous-tag-or-commit>..HEAD --format="%h %s%n%b"`, then drop every commit that only touches `docs/`, `.claude/`, any `CLAUDE.md`, or internals with no visible effect. Never copy a commit subject verbatim.
-- Each line is one user-facing outcome. Good: "Shift and right-click an ender chest now opens your chest list." Bad: "Refactored ConfigVersionService into YamlMigrator."
-- Roughly 25 words per bullet, at most 3 sub-bullets per feature. A sub-bullet must add something its lead bullet did not say.
+- Each line is one user-facing outcome. Good: "Shift and right-click an ender chest now opens the chest list." Bad: "Refactored ConfigVersionService into YamlMigrator."
+- Never address the reader as `you`, `your`, or `yours`. State the behavior or required action directly.
+- Summarize the affected behavior once. Do not list multiple example scenarios when one general statement is accurate.
+- Keep each bullet to one or two short sentences, roughly 25 words when possible. Use sub-bullets only when essential details cannot be stated clearly in the main bullet.
+- Do not explain both the old and new behavior unless the contrast is required to understand the change.
 - Backticks for every command, permission node, config key, and plugin name.
 - A renamed or removed command, permission, or config key is breaking. Put it first in `Changed`, prefix it with **Breaking:**, give old to new, and name the one action the admin must take.
-- Put upgrade advice or "no action needed" in `Notes`.
+- Reserve `Notes` for required upgrade actions, compatibility details, or a brief "no action required" statement. Do not repeat other sections or document every edge case.
 
 ## Documentation site (VitePress, in `docs/`)
 
@@ -92,6 +95,8 @@ You are writing for **server owners and players**, not developers. They install 
 ## Before finishing
 
 - Re-read your text once and delete any sentence that repeats another.
+- Shorten any changelog entry that is noticeably more verbose than the surrounding releases without adding necessary information.
+- Search changelog changes for second-person wording such as `you`, `your`, and `yours`, and rewrite it.
 - Search your output for the em-dash character and any emoji, and remove them.
 - If you touched a docs page, confirm the matching page in the other language was updated too.
 </content>
