@@ -47,7 +47,7 @@ dependencies {
 
     // Shaded and relocated — no server-side drivers required
     shade("com.zaxxer:HikariCP:7.1.0")
-    shade("org.mariadb.jdbc:mariadb-java-client:3.5.9")   // compatible with MySQL 5.7+ and 8.x
+    shade("org.mariadb.jdbc:mariadb-java-client:3.5.10")   // compatible with MySQL 5.7+ and 8.x
     shade("org.postgresql:postgresql:42.7.13") {
         // checker-qual is annotations only (CLASS retention, nothing reads them at runtime), and
         // the driver carries ~280 KB of them. The JVM silently ignores a missing annotation class.
