@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -78,7 +77,8 @@ public interface EnderChestStorage {
     int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests);
 
     /** One {@code players} row read verbatim from a source database for {@link #importRows}. */
-    record RawPlayerRow(String playerUuid, @Nullable String username, int editMode, int appliedDefaultSize) {}
+    record RawPlayerRow(String playerUuid, @Nullable String username, int editMode, int appliedDefaultSize,
+                        long lastOnline) {}
 
     /** One {@code enderchests} row read verbatim from a source database for {@link #importRows}. */
     record RawChestRow(String playerUuid, int chestIndex, int size, @Nullable String customName,
@@ -256,7 +256,7 @@ public interface EnderChestStorage {
     /**
      * Upserts the player's {@code editMode}/{@code appliedDefaultSize} (whole-object save): updates the
      * existing row, or inserts one if none exists. Does <b>not</b> touch {@code username} — that field is
-     * written only by {@link #upsertPlayerName}, so a save built from a stale in-memory copy never clobbers
+     * written only by {@link #recordPlayerSeen}, so a save built from a stale in-memory copy never clobbers
      * a name recorded since it was loaded.
      */
     void saveSettings(UUID owner, PlayerSettings settings);
@@ -284,18 +284,22 @@ public interface EnderChestStorage {
     void setAppliedDefaultSize(UUID owner, int size);
 
     // ---- player name index (offline /ee view resolution) ----
-    // username lives on the same players row as the settings above (merged table — one row per player,
-    // no separate name table) but is written through this targeted method, not saveSettings, so a stale
-    // in-memory PlayerSettings can never clobber a name recorded since it was loaded.
+    // username and last_online live on the same players row as the settings above (merged table — one
+    // row per player, no separate name table) but are written through this targeted method, not
+    // saveSettings, so a stale in-memory PlayerSettings can never clobber a name recorded since it was
+    // loaded. Neither is part of PlayerSettings' contract: last_online is index metadata, never read
+    // per-player, only in bulk by loadAllPlayerNames.
 
     /**
-     * Records a player's current in-game name against their UUID, so name→UUID resolution works for
-     * offline players from the plugin's own data instead of relying on the server usercache or a Mojang
-     * lookup. Called only when the name actually changed (lazy — see
-     * {@code ChestOpener}'s open prelude, {@code PlayerSettingsCache.setUsernameAsync}), the first time
-     * the player opens their ender chest after a rename (or ever) — not on join.
+     * Records that a player was seen: their current in-game name against their UUID (so name→UUID
+     * resolution works for offline players from the plugin's own data, with no server usercache or
+     * Mojang lookup), and {@code lastOnline} as epoch-ms. Called on join and quit, and from
+     * {@code ChestOpener}'s open prelude when the name it already loaded differs.
+     *
+     * <p>Cheap to call often: this only mutates the in-memory row and marks it dirty, so the SQL write
+     * rides the next batched flush rather than costing a statement per call.
      */
-    void upsertPlayerName(UUID owner, String name);
+    void recordPlayerSeen(UUID owner, String name, long lastOnline);
 
     /**
      * Resolves a stored in-game name to its UUID, case-insensitively, or {@code null} if no player with
@@ -304,9 +308,13 @@ public interface EnderChestStorage {
     @Nullable UUID findUuidByName(String name);
 
     /**
-     * Returns every recorded (player_uuid, username) pair with a non-null username. Used once at
-     * startup to populate the in-memory {@code PlayerNameIndex} so offline-player tab-completion and
-     * resolution can answer from memory instead of hitting the DB on every keystroke.
+     * Returns every recorded player with a non-null username, with the epoch-ms they were last seen
+     * ({@code 0} when never recorded). Used once at startup to populate the in-memory
+     * {@code PlayerNameIndex} so offline-player tab-completion and resolution can answer from memory
+     * instead of hitting the DB on every keystroke.
      */
-    Map<UUID, String> loadAllPlayerNames();
+    List<PlayerNameRecord> loadAllPlayerNames();
+
+    /** One known player for the in-memory name index: their UUID, last recorded name, and last-seen time. */
+    record PlayerNameRecord(UUID uuid, String username, long lastOnline) {}
 }

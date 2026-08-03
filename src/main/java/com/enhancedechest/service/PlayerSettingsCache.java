@@ -17,11 +17,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * to the DB (write-through), so the cache holds no dirty state and needs no shutdown flush. See the
  * leak-free invariant documented on {@link #preloadSettings}.
  *
- * <p>The DB name index is <b>not</b> written unconditionally here — {@link #setUsernameAsync} is called
- * lazily by {@code ChestOpener}'s shared open prelude, the first time a player actually opens their
- * ender chest (or the list/right-click equivalents), reusing the settings row already loaded there.
- * That same call also updates the in-memory {@link PlayerNameIndex} so offline tab-completion sees the
- * new name immediately, without waiting for a restart to reload it.
+ * <p>{@link #preloadSettings} is also where a player's name is recorded, because the settings row it
+ * already loads carries the last known {@code username} — so the check is free and the write only
+ * happens on a first-ever join or a rename. That is what makes {@link PlayerNameIndex} complete without
+ * ever reading the {@code playerdata} folder: every player who joins is in the {@code players} table
+ * from then on, and admin tab-completion needs no other source. {@code ChestOpener}'s open prelude does
+ * the same check against its own already-loaded row, covering players who were online before this
+ * plugin loaded.
  */
 public final class PlayerSettingsCache {
 
@@ -48,11 +50,17 @@ public final class PlayerSettingsCache {
      * {@link #evictSettings} on quit. The post-load online re-check covers the join-then-immediate-quit
      * race — if the player already left while the load was in flight (so {@code evictSettings} ran
      * before this put), the entry is dropped right after it is added, so nothing is ever orphaned.
+     *
+     * <p>{@code currentName} is the joining player's name, compared against the {@code username} on the
+     * row that was just loaded. Recording it here rather than only on a chest open is what keeps
+     * {@link PlayerNameIndex} — and therefore admin tab-completion — complete from the database alone,
+     * with no {@code playerdata} scan anywhere in the plugin.
      */
-    public void preloadSettings(UUID owner) {
+    public void preloadSettings(UUID owner, String currentName) {
         db.supply(() -> storage.loadSettings(owner))
                 .thenAccept(settings -> {
                     settingsCache.put(owner, settings);
+                    markSeenAsync(owner, currentName);
                     if (Bukkit.getPlayer(owner) == null) {
                         settingsCache.remove(owner);
                     }
@@ -63,6 +71,16 @@ public final class PlayerSettingsCache {
                     telemetry.error(cause, "settings.preload");
                     return null;
                 });
+    }
+
+    /**
+     * Records a name in the in-memory {@link PlayerNameIndex} only, with <b>no</b> DB write — called on
+     * join, where the name is already in hand, so an admin can tab-complete the player immediately
+     * instead of waiting on {@link #preloadSettings}'s round trip (or losing the name entirely if the
+     * startup index load failed). {@code now} as the last-seen time is exactly right: they just joined.
+     */
+    public void indexName(UUID owner, String username) {
+        nameIndex.put(owner, username, System.currentTimeMillis());
     }
 
     /** Evicts a player's cached settings on quit. Paired with {@link #preloadSettings} so the cache stays bounded by online players. */
@@ -108,17 +126,22 @@ public final class PlayerSettingsCache {
     }
 
     /**
-     * Records the player's current in-game name (offline {@code /ee view} resolution), with a single
-     * targeted upsert (no preceding read). Called by {@code ChestOpener}'s open prelude only when the
-     * loaded {@code username} differs from the player's current name — a returning player whose name
-     * hasn't changed costs no write. Write-through: the cached copy is updated in place first (if
-     * present), then the DB is written. Uses {@code computeIfPresent} so it never inserts — preserving
-     * the leak-free invariant.
+     * Records that the player is here now: their in-game name (offline {@code /ee view} resolution) and
+     * {@code last_online}, which decides how long they keep showing up in admin name suggestions. Called
+     * on join and quit, and by {@code ChestOpener}'s open prelude when the name it loaded is stale.
+     *
+     * <p>Unconditional, unlike the old name-only write, because {@code last_online} changes every time
+     * by definition — and it costs no extra statement: {@code CachedStorage} only mutates the resident
+     * row and marks it dirty, so this rides the next batched flush together with the player's chests.
+     *
+     * <p>Write-through: the cached copy is updated in place first (if present), then the storage layer.
+     * Uses {@code computeIfPresent} so it never inserts — preserving the leak-free invariant.
      */
-    public CompletableFuture<Void> setUsernameAsync(UUID owner, String username) {
+    public CompletableFuture<Void> markSeenAsync(UUID owner, String username) {
+        long now = System.currentTimeMillis();
         settingsCache.computeIfPresent(owner, (k, s) -> s.withUsername(username));
-        nameIndex.put(owner, username);
-        return db.run(() -> storage.upsertPlayerName(owner, username))
+        nameIndex.put(owner, username, now);
+        return db.run(() -> storage.recordPlayerSeen(owner, username, now))
                 .exceptionally(e -> {
                     logger.warn("Failed to record name for {}", owner, e.getCause() != null ? e.getCause() : e);
                     return null;

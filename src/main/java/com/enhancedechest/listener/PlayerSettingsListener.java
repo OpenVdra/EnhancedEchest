@@ -19,7 +19,7 @@ import java.util.UUID;
  *       preload their settings — the preload's {@code loadSettings} call is also what materializes
  *       the player's chest rows into the cache, so it doubles as the join prefetch and their first
  *       chest open touches no database.</li>
- *   <li><b>Quit:</b> evict the settings cache entry and the sort-cooldown timestamp, unpin the
+ *   <li><b>Quit:</b> stamp {@code last_online}, evict the settings cache entry and the sort-cooldown timestamp, unpin the
  *       storage cache entry, and schedule the delayed write-back + eviction of their rows
  *       ({@link AutosaveService#flushQuitterLater}) — so a leaver's changes reach the database within
  *       seconds and their memory is freed. A rejoin before that runs simply re-pins them; the
@@ -44,12 +44,20 @@ public final class PlayerSettingsListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
         storage.pin(uuid);
-        settings.preloadSettings(uuid);
+        // Index the name in memory first — instant, never fails, so an admin can tab-complete this
+        // player even while the preload below is still in flight (or if it failed outright). The preload
+        // then persists it, but only when it actually differs from the row it just read.
+        settings.indexName(uuid, event.getPlayer().getName());
+        settings.preloadSettings(uuid, event.getPlayer().getName());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
+        // Stamp last_online before anything else here: it is what keeps this player in admin name
+        // suggestions for the next commands.suggest-offline-within, and it is only a dirty-mark on the
+        // still-resident row, so the write itself rides the quit flush queued below.
+        settings.markSeenAsync(uuid, event.getPlayer().getName());
         settings.evictSettings(uuid);
         chestOpener.clearSortCooldown(uuid);
         storage.unpin(uuid);

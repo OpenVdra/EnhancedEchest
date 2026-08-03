@@ -5,7 +5,6 @@ import com.enhancedechest.storage.EnderChestStorage;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -66,8 +65,8 @@ public final class StorageGateway {
         return db.supply(() -> storage.findUuidByName(name));
     }
 
-    /** Loads every recorded (uuid, username) pair once, to populate {@link PlayerNameIndex} at startup. */
-    public CompletableFuture<Map<UUID, String>> loadAllPlayerNamesAsync() {
+    /** Loads every recorded (uuid, username, last-seen) triple once, to populate {@link PlayerNameIndex} at startup. */
+    public CompletableFuture<List<EnderChestStorage.PlayerNameRecord>> loadAllPlayerNamesAsync() {
         return db.supply(storage::loadAllPlayerNames);
     }
 }

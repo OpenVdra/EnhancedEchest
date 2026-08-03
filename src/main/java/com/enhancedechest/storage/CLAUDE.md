@@ -103,12 +103,20 @@ one typed column per setting (not EAV/JSON) — fast, type-safe, DB-level defaul
 | `username` | nullable; last recorded name, backing offline `/ee view` name→UUID resolution |
 | `edit_mode` | remembers whether `/eclist` opens in edit mode across sessions |
 | `applied_default_size` | base-chest size dictated by `enhancedechest.default_size.<size>`, `0` when not permission-managed |
+| `last_online` | epoch-ms of the player's last join/quit, `0` if never recorded. Decides how long they stay in admin `<player>` suggestions (`commands.suggest-offline-within`) |
 
-Mapped to the `PlayerSettings` record, loaded and saved **whole**, never null (an absent row reads as
-`PlayerSettings.defaults()`). `saveSettings` deliberately **excludes** `username` — that is written only
-by `upsertPlayerName`, so a save built from a stale copy can never clobber a name recorded since.
-`upsertPlayerName` is called lazily from `ChestOpener.reconcileForOpen`, not on join: a player who never
-opens a chest costs no write.
+`edit_mode` and `applied_default_size` map to the `PlayerSettings` record, loaded and saved **whole**,
+never null (an absent row reads as `PlayerSettings.defaults()`). `saveSettings` deliberately **excludes**
+`username` and `last_online` — both are written only by `recordPlayerSeen`, so a save built from a stale
+copy can never clobber a name or timestamp recorded since. `last_online` is deliberately **not** on
+`PlayerSettings` at all: nothing reads it per-player, only `loadAllPlayerNames` reads it in bulk to seed
+the name index.
+
+`recordPlayerSeen` is called on join and quit (`PlayerSettingsListener`) and from
+`ChestOpener.reconcileForOpen` when the loaded name is stale. It only mutates the resident row and marks
+it dirty, so calling it twice a session costs no extra statement — the write rides the next batched
+flush. That is what keeps the name index complete **without ever reading the `playerdata` folder**; see
+[../service/CLAUDE.md](../service/CLAUDE.md).
 
 **To add a setting:** a component on `PlayerSettings`, a column in all three DDLs **plus** a
 `SchemaMigrator` step, a field on `RawPlayerRow` mapped in `loadAllPlayers`/`batchPlayers`, and the

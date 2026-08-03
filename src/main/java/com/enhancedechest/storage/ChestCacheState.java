@@ -48,6 +48,8 @@ final class ChestCacheState {
         @Nullable String username;
         boolean editMode;
         int appliedDefaultSize;
+        /** Epoch-ms the player was last seen (join/quit); {@code 0} when never recorded. */
+        long lastOnline;
     }
 
     /** Identity of one chest row (dirty-set key). */
@@ -257,6 +259,7 @@ final class ChestCacheState {
         row.username = p.username();
         row.editMode = p.editMode() != 0;
         row.appliedDefaultSize = p.appliedDefaultSize();
+        row.lastOnline = p.lastOnline();
         players.put(UUID.fromString(p.playerUuid()), row);
     }
 
@@ -329,7 +332,7 @@ final class ChestCacheState {
         PlayerRow p = players.get(owner);
         if (p != null) {
             playerRows.add(new RawPlayerRow(owner.toString(), p.username,
-                    p.editMode ? 1 : 0, p.appliedDefaultSize));
+                    p.editMode ? 1 : 0, p.appliedDefaultSize, p.lastOnline));
         }
     }
 

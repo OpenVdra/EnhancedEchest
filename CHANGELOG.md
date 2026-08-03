@@ -2,6 +2,32 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.0.14 - 2026-08-01
+
+### Fixed
+
+- Fixed a heavy server lag spike while typing a player name in `/ee view` and the other admin commands. Names were looked up in the server's player folder on every keystroke, which read and unpacked a file per player who had ever joined. The plugin no longer reads that folder at all: name suggestions now come from its own database.
+- A player's name is now recorded when they join, instead of the first time they open a chest, so the suggestion list fills itself in. A player who has not joined since the update can still be targeted by typing their full name.
+
+### Added
+
+- Added `/endersee <player>` as a shorthand for `/ee view <player>`. It takes the same `list` and chest-number arguments and requires the same `enhancedechest.admin.view` permission.
+- Admin commands now suggest only players who were online in the last 30 days, so the name list stays short on a server with years of history. Change it with `commands.suggest-offline-within` in `config.yml`, or set it to `all` for every known player. Typing a full name always works regardless.
+
+### Changed
+
+- Command suggestions no longer put a `(player)` label at the top of the list. Minecraft already shows what the next argument is above the chat bar, so the list now contains only real names and values.
+
+### Removed
+
+- **Breaking:** The `/ee config` in-game settings menu and its `enhancedechest.admin.config` permission have been removed. Edit `config.yml` directly and run `/ee reload` to apply changes.
+
+### Notes
+
+- The database gains a `last_online` column, added automatically on first start after the update. Players already stored are treated as seen at that moment, so nothing disappears from the name suggestions right away; the list trims itself over the following 30 days.
+- Every setting remains available in `config.yml`. No configuration values are lost on upgrade.
+- The `config` message group and the `config-` entries in `gui.yml` are no longer used and can be deleted from customized language files.
+
 ## 1.0.13 - 2026-07-28
 
 ### Added

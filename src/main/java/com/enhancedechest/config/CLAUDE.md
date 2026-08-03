@@ -1,15 +1,16 @@
 # config/
 
-`config.yml` in three shapes: the parsed snapshot the plugin runs on, the declarative schema the
-in-game editor is generated from, and the key renames that let existing installs upgrade.
+`config.yml` in two shapes: the parsed snapshot the plugin runs on, and the key renames that let
+existing installs upgrade.
 
 | File | Responsibility |
 |---|---|
 | `PluginConfig` | The parsed, live snapshot every service reads |
-| `ConfigSchema` | **Single source of truth** for the in-game editor: one `Field` per editable key, grouped into `Section` pages |
-| `ConfigEditor` | Validates and writes a page's values back to `config.yml` |
 | `ConfigMigrations` | The rename tables for `config.yml`, `messages.yml`, `gui.yml` |
 | `YamlMigrator` | Applies the renames and adds missing keys on load |
+
+`config.yml` is edited on disk and applied with `/ee reload`. There is no in-game editor — the
+schema-driven `/ee config` dialog was removed in 1.0.14; don't reintroduce it without asking.
 
 ## `PluginConfig`
 
@@ -29,30 +30,6 @@ Two kinds of key:
 
 `isValidSize` / `sanitizeSize` (multiple of 9, clamped 9–54) and `getTablePrefix()` (sanitized to
 `[A-Za-z0-9_]` because it is concatenated into SQL) live here, not at the call sites.
-
-## The in-game editor (`/ee config`)
-
-`ConfigSchema` is the single source of truth: `ConfigEditor` validates and writes against it and
-`ConfigDialogs` builds its forms generically from it. **A new editable setting is one schema entry plus
-one `gui.yml` label in every bundled locale — no dialog code.**
-
-A `Field` carries the config path, a `FieldType` (`BOOLEAN`, `INTEGER`, `TEXT`, `DURATION`, `ENUM`,
-`STRING_LIST`), the `gui.yml` label key, bounds/step/options, `allowBlank`, and `restart`. Notes that
-bite:
-
-- **Nothing catches a typo for you.** A wrong path or a label key missing from a locale compiles fine.
-  Check the path against `config.yml` and the label against every bundled `gui.yml` by hand.
-  `ConfigSchemaCoverageTest` is the one automated guard — keep it passing.
-- **Dialog input keys cannot be config paths**: the client only accepts `[A-Za-z0-9_]`, hence
-  `Field.inputKey()`.
-- Integers use a slider only up to `MAX_SLIDER_STEPS` (100) distinct stops; past that a text field is
-  kinder.
-- Writing goes through Bukkit's `FileConfiguration` (verified to preserve all comments) and is
-  **all-or-nothing per page**. A successful save then calls the plugin's own `reload()` — which is why
-  an edit from the menu needs no `/ee reload` afterwards.
-- Keys bound at startup are flagged `needsRestart()` and only warn.
-- Deliberately not exposed: anything outside `config.yml`, and any key the plugin sanitizes into a
-  different shape than the admin typed.
 
 ## Renaming a key
 

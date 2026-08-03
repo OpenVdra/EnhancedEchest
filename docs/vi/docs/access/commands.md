@@ -64,9 +64,11 @@ Xóa `<count>` rương mới nhất của người chơi. Vật phẩm được 
 
 ### /ee view
 
-<CommandRow commands="/ee view &lt;player&gt; [list | index]" permission="enhancedechest.admin.view">
+<CommandRow commands="/ee view &lt;player&gt; [list | index]" :aliases="['/endersee &lt;player&gt; [list | index]']" permission="enhancedechest.admin.view">
 
 Mở menu từng rương của người chơi khác (hoạt động kể cả khi họ ngoại tuyến). Từ menu bạn mở rương, và quản trị viên có `enhancedechest.admin.clear` còn thấy nút đỏ **(Admin) Dọn rương** để làm trống rương. Chỉ với `enhancedechest.admin.view` thì kho đồ là chỉ-đọc; thêm `enhancedechest.admin.edit` để di chuyển vật phẩm.
+
+`/endersee <player>` là lệnh viết tắt cho cùng chức năng, dùng chung quyền.
 
 </CommandRow>
 
@@ -83,14 +85,6 @@ Chuyển rương của một người chơi sang tài khoản khác, dùng khi a
 <CommandRow commands="/ee reload" permission="enhancedechest.admin.reload">
 
 Tải lại file cấu hình và ngôn ngữ mà không cần khởi động lại máy chủ.
-
-</CommandRow>
-
-### /ee config
-
-<CommandRow commands="/ee config" permission="enhancedechest.admin.config">
-
-Mở menu thiết lập ngay trong game: mỗi mục của `config.yml` là một trang riêng (Chung, Rương Ender, Tính Năng Người Chơi, Rương Tạm, Sao Lưu, Cơ Sở Dữ Liệu, Liên Máy Chủ). Khi lưu một trang, giá trị được ghi vào `config.yml` và giữ nguyên mọi dòng chú thích, đồng thời áp dụng ngay nên không cần `/ee reload`. Riêng thiết lập kết nối vẫn phải khởi động lại server, và menu sẽ báo điều đó khi bạn lưu.
 
 </CommandRow>
 

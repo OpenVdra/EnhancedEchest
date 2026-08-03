@@ -8,10 +8,6 @@ Bấm vào bất kỳ tùy chọn hoặc nhóm nào để xem thêm thông tin.
 Sau khi sửa `config.yml`, chạy `/ee reload` trong game hoặc từ console để áp dụng thay đổi.
 :::
 
-::: tip Sửa ngay trong game
-`/ee config` mở menu thiết lập với mỗi mục bên dưới là một trang riêng. Khi lưu một trang, giá trị được ghi vào `config.yml`, giữ nguyên mọi dòng chú thích, và áp dụng ngay nên bạn không cần `/ee reload`. Riêng thiết lập kết nối vẫn cần khởi động lại server, và menu sẽ báo khi bạn vừa đổi một thiết lập như vậy.
-:::
-
 <div style="background-color: var(--vp-c-bg-alt); padding: 20px; border-radius: 12px; margin-top: 20px;">
 
 <ConfigProperty name="language" value="en_US" type="string">
@@ -83,6 +79,18 @@ Các từ người chơi không được dùng trong tên tùy chỉnh của rư
 
 <ConfigProperty name="features.rename-colors" value="true" type="boolean">
 Cho phép người chơi tô màu tên rương hay không. Khi <code>true</code>, tên chấp nhận mã màu <code>&amp;</code> kiểu cũ, mã hex <code>&amp;#RRGGBB</code>, và các thẻ <a href="https://docs.advntr.dev/minimessage/format.html" target="_blank">MiniMessage</a> trang trí như <code>&lt;red&gt;</code>, <code>&lt;gradient&gt;</code>, <code>&lt;rainbow&gt;</code>, và <code>&lt;bold&gt;</code>. Các thẻ tương tác (<code>&lt;click&gt;</code>, <code>&lt;hover&gt;</code>, <code>&lt;insertion&gt;</code>, …) <strong>luôn bị loại bỏ</strong>, nên tên không bao giờ có thể chạy lệnh hay giả mạo tooltip. Khi <code>false</code>, tên hiển thị đúng như đã nhập và mọi mã màu hiện ra dưới dạng văn bản thường. Công tắc toàn cục.
+</ConfigProperty>
+
+</ConfigGroup>
+
+<ConfigGroup name="commands">
+<template #info>
+Điều khiển gợi ý tên trong các lệnh quản trị, tức danh sách hiện ra khi bạn gõ tên người chơi trong <code>/ee view</code>, <code>/ee add</code> và các lệnh khác.
+</template>
+
+<ConfigProperty name="suggest-offline-within" value="30d" type="string">
+Người chơi <strong>ngoại tuyến</strong> phải từng vào máy chủ trong khoảng thời gian gần đây bao lâu thì mới được đưa vào danh sách gợi ý. Trên máy chủ đã chạy nhiều năm, danh sách toàn bộ người chơi cũ dài đến mức không dùng được, nên chỉ những người vào trong khoảng này mới được gợi ý. Người chơi đang trực tuyến luôn được liệt kê trước, không phụ thuộc thiết lập này. Định dạng thời gian: <code>20s</code>, <code>5m</code>, <code>1h</code>, <code>30d</code>, hoặc ghép như <code>1d_2h_30m</code>. Đặt <code>all</code> để gợi ý mọi người chơi mà plugin biết.<br><br>
+Thiết lập này <strong>chỉ</strong> đổi những gì được gợi ý, không đổi những gì chạy được: gõ đầy đủ tên một người chơi thì lệnh vẫn luôn tìm ra họ, dù họ đã nghỉ bao lâu. Tên được ghi lại ngay từ lúc người chơi vào máy chủ, và những người đã có sẵn trong cơ sở dữ liệu vẫn tiếp tục hiện thêm trọn một khoảng nữa kể từ khi bạn cập nhật.
 </ConfigProperty>
 
 </ConfigGroup>
@@ -325,6 +333,10 @@ enderchest:
       - staff
       - owner
     rename-colors: true
+
+commands:
+  # Chỉ gợi ý người chơi ngoại tuyến từng vào trong khoảng này. 'all' để gợi ý tất cả.
+  suggest-offline-within: 30d
 
 permission-chests:
   # Cấp rương Ender từ các quyền có dạng:

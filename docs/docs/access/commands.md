@@ -64,9 +64,11 @@ Deletes the newest `<count>` chests a player owns. Items are spilled to a tempor
 
 ### /ee view
 
-<CommandRow commands="/ee view &lt;player&gt; [list | index]" permission="enhancedechest.admin.view">
+<CommandRow commands="/ee view &lt;player&gt; [list | index]" :aliases="['/endersee &lt;player&gt; [list | index]']" permission="enhancedechest.admin.view">
 
 Opens a per-chest menu for another player's chests (works offline). From the menu you open the chest, and admins with `enhancedechest.admin.clear` also get a red **(Admin) Clear chest** button to empty it. With `enhancedechest.admin.view` alone the inventory is read-only; add `enhancedechest.admin.edit` to move items.
+
+`/endersee <player>` is a shorthand for the same command, with the same permission.
 
 </CommandRow>
 
@@ -83,14 +85,6 @@ Moves a player's chests onto another account, for when someone switches accounts
 <CommandRow commands="/ee reload" permission="enhancedechest.admin.reload">
 
 Reloads config and language files without restarting.
-
-</CommandRow>
-
-### /ee config
-
-<CommandRow commands="/ee config" permission="enhancedechest.admin.config">
-
-Opens the in-game settings menu: one page per section of `config.yml` (General, Ender Chests, Player Features, Temporary Chests, Backups, Database, Cross-Server). Saving a page writes the values into `config.yml`, keeping all its comments, and applies them straight away, so no `/ee reload` is needed. Connection settings still need a full server restart and the menu says so when you save one.
 
 </CommandRow>
 

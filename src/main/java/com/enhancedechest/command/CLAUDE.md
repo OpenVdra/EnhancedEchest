@@ -12,7 +12,7 @@ the node (+ `.requires(...)` gate + suggestion provider) in the bootstrap, and t
 | `EnderChestOpenCommand` | `/enderchest` (`/ec`), `/ec <#index\|name>`, `/eclist` |
 | `admin/ChestAdminCommand` | `add`, `resize`, `delete`, `view`, `viewList` and the offline-target resolution |
 | `admin/ChestTransferCommand` | `/ee transfer` argument parsing (the target token and the flag share one greedy argument) |
-| `admin/ConfigCommand`, `ImportCommand`, `ReloadCommand` | `/ee config`, `/ee import`, `/ee reload` |
+| `admin/ImportCommand`, `ReloadCommand` | `/ee import`, `/ee reload` |
 | `admin/MigrateVanillaCommand`, `MigrateAxVaultsCommand`, `MigratePlayerVaultsXCommand`, `MigrateCustomEnderChestCommand` | The `/ee migrate <source>` subcommands |
 | `admin/PlayerResolver` | Name → UUID for offline targets |
 
@@ -35,14 +35,13 @@ base `enhancedechest.command.admin`.
 | Subcommand | Permission | Action |
 |---|---|---|
 | `reload` | `admin.reload` | Reload config + language, re-apply runtime-tunable settings |
-| `config` | `admin.config` | In-game `config.yml` editor (saving reloads automatically) |
 | `import` | `admin.import` | Copy an old EnhancedEchest database into the active backend |
 | `migrate vanilla <player>\|all` | `admin.migrate` | Vanilla ender chest → chest #1. **Online-only** |
 | `migrate axvaults\|playervaultsx\|customenderchest [<player>\|all]` | `admin.migrate` | Import another plugin's data; works offline |
 | `add <player> <size> [count] [duration]` | `admin.add` | Grant chest(s); `duration` makes them expire |
 | `resize <player> <index> <size>` | `admin.resize` | Resize, spilling cut-off items to a temp chest. **Rejected on a PERM chest** (`admin.cannot-modify-perm`) |
 | `delete <player> <count> [force]` | `admin.delete` | Delete the `count` newest **NORMAL** chests; chest #1 always kept; `force` discards items; PERM skipped |
-| `view <player> [list \| index]` | `admin.view` | Open the target's chest through the **shared session** |
+| `view <player> [list \| index]` | `admin.view` | Open the target's chest through the **shared session**. Also registered standalone as `/endersee <player> …` — Paper aliases a whole root literal, not a subcommand, so the shorthand is a second `commands.register` sharing `viewPlayerArgument()` and the same handlers |
 | `transfer <from> <to> <#index \| name \| all> [override \| temp]` | `admin.transfer` | Move a player's NORMAL chests onto another account |
 
 ## Suggestion providers
@@ -50,10 +49,31 @@ base `enhancedechest.command.admin`.
 Providers run on **every keystroke**, so they are precomputed constants and never block:
 
 - **`KNOWN_PLAYERS`** — online names first, then offline names from `PlayerNameIndex` once a prefix is
-  typed, capped at `MAX_PLAYER_SUGGESTIONS` (50). Used by everything that accepts an offline target.
+  typed, capped at `MAX_PLAYER_SUGGESTIONS` (50) and filtered to players seen within
+  `commands.suggest-offline-within`. Used by everything that accepts an offline target.
 - **`ONLINE_PLAYERS`** — `migrate vanilla` only, which reads the live vanilla ender chest.
 - **`TARGET_CHESTS`** — index suggestions for `view`, resolving the target through the name index
   (cache-only; never `Bukkit.getOfflinePlayer(String)`, which does a blocking web lookup).
+
+**Nothing is suggested that is not a real value.** There used to be a `suggestHeader` that pinned a fake
+`(player)` / `(duration)` entry to the top of the dropdown; it was removed because the client already
+renders the argument names of the tree as a usage hint above the chat bar (`<player> [<index>]`), which
+is what an admin actually reads. Don't reintroduce it — name the argument node instead.
+
+**Offline names come from the database, via `PlayerNameIndex` — never from the `playerdata` folder.**
+`Bukkit.getOfflinePlayers()` builds one `OfflinePlayer` per file in that folder, and `getName()` on one
+whose profile is missing from the usercache loads and decompresses that player's `.dat` file. Called per
+keystroke it was thousands of NBT reads on a region thread; called once at startup it is the same
+pressure in one burst, which is enough to get a memory-tight server OOM-killed. **There is no scan
+anywhere in the plugin, and none may be added** — a name the DB has never seen is simply not suggested,
+and the admin types it in full. `knownPlayerUuid` resolves an already-typed name from memory only:
+online → name index → `Bukkit.getOfflinePlayerIfCached` (usercache, no disk, no Mojang call).
+
+Coverage comes from writes instead: `PlayerSettingsCache.markSeenAsync` records the player's name and
+`last_online` on join and quit, so every player who joins is in the `players` table from then on, and the
+suggestion list trims itself to whoever has been on recently. `PlayerResolver`'s final
+`getOfflinePlayer(String)` step is the one remaining disk/network touch — one named lookup, on command
+execution only, never on suggestions.
 
 ## `/ee view`
 
@@ -80,7 +100,6 @@ enhancedechest.additional_amount.<count>.slot.<size>
 enhancedechest.default_size.<size>
                                   base-chest size override (no op default)
 enhancedechest.admin.reload
-enhancedechest.admin.config
 enhancedechest.admin.import
 enhancedechest.admin.migrate
 enhancedechest.admin.add

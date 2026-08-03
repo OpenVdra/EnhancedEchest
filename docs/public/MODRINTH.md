@@ -62,11 +62,10 @@ The vanilla ender chest is stuck at 27 slots, one per player, forever. **Enhance
 | `/ee add <player> <size> [count] [duration]` | `enhancedechest.admin.add` | Grant chest(s), optionally temporary |
 | `/ee resize <player> <index> <size>` | `enhancedechest.admin.resize` | Resize a chest (overflow spills safely) |
 | `/ee delete <player> <count> [force]` | `enhancedechest.admin.delete` | Delete newest chests (first one is always kept) |
-| `/ee view <player> [list\|index]` | `enhancedechest.admin.view` | View or edit another player's chest |
+| `/ee view <player> [list\|index]` | `enhancedechest.admin.view` | View or edit another player's chest (shorthand: `/endersee <player>`) |
 | `/ee transfer <from> <to> <#index\|name\|all>` | `enhancedechest.admin.transfer` | Move chest(s) onto another account |
 | `/ee import` | `enhancedechest.admin.import` | Copy all data from an old database into the active one |
 | `/ee migrate vanilla\|axvaults\|playervaultsx\|customenderchest` | `enhancedechest.admin.migrate` | Import from vanilla, AxVaults, PlayerVaultsX, or CustomEnderChest |
-| `/ee config` | `enhancedechest.admin.config` | Edit config.yml from an in-game settings menu |
 | `/ee reload` | `enhancedechest.admin.reload` | Reload config and language files |
 
 ## Get started

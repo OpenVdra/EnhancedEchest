@@ -66,6 +66,14 @@ public final class PluginConfig {
     private int activityLogMaxFileSizeMb;
     private int activityLogRetentionDays;
 
+    /**
+     * How recently an <b>offline</b> player must have been seen to be offered in an admin command's
+     * {@code <player>} suggestions, in millis; {@code 0} = suggest every player the database knows
+     * ({@code commands.suggest-offline-within: all}). Only the suggestion list is filtered — a name
+     * typed in full always resolves. Runtime-tunable: pushed into {@code PlayerNameIndex} on reload.
+     */
+    private volatile long suggestOfflineWithinMillis;
+
     // Permission-granted chests (enhancedechest.additional_amount.<count>.slot.<size>)
     private boolean permissionChestsEnabled;
 
@@ -165,6 +173,9 @@ public final class PluginConfig {
                 Math.min(1024, config.getInt("activity-log.max-file-size-mb", 64)));
         activityLogRetentionDays = Math.max(1,
                 Math.min(3650, config.getInt("activity-log.retention-days", 14)));
+
+        suggestOfflineWithinMillis = parseSuggestWindow(
+                config.getString("commands.suggest-offline-within", "30d"));
 
         permissionChestsEnabled = config.getBoolean("permission-chests.enabled", true);
 
@@ -304,6 +315,18 @@ public final class PluginConfig {
         } catch (IllegalArgumentException e) {
             return DurationFormat.parse(fallback);
         }
+    }
+
+    /**
+     * Parses {@code commands.suggest-offline-within}: a duration, or the literal {@code all} for "no
+     * limit", which is returned as {@code 0} so the hot path compares against a single long. A typo
+     * falls back to the shipped 30d rather than silently meaning "everyone".
+     */
+    private static long parseSuggestWindow(String value) {
+        if (value != null && value.trim().equalsIgnoreCase("all")) {
+            return 0L;
+        }
+        return parseDuration(value, "30d");
     }
 
     /**

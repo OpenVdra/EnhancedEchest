@@ -11,7 +11,7 @@ import java.util.Locale;
 
 /**
  * Builds the "open the documentation" button shared by the dialogs that have an online page explaining
- * them ({@code /ee config}, {@code /ee import}).
+ * them ({@code /ee import}).
  *
  * <p>Three things are deliberately uniform across every such button, which is why they live here rather
  * than being rebuilt per dialog: the book sprite that marks it as a link rather than an action, the

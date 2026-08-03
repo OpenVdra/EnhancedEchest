@@ -40,7 +40,7 @@ import java.util.Locale;
 final class SchemaMigrator {
 
     /** The schema version this build expects. Bump this and add a {@link Step} when the schema changes. */
-    static final int CURRENT_VERSION = 1;
+    static final int CURRENT_VERSION = 2;
 
     private static final Logger log = LoggerFactory.getLogger("EnhancedEchest");
 
@@ -94,6 +94,33 @@ final class SchemaMigrator {
                     // upgraded database keeps it physically last. Harmless: every DML here addresses
                     // columns by name, never by position.
                     addColumnIfMissing(conn, players, "username", "VARCHAR(48)");
+                }
+            },
+            new Step() {
+                @Override public int version() { return 2; }
+                @Override public void apply(Connection conn, String prefix) throws SQLException {
+                    // 1.0.14: last_online (epoch-ms of the player's last join/quit) drives which offline
+                    // players admin tab-completion offers (commands.suggest-offline-within).
+                    String players = prefix + "players";
+                    boolean fresh = columnExists(conn, players, "last_online");
+                    addColumnIfMissing(conn, players, "last_online", "BIGINT NOT NULL DEFAULT 0");
+                    if (fresh) {
+                        return;                            // column already there: nothing to backfill
+                    }
+                    // Existing rows get "now" rather than 0. We genuinely do not know when these players
+                    // were last on — the only sources would be the playerdata folder (deliberately never
+                    // read, see PlayerNameIndex) or a Mojang call — and 0 would mean every known player
+                    // vanishes from tab-completion the moment an admin upgrades. Seeding "now" instead
+                    // keeps the list exactly as it is today and lets it trim itself: a player who never
+                    // comes back ages out one suggest-offline-within window after the upgrade.
+                    try (var ps = conn.prepareStatement(
+                            "UPDATE " + players + " SET last_online = ? WHERE last_online = 0")) {
+                        ps.setLong(1, System.currentTimeMillis());
+                        int seeded = ps.executeUpdate();
+                        if (seeded > 0) {
+                            log.info("Seeded last_online for {} existing player row(s) with the upgrade time.", seeded);
+                        }
+                    }
                 }
             }
     );

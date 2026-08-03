@@ -187,8 +187,16 @@ any new capture site.
 - `PlayerSettingsCache` is write-through and **bounded by the online-player count**: entries are added
   only by the join preload and removed by the quit eviction (with a post-load online re-check closing
   the join-then-immediate-quit race). A cache miss falls back to a one-off read that is *not* cached.
-- `PlayerNameIndex` is loaded once at startup and updated lazily by `ChestOpener`; command suggestions
-  read it instead of doing a blocking `getOfflinePlayer(String)` lookup.
+- `PlayerNameIndex` is loaded once at startup (`loadAll` from the `players` table) and kept fresh by
+  `markSeenAsync` — called on join and quit by `PlayerSettingsListener`, and by `ChestOpener`'s open
+  prelude when the row it already loaded holds a stale name. Command suggestions read it and **nothing
+  else**: never `getOfflinePlayer(String)` (blocking web lookup) and **never `getOfflinePlayers()`**,
+  which reads a `.dat` file per uncached name. That scan is banned outright, at startup as much as per
+  keystroke — it was both a TPS collapse and an OOM-kill risk. The database is the only name source.
+- The index carries each player's `last_online`, and `prefixMatches` hides anyone last seen longer ago
+  than `commands.suggest-offline-within` (default `30d`, `all` disables the filter, runtime-tunable via
+  `setSuggestWindowMillis`). **`findUuid` is deliberately unfiltered** — the window decides who is
+  *offered* while typing, never who can be *reached*; a fully typed name must always resolve.
 - Runtime-tunable settings arrive through setters called from `EnhancedEchestPlugin.reload()`
   (`setDefaultSize`, `setTempConfig`, `setConfig`, `setEnabled`…). They must only affect work started
   after the call, which is what makes reloading safe while saves are in flight.

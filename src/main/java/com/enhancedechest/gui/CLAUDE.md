@@ -9,7 +9,6 @@ holders that identify our inventories. The click/drag guards that police those i
 | File | Responsibility |
 |---|---|
 | `dialog/ChestDialogs` | Every chest dialog: list, detail, rename, icon picker, admin picker, admin clear confirm |
-| `dialog/ConfigDialogs` | `/ee config` — form pages built generically from `ConfigSchema` |
 | `dialog/IconCatalog` | The pickable icon set, sprite lookup, and locale-aware search |
 | `dialog/DialogLinks` | The shared "open the documentation" button (book sprite, URL from `gui.yml`, never shown on screen) |
 | `ChestListMenu` | The inventory-based chest chooser used when `enderchest.list-menu: inventory` |

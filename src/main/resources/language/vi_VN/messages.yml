@@ -40,17 +40,6 @@ migrate:
   import-player-done: '{prefix}Nhập {source} cho {player}: {vaults} kho đã nhập, {skipped} bỏ qua.'
   import-failed: '{prefix}Nhập {source} thất bại: {error}'
 
-# Trình chỉnh sửa cấu hình trong game (/ee config).
-config:
-  # {count} = số thiết lập đã đổi. Lưu là áp dụng luôn, không cần /ee reload.
-  saved: '{prefix}Đã lưu. {count} thiết lập đã có hiệu lực.'
-  no-changes: '{prefix}Không có gì thay đổi.'
-  # Vừa lưu một thiết lập cần khởi động lại server.
-  restart-required: '{prefix}<yellow>Một số thiết lập vừa lưu chỉ có hiệu lực sau khi khởi động lại server.'
-  # {fields} = nhãn bị từ chối. Có giá trị sai thì không lưu gì cả.
-  invalid: '{prefix}<red>Giá trị không hợp lệ ở: {fields}. Chưa lưu gì cả.'
-  save-failed: '{prefix}<red>Không ghi được config.yml. Xem console của server.'
-
 # Nhập cơ sở dữ liệu sang cơ sở dữ liệu (/ee import): sao chép backend cũ vào backend đang dùng.
 import:
   # Kiểm tra biểu mẫu trong hộp thoại trước khi chạy.

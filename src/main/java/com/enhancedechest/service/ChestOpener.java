@@ -389,14 +389,14 @@ public final class ChestOpener {
     }
 
     /**
-     * Lazily records the player's current name against their UUID (offline {@code /ee view} resolution):
-     * reuses the settings row {@link #reconcileForOpen} already loaded, and writes only when it differs
-     * from {@code loadedUsername} — a never-recorded name (first-ever open) or a rename. A returning
-     * player whose name hasn't changed costs no write, unlike writing unconditionally on every open.
+     * Corrects the player's recorded name when the settings row {@link #reconcileForOpen} already loaded
+     * disagrees with it — a rename, or a player who was online before this plugin loaded (so no join
+     * handler ever ran for them). The join path records the name for everyone else, so the common open
+     * takes the equality check and stops there.
      */
     private void recordNameIfChanged(UUID uuid, String currentName, @Nullable String loadedUsername) {
         if (!currentName.equals(loadedUsername)) {
-            settings.setUsernameAsync(uuid, currentName);
+            settings.markSeenAsync(uuid, currentName);
         }
     }
 

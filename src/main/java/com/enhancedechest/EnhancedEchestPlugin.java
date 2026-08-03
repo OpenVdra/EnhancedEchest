@@ -2,13 +2,11 @@ package com.enhancedechest;
 
 import com.enhancedechest.backup.BackupService;
 import com.enhancedechest.config.ConfigMigrations;
-import com.enhancedechest.config.ConfigEditor;
 import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.config.YamlMigrator;
 import com.enhancedechest.crossserver.CrossServerCoordinator;
 import com.enhancedechest.crossserver.RedisCoordinator;
 import com.enhancedechest.expiry.ExpirySweeper;
-import com.enhancedechest.gui.dialog.ConfigDialogs;
 import com.enhancedechest.gui.dialog.IconCatalog;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.listener.ChestListMenuListener;
@@ -72,8 +70,6 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     private PermissionChestService permissionChestService;
     private DatabaseImportService databaseImportService;
     private ChestOpener chestOpener;
-    /** In-game config.yml editor behind {@code /ee config}. */
-    private ConfigDialogs configDialogs;
     private ExpirySweeper expirySweeper;
     private BackupService backupService;
     private MigrationService migrationService;
@@ -171,7 +167,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         boolean sqliteBackend = pluginConfig.getDatabaseType().equalsIgnoreCase("sqlite");
         dbExecutor     = new DbExecutor(sqliteBackend ? 4 : Math.max(8, pluginConfig.getDbPoolSize() * 2));
         storageGateway = new StorageGateway(storage, dbExecutor);
-        playerNameIndex = new PlayerNameIndex(storageGateway, getSLF4JLogger(), telemetry);
+        playerNameIndex = new PlayerNameIndex(storageGateway, getSLF4JLogger(), telemetry,
+                pluginConfig.getSuggestOfflineWithinMillis());
         playerNameIndex.loadAll();
         settingsCache  = new PlayerSettingsCache(storage, dbExecutor, getSLF4JLogger(), playerNameIndex, telemetry);
         activityLogger = new ChestActivityLogger(getDataFolder().toPath(), getSLF4JLogger(), telemetry,
@@ -213,11 +210,6 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         chestOpener    = new ChestOpener(sessionManager, storageGateway, settingsCache, storage,
                 dbExecutor, languageManager, scheduler, getSLF4JLogger(), pluginConfig.getDefaultSize(),
                 permissionChestService, spillService, pluginConfig, databaseImportService, telemetry);
-
-        // In-game config editor (/ee config). Saving writes config.yml and then runs this same reload(),
-        // which is why an edit from the menu needs no /ee reload afterwards.
-        configDialogs = new ConfigDialogs(new ConfigEditor(this::getConfig, this::saveConfig), languageManager, scheduler,
-                getSLF4JLogger(), this::reload);
 
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger(),
                 sessionManager, scheduler, telemetry, pluginConfig.getTempExpiryMillis());
@@ -261,11 +253,11 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
 
         // Pin + preload players already online (a /reload or hot-load fires no join event for them):
         // the pin keeps them cache-resident while online, and the settings preload also materializes
-        // their chest rows (the same prefetch the join listener performs). The name index is unaffected
-        // here — it is written lazily by ChestOpener the first time a player opens their ender chest.
+        // their chest rows and records their name (the same prefetch the join listener performs).
         getServer().getOnlinePlayers().forEach(p -> {
             storage.pin(p.getUniqueId());
-            settingsCache.preloadSettings(p.getUniqueId());
+            settingsCache.indexName(p.getUniqueId(), p.getName());
+            settingsCache.preloadSettings(p.getUniqueId(), p.getName());
         });
 
         updateChecker = new UpdateChecker(getPluginMeta().getVersion(), getSLF4JLogger());
@@ -355,6 +347,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         autosaveService.reschedule(pluginConfig.getAutosaveIntervalMillis());
         activityLogger.setEnabled(pluginConfig.isActivityLogEnabled());
         activityLogger.setLogUnchanged(pluginConfig.isActivityLogUnchanged());
+        playerNameIndex.setSuggestWindowMillis(pluginConfig.getSuggestOfflineWithinMillis());
         // Re-reads plugins/EnhancedEchest/icons/lang/*.json, so a file added or edited since startup
         // (or since the last reload) takes effect immediately.
         IconCatalog.reloadLocaleNames();

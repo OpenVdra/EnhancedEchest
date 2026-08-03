@@ -220,7 +220,8 @@ class StoragePlayerLoadSimulationTest {
                     // First-ever join: materialize this player's randomly-sized chest set — the base chest
                     // plus (target-1) more with random sizes, a fraction of them temporary (with an expiry).
                     call("createChest.bootstrap", () -> s.createChest(p, 54));
-                    run("upsertPlayerName", () -> s.upsertPlayerName(p, "Player-" + Integer.toHexString(p.hashCode())));
+                    run("recordPlayerSeen", () -> s.recordPlayerSeen(p,
+                            "Player-" + Integer.toHexString(p.hashCode()), System.currentTimeMillis()));
                     for (int k = 1; k < target; k++) {
                         Long expiry = rnd.nextInt(6) == 0 ? System.currentTimeMillis() + rnd.nextInt(1, 250) : null;
                         call("createChest.bootstrap", () -> s.createChest(p, randomSize(rnd), expiry));

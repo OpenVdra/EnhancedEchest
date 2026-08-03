@@ -8,10 +8,6 @@ Click any option or group below for more details.
 After editing `config.yml`, run `/ee reload` in-game or from the console to apply your changes.
 :::
 
-::: tip Edit it in-game instead
-`/ee config` opens a settings menu with one page per section below. Saving a page writes the values into `config.yml`, keeps all its comments, and applies them straight away, so you do not need `/ee reload`. Connection settings still need a full server restart, and the menu tells you when you have changed one.
-:::
-
 <div style="background-color: var(--vp-c-bg-alt); padding: 20px; border-radius: 12px; margin-top: 20px;">
 
 <ConfigProperty name="language" value="en_US" type="string">
@@ -83,6 +79,18 @@ Words players may not use in a chest's custom name. Matching is <strong>case-ins
 
 <ConfigProperty name="features.rename-colors" value="true" type="boolean">
 Whether players may colour their chest names. When <code>true</code>, names accept legacy <code>&amp;</code> colour codes, <code>&amp;#RRGGBB</code> hex, and cosmetic <a href="https://docs.advntr.dev/minimessage/format.html" target="_blank">MiniMessage</a> tags such as <code>&lt;red&gt;</code>, <code>&lt;gradient&gt;</code>, <code>&lt;rainbow&gt;</code>, and <code>&lt;bold&gt;</code>. Interactive tags (<code>&lt;click&gt;</code>, <code>&lt;hover&gt;</code>, <code>&lt;insertion&gt;</code>, …) are <strong>always stripped</strong>, so a name can never run a command or forge a tooltip. When <code>false</code>, names are shown exactly as typed and any codes appear as plain text. Global switch.
+</ConfigProperty>
+
+</ConfigGroup>
+
+<ConfigGroup name="commands">
+<template #info>
+Controls the name suggestions in the admin commands, the list that drops down while you type a player name in <code>/ee view</code>, <code>/ee add</code>, and the others.
+</template>
+
+<ConfigProperty name="suggest-offline-within" value="30d" type="string">
+How recently an <strong>offline</strong> player must have been on the server to be offered in that list. On a server with years of history the full list of past players is unusably long, so only players seen within this window are suggested. Online players are always listed first, regardless of this setting. Time format: <code>20s</code>, <code>5m</code>, <code>1h</code>, <code>30d</code>, or combined like <code>1d_2h_30m</code>. Set it to <code>all</code> to suggest every player the plugin knows about.<br><br>
+This <strong>only</strong> changes what is suggested, never what works: typing a player's full name always finds them, however long ago they last played. Names are recorded from the moment a player joins, and players already in the database keep showing up for one full window after you update.
 </ConfigProperty>
 
 </ConfigGroup>
@@ -324,6 +332,10 @@ enderchest:
       - staff
       - owner
     rename-colors: true
+
+commands:
+  # Only suggest offline players seen within this long. 'all' suggests everyone.
+  suggest-offline-within: 30d
 
 permission-chests:
   enabled: true

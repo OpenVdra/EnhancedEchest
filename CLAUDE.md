@@ -20,7 +20,7 @@ Produces `EnhancedEchest-<version>.jar` via `shadowJar` (the plain `jar` is not 
 ./gradlew stressTest  # 300–500 player concurrency/perf/leak simulation, no server needed
 ```
 
-`src/test` covers a deliberately thin slice: config-schema coverage, chest index allocation, temp
+`src/test` covers a deliberately thin slice: chest index allocation, temp
 reclaim, the activity-log pipeline, and the load simulations. Everything else — every GUI, dialog,
 command and storage path — is **verified by running on a Paper/Folia server**. Assume nothing is
 covered automatically: check a change by running it.
@@ -59,7 +59,7 @@ hub: every service is a field on it, constructed by hand. There is no DI contain
 4. `StorageFactory.create` → wrapped in `CachedStorage` → `init()` (DDL + `SchemaMigrator`; no bulk load)
 5. `LanguageManager`, then its translator registered once on Adventure's `GlobalTranslator`
 6. service layer bottom-up: `DbExecutor` → `StorageGateway` / `PlayerNameIndex` / `PlayerSettingsCache` → `ChestActivityLogger` → `ChestSessionManager` → `ChestSpillService` / `ChestTransferService` / `PermissionChestService` / `DatabaseImportService` → `ChestOpener`
-7. `ConfigDialogs`, the migration services, `ExpirySweeper`, `BackupService`, `AutosaveService`
+7. the migration services, `ExpirySweeper`, `BackupService`, `AutosaveService`
 8. listeners, pin + preload already-online players, update check, bStats, startup banner
 
 Data flow of an open: a listener or command calls `ChestOpener`, which reconciles permission chests
@@ -81,7 +81,7 @@ keeps the rows in memory until an autosave, a quit write-back or the shutdown fl
 | Any dialog or inventory menu, the icon picker | `gui/` (see [gui/CLAUDE.md](src/main/java/com/enhancedechest/gui/CLAUDE.md)) |
 | Adding or changing a command, permission nodes | `command/` (see [command/CLAUDE.md](src/main/java/com/enhancedechest/command/CLAUDE.md)) |
 | Messages, GUI text, per-viewer localization | `lang/` (see [lang/CLAUDE.md](src/main/java/com/enhancedechest/lang/CLAUDE.md)) |
-| A config key, the in-game editor, renaming a key safely | `config/` (see [config/CLAUDE.md](src/main/java/com/enhancedechest/config/CLAUDE.md)) |
+| A config key, renaming a key safely | `config/` (see [config/CLAUDE.md](src/main/java/com/enhancedechest/config/CLAUDE.md)) |
 | Redis owner locks, running several servers on one database | `crossserver/` (see [crossserver/CLAUDE.md](src/main/java/com/enhancedechest/crossserver/CLAUDE.md)) |
 | Importing from vanilla, AxVaults, PlayerVaultsX, CustomEnderChest, another database | `migration/` (see [migration/CLAUDE.md](src/main/java/com/enhancedechest/migration/CLAUDE.md)) |
 | Join/quit lifecycle, click and drag guards, right-click interception | `listener/` (see [listener/CLAUDE.md](src/main/java/com/enhancedechest/listener/CLAUDE.md)) |

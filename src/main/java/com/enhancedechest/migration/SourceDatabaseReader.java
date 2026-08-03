@@ -48,7 +48,8 @@ public final class SourceDatabaseReader implements AutoCloseable {
         this.backend = backend;
         this.log = log;
         this.sqlReadPlayers =
-                "SELECT player_uuid, username, edit_mode, applied_default_size FROM " + tablePrefix + "players";
+                "SELECT player_uuid, username, edit_mode, applied_default_size, last_online FROM "
+                        + tablePrefix + "players";
         this.sqlReadChests =
                 "SELECT player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, " +
                 "last_updated, kind, expires_at, icon FROM " + tablePrefix + "enderchests";
@@ -133,7 +134,8 @@ public final class SourceDatabaseReader implements AutoCloseable {
                         rs.getString("player_uuid"),
                         rs.getString("username"),
                         rs.getInt("edit_mode"),
-                        rs.getInt("applied_default_size")));
+                        rs.getInt("applied_default_size"),
+                        rs.getLong("last_online")));
             }
         }
         return rows;

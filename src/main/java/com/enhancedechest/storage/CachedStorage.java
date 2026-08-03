@@ -565,7 +565,7 @@ public final class CachedStorage implements EnderChestStorage {
     @Override
     public void saveSettings(UUID owner, PlayerSettings settings) {
         // Whole-object save of editMode/appliedDefaultSize; username stays whatever the row holds
-        // (written only via upsertPlayerName), preserving the SQL contract.
+        // (written only via recordPlayerSeen), preserving the SQL contract.
         cache.mutateOwner(owner, () -> {
             ChestCacheState.PlayerRow p = state.playerRow(owner);
             p.editMode = settings.editMode();
@@ -599,9 +599,11 @@ public final class CachedStorage implements EnderChestStorage {
     }
 
     @Override
-    public void upsertPlayerName(UUID owner, String name) {
+    public void recordPlayerSeen(UUID owner, String name, long lastOnline) {
         cache.mutateOwner(owner, () -> {
-            state.playerRow(owner).username = name;
+            ChestCacheState.PlayerRow p = state.playerRow(owner);
+            p.username = name;
+            p.lastOnline = lastOnline;
             state.markPlayerDirty(owner);
         });
     }
@@ -620,14 +622,14 @@ public final class CachedStorage implements EnderChestStorage {
     }
 
     @Override
-    public Map<UUID, String> loadAllPlayerNames() {
+    public List<PlayerNameRecord> loadAllPlayerNames() {
         // Startup name-index load: flush first so the backend scan already reflects every rename,
         // then trust it wholesale (no manual overlay), matching the other whole-table reads.
         flush();
-        Map<UUID, String> names = new HashMap<>();
+        List<PlayerNameRecord> names = new ArrayList<>();
         for (RawPlayerRow p : backend.loadAllPlayers()) {
             if (p.username() != null) {
-                names.put(UUID.fromString(p.playerUuid()), p.username());
+                names.add(new PlayerNameRecord(UUID.fromString(p.playerUuid()), p.username(), p.lastOnline()));
             }
         }
         return names;

@@ -6,7 +6,6 @@ import com.enhancedechest.command.admin.MigrateAxVaultsCommand;
 import com.enhancedechest.command.admin.MigrateCustomEnderChestCommand;
 import com.enhancedechest.command.admin.MigratePlayerVaultsXCommand;
 import com.enhancedechest.command.admin.ChestTransferCommand;
-import com.enhancedechest.command.admin.ConfigCommand;
 import com.enhancedechest.command.admin.ImportCommand;
 import com.enhancedechest.command.admin.MigrateVanillaCommand;
 import com.enhancedechest.command.admin.ReloadCommand;
@@ -14,8 +13,8 @@ import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.Message;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
@@ -46,18 +45,18 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     private static final String ADMIN_DELETE_PERMISSION = "enhancedechest.admin.delete";
     private static final String ADMIN_TRANSFER_PERMISSION = "enhancedechest.admin.transfer";
     private static final String ADMIN_IMPORT_PERMISSION = "enhancedechest.admin.import";
-    private static final String ADMIN_CONFIG_PERMISSION = "enhancedechest.admin.config";
     // /ee view requires this; modifying (take/add) further requires enhancedechest.admin.edit,
     // checked per-click in EnderChestGuiListener so a view-only admin can look but not touch.
     private static final String ADMIN_VIEW_PERMISSION = "enhancedechest.admin.view";
 
     // Suggestion tooltips and value tables are precomputed once: suggestion providers run on every
     // keystroke, so building Messages/arrays inside them would allocate on the command's hot path.
-    // Each suggestion carries a tooltip naming what the value is (shown beside the entry), and the
-    // word-based arguments add an info header (see suggestHeader) above their values.
+    // Each suggestion carries a tooltip naming what the value is, shown beside the entry. Nothing is
+    // ever suggested that is not a real value — what the argument *is* comes from the client's own
+    // usage hint above the chat bar (e.g. "<player> [<index>]"), which Minecraft renders from the
+    // argument names in the tree below, so it stays correct without a fake entry in the dropdown.
     private static final Message PLAYER_TOOLTIP = new LiteralMessage("Player");
     private static final Message OFFLINE_PLAYER_TOOLTIP = new LiteralMessage("Player (offline)");
-    private static final Message HEADER_TOOLTIP = new LiteralMessage("Info only — not a value");
 
     /** Cap on how many player names a suggestion lists, so a huge offline roster can't flood the client. */
     private static final int MAX_PLAYER_SUGGESTIONS = 50;
@@ -95,7 +94,6 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
 
     /** Suggests names of currently online players for the <player> argument (online-only commands). */
     private static final SuggestionProvider<CommandSourceStack> ONLINE_PLAYERS = (ctx, builder) -> {
-        suggestHeader(builder, "(player)");
         String prefix = builder.getRemaining().toLowerCase(Locale.ROOT);
         for (Player p : Bukkit.getOnlinePlayers()) {
             String name = p.getName();
@@ -109,20 +107,25 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     /**
      * Suggests known players for the <player> argument of commands that accept <b>offline</b> targets
      * (add / resize / delete / view). Online players are listed first; once at least one character has
-     * been typed, offline players who have joined before are appended (filtered by the typed prefix and
-     * capped at {@link #MAX_PLAYER_SUGGESTIONS}, so a large roster can't flood the client). The empty
-     * state shows only online names, keeping it tidy — type to search the offline roster.
+     * been typed, offline names are appended from the plugin's own
+     * {@link com.enhancedechest.service.PlayerNameIndex} (filtered by the typed prefix and capped at
+     * {@link #MAX_PLAYER_SUGGESTIONS}, so a large roster can't flood the client). The empty state shows
+     * only online names, keeping it tidy — type to search the offline roster.
      *
-     * <p>A third pass then checks the plugin's own {@link com.enhancedechest.service.PlayerNameIndex} —
-     * an in-memory, name-sorted index of every player the plugin has ever recorded a chest for. This is
-     * what makes players imported straight into the DB (e.g. via a migration tool) show up here: they
-     * were never actually online on this server, so they are absent from {@code Bukkit.getOfflinePlayers()}
-     * (which only reflects this server's own usercache/whitelist), but {@code /ee view} can still open
-     * their chest. The lookup is a {@code ConcurrentSkipListMap.subMap} range scan (O(log n + k)), so it
-     * stays cheap on every keystroke even with a large roster — no DB query on this hot path.
+     * <p>The name index is an in-memory, name-sorted map of every player the <b>database</b> has a name
+     * for. Looking a prefix up in it is a {@code ConcurrentSkipListMap.subMap} range scan (O(log n + k)),
+     * so a keystroke costs no disk and no DB query — which is the whole point: this provider runs on a
+     * server thread on <b>every</b> keystroke.
+     *
+     * <p><b>Never call {@code Bukkit.getOfflinePlayers()} here, or anywhere else.</b> It builds one
+     * {@code OfflinePlayer} per file in the playerdata folder, and reading a name off one whose profile
+     * is not in the usercache loads and decompresses that player's {@code .dat} file. This provider used
+     * to do exactly that, and on a server with thousands of past players it turned every keypress in
+     * {@code /ee view <name>} into thousands of NBT reads on a region thread — a TPS collapse, and enough
+     * transient garbage to get the server OOM-killed. A name the DB has never seen is simply not
+     * completable; typing it in full still resolves.
      */
     private static final SuggestionProvider<CommandSourceStack> KNOWN_PLAYERS = (ctx, builder) -> {
-        suggestHeader(builder, "(player)");
         String prefix = builder.getRemaining().toLowerCase(Locale.ROOT);
         Set<String> seen = new HashSet<>();
         int added = 0;
@@ -133,28 +136,15 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                 if (++added >= MAX_PLAYER_SUGGESTIONS) return builder.buildFuture();
             }
         }
-        // Scan the offline roster only once the admin starts typing, to avoid a full scan (and a noisy
-        // dropdown) on the empty state.
+        // Search the offline names only once the admin starts typing, to keep the empty state tidy.
         if (!prefix.isEmpty()) {
-            for (OfflinePlayer p : Bukkit.getOfflinePlayers()) {
-                String name = p.getName();
-                if (name == null) continue;
-                String lower = name.toLowerCase(Locale.ROOT);
-                if (lower.startsWith(prefix) && seen.add(lower)) {
-                    builder.suggest(name, OFFLINE_PLAYER_TOOLTIP);
-                    if (++added >= MAX_PLAYER_SUGGESTIONS) break;
-                }
-            }
-            if (added < MAX_PLAYER_SUGGESTIONS) {
-                EnhancedEchestPlugin plugin =
-                        (EnhancedEchestPlugin) Bukkit.getPluginManager().getPlugin("EnhancedEchest");
-                if (plugin != null && plugin.isEnabled()) {
-                    for (var entry : plugin.getPlayerNameIndex().prefixMatches(prefix, MAX_PLAYER_SUGGESTIONS - added)) {
-                        String lower = entry.displayName().toLowerCase(Locale.ROOT);
-                        if (seen.add(lower)) {
-                            builder.suggest(entry.displayName(), OFFLINE_PLAYER_TOOLTIP);
-                            if (++added >= MAX_PLAYER_SUGGESTIONS) break;
-                        }
+            EnhancedEchestPlugin plugin =
+                    (EnhancedEchestPlugin) Bukkit.getPluginManager().getPlugin("EnhancedEchest");
+            if (plugin != null && plugin.isEnabled()) {
+                for (var entry : plugin.getPlayerNameIndex().prefixMatches(prefix, MAX_PLAYER_SUGGESTIONS - added)) {
+                    if (seen.add(entry.displayName().toLowerCase(Locale.ROOT))) {
+                        builder.suggest(entry.displayName(), OFFLINE_PLAYER_TOOLTIP);
+                        if (++added >= MAX_PLAYER_SUGGESTIONS) break;
                     }
                 }
             }
@@ -163,29 +153,27 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     };
 
     /**
-     * Resolves a player name to a UUID from already-cached/in-memory data only — online players, then
-     * the server's offline roster (`getOfflinePlayers`), then the plugin's own {@link
-     * com.enhancedechest.service.PlayerNameIndex} — <b>without</b> the blocking {@code
-     * getOfflinePlayer(String)} web lookup, so it is safe to call on the suggestion hot path. The name
-     * index step is what lets this resolve players who were imported into the plugin's DB (e.g. via a
-     * migration) but have never actually connected to this server, so they never appear in Bukkit's own
-     * usercache-backed {@code getOfflinePlayers()}. Returns null if nothing matches.
+     * Resolves a player name to a UUID from in-memory data only — online players, then the plugin's own
+     * {@link com.enhancedechest.service.PlayerNameIndex}, then Paper's usercache
+     * ({@link Bukkit#getOfflinePlayerIfCached(String)}) — <b>without</b> the blocking {@code
+     * getOfflinePlayer(String)} web lookup <b>and without</b> {@code getOfflinePlayers()}, whose per-entry
+     * name resolution reads playerdata off disk. Both would otherwise land on a server thread, since this
+     * sits on the suggestion hot path. The name index step is what lets this resolve players imported
+     * straight into the plugin's DB (e.g. via a migration) who have never connected to this server, so
+     * they are in no server-side cache at all. Returns null if nothing matches.
      */
     private static UUID knownPlayerUuid(String name, EnhancedEchestPlugin plugin) {
         Player online = Bukkit.getPlayerExact(name);
         if (online != null) return online.getUniqueId();
-        for (OfflinePlayer p : Bukkit.getOfflinePlayers()) {
-            if (name.equalsIgnoreCase(p.getName())) return p.getUniqueId();
-        }
-        return plugin != null ? plugin.getPlayerNameIndex().findUuid(name) : null;
+        UUID indexed = plugin != null ? plugin.getPlayerNameIndex().findUuid(name) : null;
+        if (indexed != null) return indexed;
+        // Memory-only usercache hit; unlike getOfflinePlayer(String) it never falls back to a Mojang
+        // lookup, and unlike getOfflinePlayers() it never touches the playerdata folder.
+        OfflinePlayer cached = Bukkit.getOfflinePlayerIfCached(name);
+        return cached != null ? cached.getUniqueId() : null;
     }
 
-    /**
-     * Suggests the valid chest sizes (multiples of 9, from 9 to 54) for the {@code <size>} argument.
-     * No info header here: this is an integer argument, and Minecraft groups numeric suggestions above
-     * text ones, so a text header is always forced to the bottom (the per-value tooltip names it
-     * instead). Only the word-based arguments (player, duration) can show a header on top.
-     */
+    /** Suggests the valid chest sizes (multiples of 9, from 9 to 54) for the {@code <size>} argument. */
     private static final SuggestionProvider<CommandSourceStack> CHEST_SIZES = (ctx, builder) -> {
         for (int i = 0; i < SIZE_VALUES.length; i++) {
             builder.suggest(SIZE_VALUES[i], SIZE_TOOLTIPS[i]);
@@ -193,8 +181,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
         return builder.buildFuture();
     };
 
-    /** Suggests common chest counts for the optional {@code <count>} argument of /ee add. (Integer
-     *  argument — see {@link #CHEST_SIZES} for why it carries no info header.) */
+    /** Suggests common chest counts for the optional {@code <count>} argument of /ee add. */
     private static final SuggestionProvider<CommandSourceStack> CHEST_COUNTS = (ctx, builder) -> {
         for (int i = 0; i < COUNT_VALUES.length; i++) {
             builder.suggest(COUNT_VALUES[i], COUNT_TOOLTIPS[i]);
@@ -204,7 +191,6 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
 
     /** Suggests a few common durations for the optional {@code <duration>} argument of /ee add. */
     private static final SuggestionProvider<CommandSourceStack> DURATIONS = (ctx, builder) -> {
-        suggestHeader(builder, "(duration)");
         String prefix = builder.getRemaining().toLowerCase(Locale.ROOT);
         for (int i = 0; i < DURATION_VALUES.length; i++) {
             if (DURATION_VALUES[i].startsWith(prefix)) {
@@ -213,25 +199,6 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
         }
         return builder.buildFuture();
     };
-
-    /**
-     * Adds a purely-informational header above the real suggestions (e.g. {@code (player)}) so the
-     * user can see what the argument expects without hovering.
-     *
-     * <p>Brigadier sorts suggestions by text, so the label must begin with a character that sorts
-     * <i>before</i> the values to land first. {@code (} (ASCII 40) sorts before digits and letters, so
-     * {@code (label)} pins it to the top cleanly with no leading space. This only works for word-based
-     * arguments: on integer arguments Minecraft groups numeric suggestions above text ones, so a text
-     * header is forced to the bottom — those arguments rely on their per-value tooltips instead.
-     *
-     * <p>The header is only shown while nothing has been typed yet — once the player starts typing a
-     * value it disappears. Completing it produces an invalid value (it is a hint, not a real option).
-     */
-    private static void suggestHeader(SuggestionsBuilder builder, String label) {
-        if (builder.getRemaining().isEmpty()) {
-            builder.suggest(label, HEADER_TOOLTIP);
-        }
-    }
 
     /** Suggests the sender's own chests as {@code #index} and custom-name completions for /ec. */
     private static final SuggestionProvider<CommandSourceStack> OWN_CHESTS = (ctx, builder) -> {
@@ -375,6 +342,31 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
         );
     }
 
+    /**
+     * The {@code <player> [list | <index>]} subtree shared by {@code /ee view} and its standalone
+     * shorthand {@code /endersee}. Built fresh per call rather than cached in a constant: Brigadier
+     * builders are mutable and {@code build()} produces one node instance, so handing the same object to
+     * two parents would splice one command node into two trees.
+     */
+    private static RequiredArgumentBuilder<CommandSourceStack, String> viewPlayerArgument() {
+        return Commands.argument("player", StringArgumentType.word())
+                .suggests(KNOWN_PLAYERS)
+                .executes(ctx -> ChestAdminCommand.view(
+                        ctx.getSource(),
+                        StringArgumentType.getString(ctx, "player")))
+                // Literal 'list' → always open the chest picker for the target.
+                .then(Commands.literal("list")
+                        .executes(ctx -> ChestAdminCommand.viewList(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "player"))))
+                .then(Commands.argument("index", IntegerArgumentType.integer(1))
+                        .suggests(TARGET_CHESTS)
+                        .executes(ctx -> ChestAdminCommand.view(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "player"),
+                                IntegerArgumentType.getInteger(ctx, "index"))));
+    }
+
     private void registerAdminCommands(Commands commands) {
         commands.register(
                 Commands.literal("enhancedechest")
@@ -429,10 +421,6 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                         .then(Commands.literal("import")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_IMPORT_PERMISSION))
                                 .executes(ctx -> ImportCommand.execute(ctx.getSource())))
-                        // /ee config — open the in-game config.yml editor (one dialog page per section).
-                        .then(Commands.literal("config")
-                                .requires(src -> src.getSender().hasPermission(ADMIN_CONFIG_PERMISSION))
-                                .executes(ctx -> ConfigCommand.execute(ctx.getSource())))
                         // /ee add <player> <size> [count] [duration] — a single linear chain so each
                         // node has one argument child (two sibling argument children break Brigadier's
                         // suggestions, since word() matches the empty trailing token).
@@ -469,22 +457,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                         // the picker even for a single chest. Modifying requires enhancedechest.admin.edit.
                         .then(Commands.literal("view")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_VIEW_PERMISSION))
-                                .then(Commands.argument("player", StringArgumentType.word())
-                                        .suggests(KNOWN_PLAYERS)
-                                        .executes(ctx -> ChestAdminCommand.view(
-                                                ctx.getSource(),
-                                                StringArgumentType.getString(ctx, "player")))
-                                        // Literal 'list' → always open the chest picker for the target.
-                                        .then(Commands.literal("list")
-                                                .executes(ctx -> ChestAdminCommand.viewList(
-                                                        ctx.getSource(),
-                                                        StringArgumentType.getString(ctx, "player"))))
-                                        .then(Commands.argument("index", IntegerArgumentType.integer(1))
-                                                .suggests(TARGET_CHESTS)
-                                                .executes(ctx -> ChestAdminCommand.view(
-                                                        ctx.getSource(),
-                                                        StringArgumentType.getString(ctx, "player"),
-                                                        IntegerArgumentType.getInteger(ctx, "index"))))))
+                                .then(viewPlayerArgument()))
                         // /ee resize <player> <index> <size>
                         .then(Commands.literal("resize")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_RESIZE_PERMISSION))
@@ -536,6 +509,17 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                         .build(),
                 "EnhancedEchest admin commands",
                 List.of("ee")
+        );
+
+        // /endersee <player> [list | index] — a standalone shorthand for /ee view, registered as its own
+        // command rather than an alias because Paper aliases the whole root literal, not a subcommand.
+        // Same permission and same handlers, so the two stay behaviourally identical by construction.
+        commands.register(
+                Commands.literal("endersee")
+                        .requires(src -> src.getSender().hasPermission(ADMIN_VIEW_PERMISSION))
+                        .then(viewPlayerArgument())
+                        .build(),
+                "Open another player's ender chest (same as /ee view)"
         );
     }
 }

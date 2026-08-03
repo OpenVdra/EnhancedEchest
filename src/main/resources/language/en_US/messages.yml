@@ -40,17 +40,6 @@ migrate:
   import-player-done: '{prefix}{source} import for {player}: {vaults} vault(s) imported, {skipped} skipped.'
   import-failed: '{prefix}{source} import failed: {error}'
 
-# In-game config editor (/ee config).
-config:
-  # {count} = settings changed. Saving applies them, so /ee reload is not needed.
-  saved: '{prefix}Saved. {count} setting(s) are now active.'
-  no-changes: '{prefix}Nothing changed.'
-  # Saved a setting that needs a server restart.
-  restart-required: '{prefix}<yellow>Some of those settings only take effect after a full server restart.'
-  # {fields} = rejected labels. Nothing is saved when a value is invalid.
-  invalid: '{prefix}<red>Invalid value for: {fields}. Nothing was saved.'
-  save-failed: '{prefix}<red>Could not write config.yml. See the server console.'
-
 # Database-to-database import (/ee import): copies an old backend into the active one.
 import:
   # Validation of the dialog form before anything runs.

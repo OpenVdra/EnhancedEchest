@@ -78,18 +78,18 @@ public abstract class AbstractSqlStorage implements StorageBackend {
         // write-back uses the upsert variants below, each reused as one batched PreparedStatement per
         // table under a single transaction.
         this.sqlInsertPlayer = "INSERT INTO " + players
-                + " (player_uuid, username, edit_mode, applied_default_size) VALUES (?, ?, ?, ?)";
+                + " (player_uuid, username, edit_mode, applied_default_size, last_online) VALUES (?, ?, ?, ?, ?)";
         this.sqlInsertChest = "INSERT INTO " + chests + " "
                 + "(player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, last_updated, kind, expires_at, icon) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         this.sqlUpsertPlayer = sqlInsertPlayer + upsertClause(upsertSyntax, "player_uuid",
-                "username", "edit_mode", "applied_default_size");
+                "username", "edit_mode", "applied_default_size", "last_online");
         this.sqlUpsertChest = sqlInsertChest + upsertClause(upsertSyntax, "player_uuid, chest_index",
                 "size", "custom_name", "is_primary", "container_data", "migrated", "last_updated",
                 "kind", "expires_at", "icon");
         this.sqlLoadPlayerChests = "SELECT player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, "
                 + "last_updated, kind, expires_at, icon FROM " + chests + " WHERE player_uuid = ?";
-        this.sqlLoadAllPlayers = "SELECT player_uuid, username, edit_mode, applied_default_size FROM " + players;
+        this.sqlLoadAllPlayers = "SELECT player_uuid, username, edit_mode, applied_default_size, last_online FROM " + players;
         this.sqlLoadOnePlayer = sqlLoadAllPlayers + " WHERE player_uuid = ?";
         this.sqlFindExpired = "SELECT player_uuid, chest_index, kind FROM " + chests + " "
                 + "WHERE expires_at IS NOT NULL AND expires_at <= ?";
@@ -249,7 +249,8 @@ public abstract class AbstractSqlStorage implements StorageBackend {
                 rs.getString("player_uuid"),
                 rs.getString("username"),
                 rs.getInt("edit_mode"),
-                rs.getInt("applied_default_size"));
+                rs.getInt("applied_default_size"),
+                rs.getLong("last_online"));
     }
 
     // ---- flush (autosave / shutdown write-back) ----
@@ -326,6 +327,7 @@ public abstract class AbstractSqlStorage implements StorageBackend {
                 if (p.username() == null) ps.setNull(2, Types.VARCHAR); else ps.setString(2, p.username());
                 ps.setInt(3, p.editMode());
                 ps.setInt(4, p.appliedDefaultSize());
+                ps.setLong(5, p.lastOnline());
                 ps.addBatch();
                 total++;
                 if (++pending >= BATCH_SIZE) {

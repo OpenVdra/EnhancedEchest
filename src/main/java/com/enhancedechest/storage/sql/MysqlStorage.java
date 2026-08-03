@@ -24,16 +24,17 @@ public final class MysqlStorage extends AbstractSqlStorage {
             """;
 
     // Per-player row: settings plus the name index for offline /ee view resolution (name -> UUID),
-    // written lazily by ChestOpener's open prelude the first time a player opens their ender chest after
-    // a rename (or ever) — not on join. username is VARCHAR(48) (nullable — a row can exist, e.g. from an
-    // offline admin resize, before any name is recorded) to comfortably fit Java (16), Bedrock/Floodgate-
-    // prefixed names and the like.
+    // written on join and whenever the name changes. username is VARCHAR(48) (nullable — a row can
+    // exist, e.g. from an offline admin resize, before any name is recorded) to comfortably fit Java
+    // (16), Bedrock/Floodgate-prefixed names and the like. last_online is epoch-ms of the last
+    // join/quit, 0 when never recorded; it decides which offline players tab-completion offers.
     private static final String INIT_SETTINGS_SQL = """
             CREATE TABLE IF NOT EXISTS %1$splayers (
                 player_uuid          VARCHAR(36) NOT NULL,
                 username             VARCHAR(48),
                 edit_mode            TINYINT(1)  NOT NULL DEFAULT 0,
                 applied_default_size INT         NOT NULL DEFAULT 0,
+                last_online          BIGINT      NOT NULL DEFAULT 0,
                 PRIMARY KEY (player_uuid)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """;
