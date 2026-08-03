@@ -49,6 +49,33 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     // checked per-click in EnderChestGuiListener so a view-only admin can look but not touch.
     private static final String ADMIN_VIEW_PERMISSION = "enhancedechest.admin.view";
 
+    /**
+     * Every node the {@code /enhancedechest} tree can gate on. The root literal itself carries no
+     * permission of its own, but it still needs a {@code .requires} that is the <b>union</b> of its
+     * children's: Brigadier only strips a node from the tree it sends a client when that node's own
+     * requirement fails, so a root with no requirement stays visible in tab-completion for everyone —
+     * even a player for whom every subcommand underneath it is hidden. Keep this list in sync when a
+     * subcommand is added, or its holders lose the ability to see the command at all.
+     */
+    private static final String[] ADMIN_PERMISSIONS = {
+            ADMIN_RELOAD_PERMISSION,
+            ADMIN_MIGRATE_PERMISSION,
+            ADMIN_ADD_PERMISSION,
+            ADMIN_RESIZE_PERMISSION,
+            ADMIN_DELETE_PERMISSION,
+            ADMIN_TRANSFER_PERMISSION,
+            ADMIN_IMPORT_PERMISSION,
+            ADMIN_VIEW_PERMISSION,
+    };
+
+    /** True when the sender holds at least one admin node, i.e. {@code /ee} has something to offer them. */
+    private static boolean hasAnyAdminPermission(CommandSourceStack src) {
+        for (String permission : ADMIN_PERMISSIONS) {
+            if (src.getSender().hasPermission(permission)) return true;
+        }
+        return false;
+    }
+
     // Suggestion tooltips and value tables are precomputed once: suggestion providers run on every
     // keystroke, so building Messages/arrays inside them would allocate on the command's hot path.
     // Each suggestion carries a tooltip naming what the value is, shown beside the entry. Nothing is
@@ -370,6 +397,11 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     private void registerAdminCommands(Commands commands) {
         commands.register(
                 Commands.literal("enhancedechest")
+                        // The root has no permission of its own — this gate is only about visibility:
+                        // without it Brigadier keeps the root (and the /ee + namespaced aliases) in the
+                        // tree it sends every client, so /ee tab-completes for players who can run none
+                        // of its subcommands. Each subcommand still gates on its own node below.
+                        .requires(EnhancedEchestBootstrap::hasAnyAdminPermission)
                         .then(Commands.literal("migrate")
                                 // All three migration sources share one permission node; gate the whole
                                 // subtree on the "migrate" literal itself (not just its children) so

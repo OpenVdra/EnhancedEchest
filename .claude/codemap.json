@@ -1,0 +1,391 @@
+{
+  "codemapVersion": 1,
+  "generatedAt": "2026-08-03",
+  "generatedFromCommit": "443f5d9",
+  "regenerateHint": "Hand-maintained. When adding/removing/renaming a class, update its entry here and the matching row in .claude/CODEMAP.md. Line counts are indicative, not exact after edits.",
+
+  "project": {
+    "name": "EnhancedEchest",
+    "version": "1.2.0",
+    "description": "Paper/Folia plugin replacing the vanilla ender chest with a database-backed one: a player owns several chests of up to 54 slots, each with its own size, custom name and icon, managed from an in-game dialog.",
+    "basePackage": "com.enhancedechest",
+    "language": "Java 21",
+    "build": "Gradle Kotlin DSL, single module, shadowJar is the deliverable",
+    "platform": "Paper API 1.21.11 (api-version 1.21); runs on Paper forks 1.21.11 - 26.2; NOT CraftBukkit",
+    "sourceRoot": "src/main/java/com/enhancedechest",
+    "stats": { "javaFiles": 87, "javaLines": 14996, "packages": 20 }
+  },
+
+  "docs": {
+    "root": "CLAUDE.md",
+    "packageDocs": {
+      "command": "src/main/java/com/enhancedechest/command/CLAUDE.md",
+      "config": "src/main/java/com/enhancedechest/config/CLAUDE.md",
+      "crossserver": "src/main/java/com/enhancedechest/crossserver/CLAUDE.md",
+      "gui": "src/main/java/com/enhancedechest/gui/CLAUDE.md",
+      "lang": "src/main/java/com/enhancedechest/lang/CLAUDE.md",
+      "listener": "src/main/java/com/enhancedechest/listener/CLAUDE.md",
+      "migration": "src/main/java/com/enhancedechest/migration/CLAUDE.md",
+      "service": "src/main/java/com/enhancedechest/service/CLAUDE.md",
+      "storage": "src/main/java/com/enhancedechest/storage/CLAUDE.md"
+    },
+    "humanCodemap": ".claude/CODEMAP.md",
+    "endUserDocs": "docs/ (VitePress; use the write-docs skill)",
+    "changelog": "CHANGELOG.md (end-user tone; use the write-docs skill)",
+    "internalRunbooks": "local-docs/ (docker DB rig, cross-server two-server rig; not published)"
+  },
+
+  "commands": {
+    "build": "./gradlew build",
+    "test": "./gradlew test",
+    "stressTest": "./gradlew stressTest",
+    "note": "Only chest index allocation, temp reclaim, the activity-log pipeline, schema upgrade and the load simulations are covered by tests. Every GUI, dialog, command and storage path is verified by running on a Paper/Folia server."
+  },
+
+  "entrypoints": [
+    {
+      "name": "plugin bootstrap",
+      "file": "EnhancedEchestBootstrap.java",
+      "role": "PluginBootstrap. Registers the /enderchest, /eclist and /enhancedechest Brigadier trees on LifecycleEvents.COMMANDS, before enable. Also the single place permission node constants live."
+    },
+    {
+      "name": "plugin main / wiring hub",
+      "file": "EnhancedEchestPlugin.java",
+      "role": "Every service is a field constructed by hand here. No DI container, so onEnable/onDisable ordering is load-bearing (see flows.startup / flows.shutdown)."
+    },
+    {
+      "name": "chest open",
+      "file": "service/ChestOpener.java",
+      "role": "Decides WHAT to open for /ec, /eclist, right-click and admin /ee view, then funnels into ChestSessionManager.open."
+    },
+    {
+      "name": "dupe-safety funnel",
+      "file": "service/ChestSessionManager.java",
+      "role": "The single closed class that mutates the live-session map. Every open goes through open(); admin mutations chain behind forceCloseAll + runExclusive."
+    },
+    {
+      "name": "storage facade",
+      "file": "storage/CachedStorage.java",
+      "role": "The EnderChestStorage everyone actually sees. Authoritative for every resident owner."
+    }
+  ],
+
+  "packages": [
+    {
+      "name": "(root)",
+      "path": "",
+      "role": "Bootstrap and wiring hub.",
+      "files": [
+        { "path": "EnhancedEchestBootstrap.java", "lines": 525, "key": true, "role": "PluginBootstrap: builds the whole Brigadier command tree (/enderchest, /ec, /eclist, /ee) on LifecycleEvents.COMMANDS, each node gated by .requires(...). Declares the permission node constants." },
+        { "path": "EnhancedEchestPlugin.java", "lines": 440, "key": true, "role": "JavaPlugin. Hand-wired service graph, ordered onEnable/onDisable, reload(). @Getter (Lombok) exposes every service." }
+      ]
+    },
+    {
+      "name": "service",
+      "path": "service",
+      "doc": "src/main/java/com/enhancedechest/service/CLAUDE.md",
+      "role": "Open routing, live sessions, dupe-safety, item-moving operations, the async dispatch boundary. The ONLY layer allowed to put storage calls on the async pool.",
+      "files": [
+        { "path": "service/ChestSessionManager.java", "lines": 664, "key": true, "role": "Shared-live-inventory registry + the dupe-safety contract. open() is the sole open funnel; forceCloseAll/runExclusive serialize admin mutations per (owner,index); shutdown() persists every open session (blocks <=30s).", "invariants": ["no-dupe", "one shared Inventory per open chest", "encode-on-save stays synchronous on the global thread"] },
+        { "path": "service/ChestOpener.java", "lines": 688, "key": true, "role": "GUI-flow layer above the session manager: reconciles permission chests, routes /ec vs the list menu vs a direct open, drives the management dialogs and /ee import." },
+        { "path": "service/ChestActivityLogger.java", "lines": 936, "role": "Bounded, batched audit pipeline. Bukkit-thread side captures occupied slots as immutable strings/numbers once; diffing, rendering, rotation and file I/O run on one dedicated worker. Plain-text OPEN/CLOSE headers + ADD/TAKE totals, optional HAVE contents lines, shulker contents in the detail string." },
+        { "path": "service/ChestSpillService.java", "lines": 349, "key": true, "role": "Item-moving operations: shrink-spill, delete (spill or force), bulk delete, and reclaimTempInto (temp chest -> newly granted chest). Force-closes viewers, then runs exclusively per (owner,index)." },
+        { "path": "service/ChestTransferService.java", "lines": 235, "role": "/ee transfer: moves NORMAL chests onto another account (a move, never a copy). Row swap is one transaction in EnderChestStorage.transferChests." },
+        { "path": "service/PermissionChestService.java", "lines": 262, "role": "Grants/revokes ChestKind.PERM chests from enhancedechest.additional_amount.<count>.slot.<size>; all matching permissions stack, reconcile() diffs target vs held." },
+        { "path": "service/DbExecutor.java", "lines": 82, "key": true, "role": "The shared daemon pool for all async storage work (thread name EnhancedEchest-db). supply()/run(). Bounded (64 cap), sized per backend, closed last on disable." },
+        { "path": "service/StorageGateway.java", "lines": 72, "role": "Thin async wrapper over EnderChestStorage — pure delegation onto DbExecutor, no session logic. Used by dialog callbacks, admin commands, open routing." },
+        { "path": "service/PlayerSettingsCache.java", "lines": 158, "role": "Write-through read cache of per-player settings, bounded by online players (preload on join, evict on quit). Also records the player's username / last_online." },
+        { "path": "service/PlayerNameIndex.java", "lines": 151, "role": "In-memory index of every recorded player name (players.username), loaded once at startup; answers offline tab-completion and name resolution without a DB round-trip." },
+        { "path": "service/TempReclaimNotifier.java", "lines": 73, "role": "Tells the owner which chest their temp-chest items were moved into. Hooked on the tail of reclaimTempInto so no call site can forget it." }
+      ]
+    },
+    {
+      "name": "storage",
+      "path": "storage",
+      "doc": "src/main/java/com/enhancedechest/storage/CLAUDE.md",
+      "role": "The lazy per-owner cache, the SQL backends, the schema, autosave. Storage methods are synchronous — the caller dispatches.",
+      "files": [
+        { "path": "storage/EnderChestStorage.java", "lines": 320, "key": true, "role": "The synchronous storage contract the whole plugin codes against. Ownership model: a player owns a chest iff a row exists for (player_uuid, chest_index)." },
+        { "path": "storage/CachedStorage.java", "lines": 637, "key": true, "role": "Lazy-loading write-back cache and the EnderChestStorage everyone sees. Thin facade holding only the ender-chest domain logic.", "invariants": ["residency", "dirty => resident", "eviction takes only clean owners"] },
+        { "path": "storage/OwnerResidencyCache.java", "lines": 362, "key": true, "role": "The coherence engine: load-on-miss residency protocol, write-back flush, idle eviction, the single lock. withOwner() = residency re-check + operation in one lock hold. Generic — knows only owners and dirty rows." },
+        { "path": "storage/ChestCacheState.java", "lines": 346, "role": "The pure in-memory row model (enderchests/players rows + dirty tracking + index allocation). NOT thread-safe; only ever touched under OwnerResidencyCache's lock." },
+        { "path": "storage/StorageBackend.java", "lines": 113, "role": "The narrow SQL contract the cache needs: loadOwner, bulk flush, findExpired/countChests/findUuidByName/loadAllPlayers, backup, importRows. Deliberately NO per-row write operations." },
+        { "path": "storage/StorageFactory.java", "lines": 24, "role": "Picks the SQL dialect from config (sqlite/mysql/mariadb/postgresql)." },
+        { "path": "storage/AutosaveService.java", "lines": 111, "role": "Async repeating flush() + evictIdle() at database.autosave-interval (default 3m), plus flushQuitterLater (quit write-back +5s)." },
+        { "path": "storage/sql/AbstractSqlStorage.java", "lines": 377, "key": true, "role": "JDBC StorageBackend shared by all dialects: DDL, per-player reads, batched dirty flush, whole-database queries, verbatim import copy. HikariCP pool, database.ssl modes." },
+        { "path": "storage/sql/SqliteStorage.java", "lines": 102, "role": "SQLite dialect (WAL, 30s busy timeout, VACUUM INTO backup). Driver is compileOnly — comes from the server classpath, never relocated." },
+        { "path": "storage/sql/MysqlStorage.java", "lines": 87, "role": "MySQL/MariaDB dialect (shaded+relocated MariaDB driver, ON DUPLICATE KEY upserts)." },
+        { "path": "storage/sql/PostgresStorage.java", "lines": 85, "role": "PostgreSQL dialect (shaded+relocated PG driver + com.ongres, ON CONFLICT upserts)." },
+        { "path": "storage/sql/SchemaMigrator.java", "lines": 377, "key": true, "role": "Versioned forward-only migrator for EXISTING installs (fresh installs land on latest via CREATE TABLE). Also renameLegacyTables (enderchests/players/schema_meta -> echest_*), which runs before CREATE TABLE." }
+      ]
+    },
+    {
+      "name": "gui",
+      "path": "gui",
+      "doc": "src/main/java/com/enhancedechest/gui/CLAUDE.md",
+      "role": "Dialogs, inventory menus, holders, the icon picker.",
+      "files": [
+        { "path": "gui/dialog/ChestDialogs.java", "lines": 730, "key": true, "role": "All Paper Dialog API usage, isolated here so a Paper breaking change is a one-file edit. List / per-chest detail / rename dialogs, plus the config editor and import dialogs. Renders eagerly with the viewer's Locale." },
+        { "path": "gui/dialog/IconCatalog.java", "lines": 343, "role": "Pickable chest icons over the Material registry + rendering a chosen icon as an Adventure sprite object component (minecraft:blocks / minecraft:items atlases). Uses gson from the server classpath." },
+        { "path": "gui/dialog/DialogLinks.java", "lines": 63, "role": "The shared 'open the documentation' button (book sprite, URL from gui.yml, address never shown on screen)." },
+        { "path": "gui/ChestListMenu.java", "lines": 190, "role": "The simple /eclist inventory chooser (enderchest.list-menu: inventory): one icon per chest, padding-border layout sized 27/36/45/54 to the chest count; >28 chests falls back to the dialog." },
+        { "path": "gui/ChestListHolder.java", "lines": 52, "role": "Marker InventoryHolder for the chooser menu (read-only: every interaction is cancelled). Carries the source block location and slot -> chest index map." },
+        { "path": "gui/EnderChestHolder.java", "lines": 51, "role": "Marker InventoryHolder on every custom ender chest Inventory: owner, 1-based index, size, ChestKind, optional source block." },
+        { "path": "gui/EnderChestAnimator.java", "lines": 61, "role": "Vanilla lid animation + sound via the pure Paper Lidded API (no NMS). Must be called on the block's region thread; degrades to a no-op." }
+      ]
+    },
+    {
+      "name": "command",
+      "path": "command",
+      "doc": "src/main/java/com/enhancedechest/command/CLAUDE.md",
+      "role": "Brigadier command bodies. Registration itself lives in the bootstrap, not plugin.yml.",
+      "files": [
+        { "path": "command/EnderChestOpenCommand.java", "lines": 63, "role": "/ec (open) and /eclist (management list)." },
+        { "path": "command/admin/ChestAdminCommand.java", "lines": 352, "key": true, "role": "/ee add|resize|delete <player>. Add allocates the next free index and may grant an expiring chest; resize spills cut-off items; delete removes the newest N chests (spill by default, 'force' to hard-delete), never the first chest." },
+        { "path": "command/admin/ChestTransferCommand.java", "lines": 77, "role": "/ee transfer <from> <to> <index|name|all> [override|temp]; the target and flag are parsed from one greedy argument so names may contain spaces." },
+        { "path": "command/admin/ImportCommand.java", "lines": 38, "role": "/ee import — opens the DB->DB import dialog (player-only)." },
+        { "path": "command/admin/MigrateVanillaCommand.java", "lines": 107, "role": "/ee migrate vanilla [all|<player>] — vanilla ender chest -> chest #1." },
+        { "path": "command/admin/MigrateAxVaultsCommand.java", "lines": 129, "role": "/ee migrate axvaults [all|<player>]." },
+        { "path": "command/admin/MigratePlayerVaultsXCommand.java", "lines": 130, "role": "/ee migrate playervaultsx [all|<player>]." },
+        { "path": "command/admin/MigrateCustomEnderChestCommand.java", "lines": 130, "role": "/ee migrate customenderchest [all|<player>]." },
+        { "path": "command/admin/PlayerResolver.java", "lines": 64, "role": "Name -> UUID for admin commands, works offline. Order: online exact match -> the plugin's own players table -> Paper usercache -> Bukkit offline lookup. Table/offline steps run on the async executor." },
+        { "path": "command/admin/ReloadCommand.java", "lines": 23, "role": "/ee reload -> EnhancedEchestPlugin.reload()." }
+      ]
+    },
+    {
+      "name": "listener",
+      "path": "listener",
+      "doc": "src/main/java/com/enhancedechest/listener/CLAUDE.md",
+      "role": "Join/quit lifecycle, click and drag guards, right-click interception.",
+      "files": [
+        { "path": "listener/EnderChestGuiListener.java", "lines": 213, "key": true, "role": "Click/drag guards on the custom chest GUI, admin edit permission check, deny sound throttle, and the detach-on-close that triggers the save when the last viewer leaves." },
+        { "path": "listener/VanillaEnderChestListener.java", "lines": 53, "role": "Intercepts right-clicking an ender chest block (and shift+right-click -> chest list when enderchest.shift-click-list is on)." },
+        { "path": "listener/ChestListMenuListener.java", "lines": 53, "role": "Drives the 27-slot chooser: cancels every click/drag, opens the clicked chest through ChestOpener.openChest." },
+        { "path": "listener/PlayerSettingsListener.java", "lines": 66, "key": true, "role": "Join: pin in the storage cache, preload settings (which also materializes the chest rows = the join prefetch). Quit: stamp last_online, evict, unpin, schedule the delayed write-back." },
+        { "path": "listener/PlayerQuitListener.java", "lines": 38, "role": "Backstop detach when a player disconnects with the GUI open. detach is idempotent." },
+        { "path": "listener/JoinMigrationListener.java", "lines": 64, "role": "Auto-migrates un-migrated players on join when migration mode is on. The isMigrated pre-check runs on DbExecutor, never the join thread." },
+        { "path": "listener/TempChestJoinNotifyListener.java", "lines": 113, "role": "On-join chat + action bar (+ sound) reminder that items are still sitting in temp chests (temp-enderchest.join-notify)." }
+      ]
+    },
+    {
+      "name": "lang",
+      "path": "lang",
+      "doc": "src/main/java/com/enhancedechest/lang/CLAUDE.md",
+      "role": "Messages, GUI text, per-viewer localization.",
+      "files": [
+        { "path": "lang/LanguageManager.java", "lines": 423, "key": true, "role": "Loads language files and exposes them as locale-free Component.translatable; parsed Components are cached. Every player-facing string must have a key here in every bundled locale." },
+        { "path": "lang/EnhancedEchestTranslator.java", "lines": 93, "role": "The Adventure Translator registered once on GlobalTranslator, so every Component is rendered against the recipient's own client locale. Fallback: exact -> same language -> configured locale -> en_US." }
+      ]
+    },
+    {
+      "name": "config",
+      "path": "config",
+      "doc": "src/main/java/com/enhancedechest/config/CLAUDE.md",
+      "role": "Typed config + YAML migration. Renaming a key without a rule silently loses the setting.",
+      "files": [
+        { "path": "config/PluginConfig.java", "lines": 373, "key": true, "role": "Typed snapshot of config.yml. Fields read live from other threads are volatile (telemetry metric suppliers may only read from here)." },
+        { "path": "config/YamlMigrator.java", "lines": 109, "key": true, "role": "Runs on startup for every config/language file: apply renames, add missing keys from the bundled default, write only if changed. Existing user values are never touched." },
+        { "path": "config/ConfigMigrations.java", "lines": 42, "role": "The central registry of YamlMigrator.Rename entries. Add one whenever a key is renamed; order matters only for chained renames." }
+      ]
+    },
+    {
+      "name": "migration",
+      "path": "migration",
+      "doc": "src/main/java/com/enhancedechest/migration/CLAUDE.md",
+      "role": "Importing from vanilla, other vault plugins, or another database.",
+      "files": [
+        { "path": "migration/MigrationService.java", "lines": 279, "key": true, "role": "Vanilla ender chest -> chest #1. Runs its DB write phase under the session manager's exclusivity, and re-checks the migrated flag inside it, so it can never migrate twice or clobber a live session." },
+        { "path": "migration/DatabaseImportService.java", "lines": 70, "key": true, "role": "/ee import: copies all data from an old backend into the ACTIVE backend in one transaction. Item bytes are copied verbatim (no de/serialization)." },
+        { "path": "migration/SourceDatabaseReader.java", "lines": 176, "role": "Opens an EnhancedEchest DB of any dialect read-only and reads its rows verbatim for the DB->DB copy." },
+        { "path": "migration/SourceSpec.java", "lines": 69, "role": "Connection details for the import source, as filled in by the import dialog." },
+        { "path": "migration/AxVaultsMigrationService.java", "lines": 149, "role": "AxVaults vault #N -> chest #N; never overwrites a chest that already holds data, so it is safe to re-run." },
+        { "path": "migration/AxVaultsReader.java", "lines": 182, "role": "Reads axvaults_data and decodes the AxAPI ITEM_ARRAY framing (int slot count, then per slot an unsigned short length + gzip NBT item bytes)." },
+        { "path": "migration/PlayerVaultsXMigrationService.java", "lines": 156, "role": "PlayerVaultsX vault #N -> chest #N, same never-overwrite rule." },
+        { "path": "migration/PlayerVaultsXReader.java", "lines": 160, "role": "Reads plugins/PlayerVaults/newvaults/<uuid>.yml and decodes the Base64 CardboardBoxSerialization framing." },
+        { "path": "migration/CustomEnderChestMigrationService.java", "lines": 134, "role": "CustomEnderChest gives one chest per player -> imported into chest #1 only, never a different index." },
+        { "path": "migration/CustomEnderChestReader.java", "lines": 128, "role": "Reads plugins/CustomEnderChest/playerdata/<uuid>.yml (storage.type: yml)." }
+      ]
+    },
+    {
+      "name": "crossserver",
+      "path": "crossserver",
+      "doc": "src/main/java/com/enhancedechest/crossserver/CLAUDE.md",
+      "role": "Redis owner locks that make the residency cache safe across several servers on one database.",
+      "files": [
+        { "path": "crossserver/CrossServerCoordinator.java", "lines": 73, "key": true, "role": "The coordination contract: an owner may be resident here only while this server holds their distributed lock. Release is split (beginRelease inside the cache lock, finishRelease after — never network I/O under the lock)." },
+        { "path": "crossserver/RedisCoordinator.java", "lines": 392, "key": true, "role": "Redis implementation: one TTL'd, heartbeat-extended lock key per owner + a pub/sub channel for fast handover. Never steals a live holder's lock; a crashed holder's key just expires." },
+        { "path": "crossserver/CrossServerLockException.java", "lines": 15, "role": "Thrown when an owner's lock could not be obtained within the acquire timeout. Propagates like a failed SQL read — the operation fails loudly, never proceeds on stale data." }
+      ]
+    },
+    {
+      "name": "model",
+      "path": "model",
+      "role": "Records shared across layers.",
+      "files": [
+        { "path": "model/EnderChestData.java", "lines": 28, "role": "One chest as loaded for opening: owner, 1-based index, size, customName, containerData bytes, kind, icon, expiry." },
+        { "path": "model/ChestSummary.java", "lines": 28, "role": "Lightweight per-chest description used to build the list dialog and decide what /ec opens." },
+        { "path": "model/ChestKind.java", "lines": 37, "key": true, "role": "NORMAL / TEMP / PERM. TEMP is auto-created overflow (always expiring, disappears when emptied); PERM is permission-granted and untouched by admin commands." },
+        { "path": "model/PlayerSettings.java", "lines": 58, "role": "Per-player state, one row in players, loaded and saved whole. Adding a setting = record component + DDL column in all three dialects + a SchemaMigrator step." }
+      ]
+    },
+    {
+      "name": "scheduler",
+      "path": "scheduler",
+      "role": "Folia-safe scheduling.",
+      "files": [
+        { "path": "scheduler/Scheduler.java", "lines": 90, "key": true, "role": "Thin wrapper over Paper's io.papermc.paper.threadedregions.scheduler API — safe on both Paper and Folia with no platform branching. runAsync/runAtEntity/runAtLocation/runNextTick take a Consumer<ScheduledTask>, the *Later/*Timer* variants have Runnable overloads. isFolia() exists for exactly one genuine behavioural branch." }
+      ]
+    },
+    {
+      "name": "serialization",
+      "path": "serialization",
+      "role": "ItemStack[] <-> byte[].",
+      "files": [
+        { "path": "serialization/ContainerCodec.java", "lines": 122, "key": true, "role": "The stored blob format: [1-byte version tag] + body. 0x02 (current) = ItemStack.serializeItemsAsBytes, which preserves slot positions and migrates across Minecraft versions on read. Isolates the Data Component API." },
+        { "path": "serialization/CodecException.java", "lines": 12, "role": "Thrown on a decode failure." }
+      ]
+    },
+    {
+      "name": "expiry",
+      "path": "expiry",
+      "role": "Expiry sweeps.",
+      "files": [
+        { "path": "expiry/ExpirySweeper.java", "lines": 99, "role": "Async repeating sweep at check-interval: a DB-side candidate query (the only way to see offline owners) re-verified against authoritative memory, plus a scan of resident owners. NORMAL -> spill into a temp chest; TEMP -> hard delete. Reuses the spill service, so expiry is as dupe-safe as a manual delete." }
+      ]
+    },
+    {
+      "name": "backup",
+      "path": "backup",
+      "role": "Scheduled DB snapshots.",
+      "files": [
+        { "path": "backup/BackupService.java", "lines": 175, "role": "Async repeating snapshot via EnderChestStorage.backup (SQLite VACUUM INTO — consistent while players save). SQLite only; remote backends log a one-time warning and stay idle. Prunes backups/ to the most recent `keep` files." }
+      ]
+    },
+    {
+      "name": "telemetry",
+      "path": "telemetry",
+      "role": "Error reporting and custom metrics.",
+      "files": [
+        { "path": "telemetry/Telemetry.java", "lines": 31, "key": true, "role": "The ONLY telemetry type the rest of the plugin may depend on. telemetry.error(e, \"site-label\") always accompanies a log line, never replaces it. NOOP when no token was baked in, so call sites never null-check." },
+        { "path": "telemetry/FastStatsTelemetry.java", "lines": 110, "role": "The dev.faststats implementation, resolved via create() -> NOOP on failure. Metric suppliers run on SDK threads: they may only read immutable/volatile PluginConfig fields. Custom metrics are deliberately only storage_type + language." }
+      ]
+    },
+    {
+      "name": "update",
+      "path": "update",
+      "role": "Update check + notify.",
+      "files": [
+        { "path": "update/UpdateChecker.java", "lines": 167, "role": "Modrinth lookup with a GitHub release fallback; points users at the matching download page." },
+        { "path": "update/UpdateNotifyListener.java", "lines": 56, "role": "Notifies permitted players on join when an update is available." }
+      ]
+    },
+    {
+      "name": "util",
+      "path": "util",
+      "role": "Shared helpers.",
+      "files": [
+        { "path": "util/DurationFormat.java", "lines": 181, "role": "Parses/formats durations: s/m/h/d/w/mo/y (month = 30d, year = 365d), simple (20s) or underscore-joined (1d_2h_30m_15s). Also the 'expires in' text." }
+      ]
+    }
+  ],
+
+  "flows": {
+    "startup": {
+      "file": "EnhancedEchestPlugin.java#onEnable",
+      "note": "The order is load-bearing — there is no DI container.",
+      "steps": [
+        "config (YamlMigrator first, then PluginConfig), Scheduler, ContainerCodec, IconCatalog.setExternalLangDir",
+        "Telemetry — before storage, so every later layer can report errors",
+        "the cross-server coordinator when cross-server.enabled (a misconfiguration DISABLES the plugin, never degrades silently)",
+        "StorageFactory.create -> wrapped in CachedStorage -> init() (DDL + SchemaMigrator; no bulk load)",
+        "LanguageManager, then its translator registered once on Adventure's GlobalTranslator",
+        "services bottom-up: DbExecutor -> StorageGateway / PlayerNameIndex / PlayerSettingsCache -> ChestActivityLogger -> ChestSessionManager -> ChestSpillService / ChestTransferService / PermissionChestService / DatabaseImportService -> ChestOpener",
+        "migration services, ExpirySweeper, BackupService, AutosaveService",
+        "listeners, pin + preload already-online players, update check, bStats, startup banner"
+      ]
+    },
+    "shutdown": {
+      "file": "EnhancedEchestPlugin.java#onDisable",
+      "note": "Order matters as much as startup.",
+      "steps": [
+        "detach the translator",
+        "stop the timers",
+        "sessionManager.shutdown() — persists every open session, blocks <=30s for pending saves",
+        "telemetry, settings cache",
+        "dbExecutor.shutdown()",
+        "storage.close() — the final full flush",
+        "Redis",
+        "cancel tasks"
+      ]
+    },
+    "openChest": {
+      "steps": [
+        "a listener or command calls ChestOpener",
+        "ChestOpener reconciles permission chests and decides WHAT to show",
+        "funnels into ChestSessionManager.open — the single dupe-safe funnel",
+        "the row is read and decoded on the DB executor",
+        "the shared Inventory is built on the global thread; viewers attach to it",
+        "on LAST viewer close the contents are encoded (synchronously, global thread) and written into CachedStorage",
+        "CachedStorage keeps the rows in memory until an autosave, a quit write-back or the shutdown flush pushes them to SQL"
+      ]
+    },
+    "adminMutation": {
+      "steps": [
+        "ChestSessionManager.forceCloseAll — flushes and closes every viewer's GUI",
+        "ChestSessionManager.runExclusive per (owner,index) — load, decode, mutate, save with no concurrent open observing a half-applied state"
+      ],
+      "usedBy": ["ChestSpillService", "ChestTransferService", "MigrationService", "ExpirySweeper"]
+    }
+  },
+
+  "invariants": [
+    { "id": "no-dupe", "rule": "A chest's contents exist in exactly one place at a time: one shared Inventory per open chest, loaded fresh on first open, saved on LAST viewer close, with a pending-save wait on reopen. Every open path funnels through ChestSessionManager.open. The encode on save is synchronous on the global thread.", "breaks": "A second, independently loaded Inventory reintroduces duping." },
+    { "id": "residency", "rule": "CachedStorage is authoritative for every resident owner. Per-owner operations go through withOwner (residency re-check + operation in one lock hold), dirty => resident, eviction takes only clean owners. In cross-server mode: resident => this server holds the owner's Redis lock.", "breaks": "Bypassing the cache." },
+    { "id": "async-boundary", "rule": "Storage methods are synchronous; only com.enhancedechest.service may dispatch them onto the async pool (DbExecutor, thread pool EnhancedEchest-db).", "breaks": "Dispatching from elsewhere loses the dupe-safety ordering." },
+    { "id": "folia", "rule": "All scheduling goes through com.enhancedechest.scheduler.Scheduler. Never touch an entity or block off its region thread. Scheduler.isFolia() exists for exactly one behavioural branch (ChestSessionManager's single-viewer-on-Folia vs concurrent-edit-on-Paper rule) — do not add new platform branches." },
+    { "id": "no-literals", "rule": "Player-facing strings are never literals — always a LanguageManager key that exists in every bundled locale. Dialogs and inventory item names must be rendered EAGERLY with the viewer's Locale; only chat and inventory window titles are auto-rendered by Paper." },
+    { "id": "commands-in-bootstrap", "rule": "Commands are registered in EnhancedEchestBootstrap on LifecycleEvents.COMMANDS, not plugin.yml. Each node is gated by .requires(...); admin permissions default to op." },
+    { "id": "config-renames", "rule": "Config keys are renamed through a ConfigMigrations rule. Renaming without one silently loses the setting." },
+    { "id": "no-auto-primary", "rule": "The main chest is never auto-assigned. createChest/ensureChest insert with is_primary = 0 and a delete does not promote a survivor; only the dialog's 'Set as main' sets it." },
+    { "id": "telemetry-facade", "rule": "Telemetry is the only telemetry type the rest of the plugin may depend on; everything dev.faststats stays inside FastStatsTelemetry. Custom metrics are deliberately just storage_type + language — action counters were removed on request, do not reintroduce them without asking." },
+    { "id": "api-floor", "rule": "Compiled against Paper 1.21.11 so the jar runs on 1.21.11 through 26.2 — do not call APIs newer than 1.21.11." },
+    { "id": "relocation", "rule": "Shaded libs are relocated under com.enhancedechest.libs.* (HikariCP, MariaDB, PostgreSQL + com.ongres, Jedis + commons-pool2 + org.json, bStats, FastStats). The SQLite driver and gson are compileOnly from the server classpath and must NOT be relocated." }
+  ],
+
+  "tests": {
+    "root": "src/test/java/com/enhancedechest",
+    "coverage": "A deliberately thin slice. Everything else is verified by running on a Paper/Folia server.",
+    "files": [
+      { "path": "storage/ChestIndexAllocationTest.java", "role": "Next-free-index allocation." },
+      { "path": "storage/TempReclaimTest.java", "role": "Temp chest reclaim into a newly granted chest." },
+      { "path": "storage/SchemaMigratorUpgradeTest.java", "role": "Old-schema install upgrades to CURRENT_VERSION." },
+      { "path": "storage/StoragePlayerLoadSimulationTest.java", "role": "300-500 player concurrency/perf/leak simulation (stressTest task; excluded from `test`)." },
+      { "path": "service/ChestActivityLogTest.java", "role": "The activity-log pipeline." },
+      { "path": "service/ChestActivityLogSimulationTest.java", "role": "Activity-log load simulation (stressTest task; excluded from `test`)." }
+    ]
+  },
+
+  "resources": {
+    "root": "src/main/resources",
+    "files": [
+      { "path": "config.yml", "role": "Shipped defaults + the end-user comments (write them with the write-docs skill)." },
+      { "path": "paper-plugin.yml", "role": "Paper plugin descriptor pointing at the bootstrapper. Version is templated in at build time." },
+      { "path": "plugin.yml", "role": "Legacy descriptor. Version templated in at build time." },
+      { "path": "language/en_US/messages.yml", "role": "Chat messages, en_US." },
+      { "path": "language/en_US/gui.yml", "role": "GUI/dialog text, en_US (incl. the docs URLs used by DialogLinks)." },
+      { "path": "language/vi_VN/messages.yml", "role": "Chat messages, vi_VN." },
+      { "path": "language/vi_VN/gui.yml", "role": "GUI/dialog text, vi_VN." },
+      { "path": "icons/lang/en_us.json", "role": "Item-name table for the icon picker search, en_us." },
+      { "path": "icons/lang/vi_vn.json", "role": "Item-name table for the icon picker search, vi_vn." },
+      { "path": "icons/valid-icon-sprites.txt", "role": "Materials whose sprite renders correctly inside a dialog button." },
+      { "path": "faststats.properties", "role": "Build-time telemetry token slot; absent/empty -> Telemetry.NOOP." }
+    ]
+  },
+
+  "notes": [
+    "src/main/java/com/enhancedechest/logging/ (and its texture/ and viewer/ subdirectories) are EMPTY leftovers from a reverted JSONL-log + HTML-viewer build. No classes live there; the working activity log is service/ChestActivityLogger.java.",
+    "Long files are normal here — read the surrounding region before editing rather than pattern-matching on one method.",
+    "Comments explain WHY a choice is load-bearing, not what the line does. Keep that style when editing.",
+    "A new service means: construct it in onEnable at the right point in the chain, re-apply its runtime-tunable settings in reload(), and shut it down at the right point in onDisable."
+  ]
+}

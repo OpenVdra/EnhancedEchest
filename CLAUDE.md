@@ -74,6 +74,10 @@ keeps the rows in memory until an autosave, a quit write-back or the shutdown fl
 
 ## Where to look
 
+Per-class index: [.claude/CODEMAP.md](.claude/CODEMAP.md) (human) and
+[.claude/codemap.json](.claude/codemap.json) (machine-readable) list every file with its role.
+Both are hand-maintained — update them when you add, remove or rename a class.
+
 | Task | Location |
 |---|---|
 | Opening a chest, sessions, dupe-safety, spill/sort/transfer, permission chests, activity log | `service/` (see [service/CLAUDE.md](src/main/java/com/enhancedechest/service/CLAUDE.md)) |

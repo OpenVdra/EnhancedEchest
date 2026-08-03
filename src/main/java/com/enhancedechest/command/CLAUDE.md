@@ -30,7 +30,12 @@ Right-clicking an ender chest block needs **no** permission — `command.open` g
 ## Admin commands (`/enhancedechest`, alias `/ee`)
 
 The root literal has **no permission of its own**; each subcommand gates on its own node. There is no
-base `enhancedechest.command.admin`.
+base `enhancedechest.command.admin`. The root does carry a `.requires` that is the **union** of the
+admin nodes (`ADMIN_PERMISSIONS` / `hasAnyAdminPermission` in the bootstrap) — purely so the command
+disappears from tab-completion for players who can run nothing under it. Brigadier only strips a node
+from the tree it sends a client when *that node's own* requirement fails, so a root without one stays
+visible even when every child is hidden. **Adding a subcommand means adding its node to that array**,
+or its holders can no longer see `/ee` at all.
 
 | Subcommand | Permission | Action |
 |---|---|---|
