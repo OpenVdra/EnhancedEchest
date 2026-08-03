@@ -22,6 +22,23 @@ Mỗi lượt mở có thay đổi tạo ra một mục: lúc mở rương, nh�
 - `chest=2` là số rương của người chơi, đúng số họ thấy trong `/eclist`. `size=54` là số ô của rương đó.
 - Vị trí đồ trong rương không được ghi lại. Nhật ký cho biết thứ gì đã dịch chuyển, không cho biết nó nằm ở ô nào.
 
+### Toàn Bộ Đồ Trong Rương
+
+Mỗi header đều kèm một dòng `HAVE` liệt kê rương đang có gì tại thời điểm đó:
+
+```
+[2026-08-03 15:10:23.913 ICT] OPEN player=Steve uuid=925c51aa-... chest=2 size=54
+  HAVE  minecraft:stone x128, minecraft:redstone x8, minecraft:oak_log x64
+  ADD   minecraft:redstone x24
+  TAKE  minecraft:stone x32
+[2026-08-03 15:12:41.002 ICT] CLOSE player=Steve uuid=925c51aa-... chest=2 size=54
+  HAVE  minecraft:stone x96, minecraft:redstone x32, minecraft:oak_log x64
+```
+
+Đồ được liệt kê theo đúng thứ tự nằm trong rương, nên có thể đối chiếu dòng này với ảnh chụp màn hình hoặc với `/ee view`. Vật phẩm giống nhau vẫn cộng dồn thành một mục, đặt ở vị trí của cái đầu tiên. Rương không có gì sẽ ghi `HAVE  (empty)`.
+
+Những dòng này làm mỗi mục nhật ký phình lên vài lần, và phình thêm nữa khi liệt kê cả nội dung shulker, nên file nhật ký chạm giới hạn kích thước sớm hơn nhiều. Muốn bỏ chúng đi, đặt `chest-contents` thành `false` trong nhóm `activity-log` của `config.yml`.
+
 ### Shulker Box
 
 Shulker box vẫn tính là một vật phẩm, nhưng thứ nó đang đựng được liệt kê ngay sau đó, nên đồ mang ra mang vào bên trong shulker vẫn nhìn thấy được.
@@ -69,5 +86,5 @@ File đã nén cũ hơn `retention-days` sẽ tự động bị xóa. File đang
 Để đọc file đã nén, mở bằng 7-Zip, WinRAR hoặc bất kỳ công cụ nào hỗ trợ `.gz`.
 
 ::: tip Đổi các thiết lập file
-`enabled`, `log-unchanged` và `shulker-contents` có hiệu lực khi chạy `/ee reload`. Ba thiết lập còn lại chỉ được đọc lúc server khởi động, nên đổi chúng thì phải khởi động lại toàn bộ server.
+`enabled`, `log-unchanged`, `shulker-contents` và `chest-contents` có hiệu lực khi chạy `/ee reload`. Ba thiết lập còn lại chỉ được đọc lúc server khởi động, nên đổi chúng thì phải khởi động lại toàn bộ server.
 :::

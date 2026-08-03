@@ -23,9 +23,7 @@ Dùng `enhancedechest.additional_amount.<count>.slot.<size>` để cấp rương
 - **Node cộng dồn**: cấp `...1.slot.9` và `...2.slot.9` sẽ cho người chơi tổng cộng ba rương 9 ô.
 - **Thu hồi sạch sẽ**: mất một node sẽ xóa đúng các rương đó, dồn vật phẩm sang một rương tạm để người chơi lấy lại. Rương cơ bản không bao giờ bị ảnh hưởng.
 
-::: warning
-Việc cấp theo quyền chỉ hoạt động khi `enabled` trong mục `permission-chests` là `true` ở `config.yml`. Tắt nó dừng đồng bộ nhưng giữ nguyên các rương đã cấp.
-:::
+- **Luôn hoạt động**: không có gì phải bật trong `config.yml`. Người chơi nhận đúng số rương mà quyền của họ quy định.
 
 ## Rương Theo Quyền So Với Rương `/ee add`
 

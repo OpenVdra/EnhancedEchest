@@ -138,8 +138,9 @@ centralised in one serialized place. NORMAL expiry spills, TEMP expiry discards.
 
 ## Permission-granted chests
 
-`enhancedechest.additional_amount.<count>.slot.<size>` grants chests (stacking, summed per size), gated
-by `permission-chests.enabled`.
+`enhancedechest.additional_amount.<count>.slot.<size>` grants chests (stacking, summed per size).
+**Always on** — the `permission-chests.enabled` toggle was removed in 1.2.0 and the branches it guarded
+went with it. Don't reintroduce a config gate here: permissions are the only input.
 
 - `resolveTargets(player)` runs on the entity thread (it reads `getEffectivePermissions()`) and resolves
   **both** permission-derived targets — the PERM target `Map<size, count>` and the `default_size`
@@ -182,6 +183,13 @@ inner items into `Snapshot.totals` instead would unpack every container on **eve
 items per occupied slot, on a region thread) and is what was deliberately not built. Expansion is one
 level deep and inner identities are never interned; both rules exist so a crafted CONTAINER component
 cannot turn one capture into an unbounded walk or evict the shared cache.
+
+`activity-log.chest-contents` (default **on**) adds a `HAVE` line under each header listing what the
+chest held at that moment. It is pure formatting: both snapshots are captured and queued either way, so
+the flag costs nothing on a Bukkit thread and only multiplies bytes on disk (roughly 3x, or far more
+once shulker contents are rendered into it). `HAVE` is **unsorted on purpose** — `capture` fills a
+`LinkedHashMap` in slot order and `merge` does not reorder an existing key, so iterating the totals
+reproduces the chest's own order. ADD/TAKE stay alphabetical; the two lines answer different questions.
 
 `ChestSessionManager` drives it: `opened(...)` when the first viewer attaches, `closed(...)` on detach,
 `abandon(...)` when `needsCapture(s.touched)` says nobody touched the chest. The `touched` flag and

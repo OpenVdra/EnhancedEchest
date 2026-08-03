@@ -58,8 +58,6 @@ public final class PermissionChestService {
 
     // Runtime-tunable via /ee reload (see setConfig). volatile so values written on the main thread
     // during a reload are visible to the async/entity threads that read them.
-    /** Master switch: when false, reconcile is a no-op (existing PERM chests are left untouched). */
-    private volatile boolean enabled;
     /**
      * Config {@code enderchest.default-size}: the base NORMAL chest's size when the player has no
      * {@code default_size} permission, and the size a revoked base chest shrinks back to.
@@ -72,23 +70,21 @@ public final class PermissionChestService {
     private final ConcurrentHashMap<UUID, CompletableFuture<?>> inFlight = new ConcurrentHashMap<>();
 
     public PermissionChestService(StorageGateway storageGateway, ChestSpillService spillService,
-                                  boolean enabled, int defaultSize) {
+                                  int defaultSize) {
         this.storageGateway = storageGateway;
         this.spillService   = spillService;
-        this.enabled        = enabled;
         this.defaultSize    = defaultSize;
     }
 
     /** Re-applies the runtime-tunable values after a {@code /ee reload}. Dupe-safe (only future work). */
-    public void setConfig(boolean enabled, int defaultSize) {
-        this.enabled     = enabled;
+    public void setConfig(int defaultSize) {
         this.defaultSize = defaultSize;
     }
 
     /**
      * Both permission-derived targets, resolved together: the PERM-chest target as {@code size → count}
-     * (empty when the feature is disabled) and the base-chest size override (the largest valid
-     * {@code default_size} permission held, or {@code 0} for none — always active, no config toggle).
+     * and the base-chest size override (the largest valid {@code default_size} permission held, or
+     * {@code 0} for none). Neither has a config toggle: both are driven purely by permissions.
      */
     public record PermTargets(Map<Integer, Integer> desired, int defaultTarget) {}
 
@@ -101,15 +97,12 @@ public final class PermissionChestService {
      * Must be called on the player's entity thread ({@code getEffectivePermissions}).
      */
     public PermTargets resolveTargets(Player player) {
-        // Snapshot the volatile toggle once so a /ee reload flipping it mid-scan can't yield a
-        // partially-built target map (which the reconcile diff would treat as real revocations).
-        final boolean permEnabled = enabled;
         Map<Integer, Integer> desired = new HashMap<>();
         int maxDefault = 0;
         for (PermissionAttachmentInfo info : player.getEffectivePermissions()) {
             if (!info.getValue()) continue;
             String node = info.getPermission();
-            if (permEnabled && node.startsWith(PERM_PREFIX)) {
+            if (node.startsWith(PERM_PREFIX)) {
                 Matcher m = PERM_PATTERN.matcher(node);
                 if (!m.matches()) continue;
                 int count;
@@ -171,13 +164,6 @@ public final class PermissionChestService {
     public CompletableFuture<List<ChestSummary>> reconcile(UUID owner, Map<Integer, Integer> desired,
                                                            int defaultTarget, int appliedDefault,
                                                            List<ChestSummary> chests) {
-        // PERM-chest reconcile disabled AND base-size override inert (no permission, no baseline): never
-        // mutate. The base-size override itself has no toggle — it is inert only when nothing applies.
-        boolean baseManaged = defaultTarget > 0 || (defaultTarget == 0 && appliedDefault > 0);
-        if (!enabled && !baseManaged) {
-            return CompletableFuture.completedFuture(chests);
-        }
-
         boolean hasNormal = chests.stream().anyMatch(c -> c.kind() == ChestKind.NORMAL);
         List<ChestSummary> existing = chests.stream()
                 .filter(c -> c.kind() == ChestKind.PERM)
@@ -199,8 +185,7 @@ public final class PermissionChestService {
         boolean baseResizeNeeded = base != null && baseTarget > 0 && base.size() != baseTarget;
 
         boolean needsBase = !hasNormal;
-        // The PERM diff only runs when that feature is enabled; when it is off we still may touch the base.
-        boolean permChanged = enabled && (needsBase || !existMulti.equals(desired));
+        boolean permChanged = needsBase || !existMulti.equals(desired);
 
         // Fast path: nothing to do for the base or the PERM chests — no writes, no re-list.
         if (!needsBase && !baseResizeNeeded && !permChanged) {
@@ -226,17 +211,6 @@ public final class PermissionChestService {
             // each op serializes per (owner, index) in ChestSpillService.
             if (baseResizeNeeded) {
                 chain = chain.thenCompose(v -> spillService.resizeOrSpill(owner, baseIndex, baseTarget));
-            }
-
-            // The PERM-chest diff only applies when that feature is enabled.
-            if (!enabled) {
-                chain.thenCompose(v -> storageGateway.listChestsAsync(owner))
-                        .whenComplete((list, ex) -> {
-                            inFlight.remove(owner, result);
-                            if (ex != null) result.completeExceptionally(ex);
-                            else result.complete(list);
-                        });
-                return result;
             }
 
             // 1) Keep every existing PERM chest already at a still-desired size (untouched, zero risk).

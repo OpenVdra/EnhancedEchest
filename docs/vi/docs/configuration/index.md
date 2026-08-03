@@ -95,18 +95,6 @@ Thiết lập này <strong>chỉ</strong> đổi những gì được gợi ý, 
 
 </ConfigGroup>
 
-<ConfigGroup name="permission-chests">
-<template #info>
-Điều khiển các rương Ender được cấp tự động từ quyền. Xem trang Quyền để biết định dạng node và hành vi.
-</template>
-
-<ConfigProperty name="enabled" value="true" type="boolean">
-Khi <code>true</code>, người chơi được cấp các rương Ender từ quyền <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> (ví dụ <code>enhancedechest.additional_amount.2.slot.54</code> → hai rương 54 ô). Các node khớp sẽ <strong>cộng dồn</strong>. Việc cấp được đồng bộ mỗi lần người chơi mở rương Ender; mất một node sẽ xóa các rương đó, dồn mọi vật phẩm sang một rương tạm để người chơi lấy lại. Người chơi luôn giữ rương cơ bản của mình. Đặt thành <code>false</code> sẽ dừng đồng bộ nhưng giữ nguyên các rương đã cấp.<br><br>
-Xem trang <a href="/vi/docs/access/permission-chests#permission-granted-chests">Rương Theo Quyền</a> để biết đầy đủ chi tiết.
-</ConfigProperty>
-
-</ConfigGroup>
-
 <ConfigGroup name="temp-enderchest">
 <template #info>
 Điều khiển rương tạm. Khi một rương bị thu nhỏ, bị xóa (không kèm <code>force</code>), hoặc hết hạn mà vẫn còn vật phẩm bên trong, những vật phẩm đó được chuyển vào một rương tạm; rương tạm biến mất khi được lấy hết đồ hoặc khi nó hết hạn. Rương tạm chỉ cho lấy ra: người chơi lấy được vật phẩm ra nhưng không bỏ thêm vào được.
@@ -275,6 +263,10 @@ Chỉ bỏ qua khi giống hệt nhau, nên người chơi chỉ sắp xếp l�
 Liệt kê thứ shulker box đang đựng ngay trên dòng ghi nó, nhờ vậy đồ mang ra mang vào bên trong shulker vẫn nhìn thấy được. Chỉ liệt kê một lớp. Đặt <code>false</code> để ghi shulker box như một vật phẩm đơn lẻ và giữ dòng nhật ký ngắn gọn. Có hiệu lực khi chạy <code>/ee reload</code>.
 </ConfigProperty>
 
+<ConfigProperty name="chest-contents" value="true" type="boolean">
+Thêm một dòng <code>HAVE</code> dưới mỗi header, liệt kê toàn bộ đồ rương đang có tại thời điểm đó, theo đúng thứ tự nằm trong rương. Đặt <code>false</code> để bỏ đi: những dòng này làm mỗi mục nhật ký phình lên vài lần, và phình thêm nữa khi liệt kê cả nội dung shulker, nên file nhật ký chạm giới hạn kích thước sớm hơn nhiều. Có hiệu lực khi chạy <code>/ee reload</code>.
+</ConfigProperty>
+
 <ConfigProperty name="queue-capacity" value="4096" type="number">
 Số lượt mở rương đã xong được phép chờ ghi xuống đĩa. Thiết lập này chỉ để giới hạn bộ nhớ khi đĩa bị nghẽn; nếu đầy, các lượt mới nhất bị bỏ qua và nhật ký sẽ ghi rõ bỏ bao nhiêu. Giá trị mặc định đủ cho server 300 đến 500 người chơi. Cần khởi động lại server.
 </ConfigProperty>
@@ -341,14 +333,6 @@ enderchest:
 commands:
   # Chỉ gợi ý người chơi ngoại tuyến từng vào trong khoảng này. 'all' để gợi ý tất cả.
   suggest-offline-within: 30d
-
-permission-chests:
-  # Cấp rương Ender từ các quyền có dạng:
-  #   enhancedechest.additional_amount.<count>.slot.<size>
-  #   ví dụ enhancedechest.additional_amount.2.slot.54  -> hai rương 54 ô.
-  # Các quyền khớp sẽ CỘNG DỒN (cộng theo từng kích thước). Mất một quyền sẽ xóa các rương đó,
-  # dồn mọi vật phẩm sang một rương tạm. Người chơi luôn giữ rương cơ bản của mình.
-  enabled: true
 
 temp-enderchest:
   # Thời gian tồn tại của rương tạm được tạo khi thu nhỏ/xóa/hết hạn còn đồ.

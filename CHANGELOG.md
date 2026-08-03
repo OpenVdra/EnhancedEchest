@@ -2,7 +2,7 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
-## 1.0.14 - 2026-08-01
+## 1.2.0 - 2026-08-03
 
 ### Fixed
 
@@ -12,11 +12,13 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 ### Added
 
 - The activity log now lists what a shulker box held when one was put into or taken out of a chest. Items moved by packing them into a shulker are no longer missing from the record. Turn it off with `shulker-contents` in `config.yml`.
+- The activity log now records everything a chest held when it was opened and again when it was closed, in the order the items sit in it. Turn it off with `chest-contents` in `config.yml`.
 - Added `/endersee <player>` as a shorthand for `/ee view <player>`. It takes the same `list` and chest-number arguments and requires the same `enhancedechest.admin.view` permission.
 - Admin commands now suggest only players who were online in the last 30 days, so the name list stays short on a server with years of history. Change it with `commands.suggest-offline-within` in `config.yml`, or set it to `all` for every known player. Typing a full name always works regardless.
 
 ### Changed
 
+- **Breaking:** The `permission-chests` section has been removed from `config.yml`. Chests granted by `enhancedechest.additional_amount.<count>.slot.<size>` permissions are always active now. A server that had `enabled` set to `false` must remove those permission nodes instead, or players holding them will be granted their chests on next open.
 - Command suggestions no longer put a `(player)` label at the top of the list. Minecraft already shows what the next argument is above the chat bar, so the list now contains only real names and values.
 
 ### Removed
@@ -26,8 +28,8 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 ### Notes
 
 - The database gains a `last_online` column, added automatically on first start after the update. Players already stored are treated as seen at that moment, so nothing disappears from the name suggestions right away; the list trims itself over the following 30 days.
-- Every setting remains available in `config.yml`. No configuration values are lost on upgrade.
-- Activity log lines for shulker boxes are longer, so log files reach their size limit sooner.
+- A leftover `permission-chests` section in an existing `config.yml` is ignored and can be deleted. Every other setting remains available.
+- Activity log entries are larger than before: shulker box lines are longer, and a full item list is written at both ends of every entry. Log files reach their size limit sooner.
 - The `config` message group and the `config-` entries in `gui.yml` are no longer used and can be deleted from customized language files.
 
 ## 1.0.13 - 2026-07-28

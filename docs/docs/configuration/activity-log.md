@@ -22,6 +22,23 @@ Every visit that changed something produces one entry: when the chest was opened
 - `chest=2` is the player's chest number, the same one they see in `/eclist`. `size=54` is how many slots it has.
 - The chest layout is not recorded. The log tells you what moved, not which slot it sat in.
 
+### Everything the Chest Held
+
+Each header carries a `HAVE` line listing what the chest held at that moment:
+
+```
+[2026-08-03 15:10:23.913 ICT] OPEN player=Steve uuid=925c51aa-... chest=2 size=54
+  HAVE  minecraft:stone x128, minecraft:redstone x8, minecraft:oak_log x64
+  ADD   minecraft:redstone x24
+  TAKE  minecraft:stone x32
+[2026-08-03 15:12:41.002 ICT] CLOSE player=Steve uuid=925c51aa-... chest=2 size=54
+  HAVE  minecraft:stone x96, minecraft:redstone x32, minecraft:oak_log x64
+```
+
+Items are listed in the order they sit in the chest, so the line can be read against a screenshot or against `/ee view`. Identical items are still totalled into one entry, placed where the first of them sat. A chest holding nothing reads `HAVE  (empty)`.
+
+These lines make every entry several times larger, and larger again when shulker boxes are listed as well, so log files reach their size limit much sooner. To leave them out, set `chest-contents` to `false` under `activity-log` in `config.yml`.
+
 ### Shulker Boxes
 
 A shulker box counts as one item, but what it held is listed after it, so items carried in and out inside a shulker are still visible.
@@ -69,5 +86,5 @@ Compressed files older than `retention-days` are deleted automatically. The file
 To read a compressed file, open it with 7-Zip, WinRAR, or any tool that handles `.gz`.
 
 ::: tip Changing file settings
-`enabled`, `log-unchanged` and `shulker-contents` apply on `/ee reload`. The other three settings are read once when the server starts, so changing them needs a full restart.
+`enabled`, `log-unchanged`, `shulker-contents` and `chest-contents` apply on `/ee reload`. The other three settings are read once when the server starts, so changing them needs a full restart.
 :::

@@ -95,18 +95,6 @@ This <strong>only</strong> changes what is suggested, never what works: typing a
 
 </ConfigGroup>
 
-<ConfigGroup name="permission-chests">
-<template #info>
-Controls ender chests granted automatically from permissions. See the <a href="/docs/access/permission-chests#permission-granted-chests">Permission Chests</a> page for the node format and behavior.
-</template>
-
-<ConfigProperty name="enabled" value="true" type="boolean">
-When <code>true</code>, players are granted ender chests from <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> permissions. Grants are synced each time a player opens their ender chest; losing a node removes those chests, moving any items into a temporary chest the player can take them back from. Players always keep their base chest. Setting this to <code>false</code> stops syncing but leaves already-granted chests in place.<br><br>
-See the <a href="/docs/access/permission-chests#permission-granted-chests">Permission Chests</a> page for full details.
-</ConfigProperty>
-
-</ConfigGroup>
-
 <ConfigGroup name="temp-enderchest">
 <template #info>
 Controls temporary chests. When a chest is shrunk, deleted (without <code>force</code>), or expires with items still inside, those items move into a temporary chest that disappears once emptied or once it expires. Temporary chests are take-only: players can take items out but not put new ones in.
@@ -275,6 +263,10 @@ Only an exact match is skipped, so a player who merely moved items around is sti
 List what a shulker box held on the line that records it, so items carried in and out inside a shulker stay visible. Only the first level is listed. Set to <code>false</code> to record a shulker box as a single item and keep the lines short. Takes effect on <code>/ee reload</code>.
 </ConfigProperty>
 
+<ConfigProperty name="chest-contents" value="true" type="boolean">
+Add a <code>HAVE</code> line under each header listing everything the chest held at that moment, in the order the items sit in it. Set to <code>false</code> to leave it out: these lines enlarge every entry several times over, and more again when shulker boxes are listed too, so log files reach their size limit much sooner. Takes effect on <code>/ee reload</code>.
+</ConfigProperty>
+
 <ConfigProperty name="queue-capacity" value="4096" type="number">
 How many finished visits may wait to be written to disk. This only caps memory use if the disk stalls; if it ever fills, the newest visits are skipped and the log says how many. The default suits a 300 to 500 player server. Needs a server restart.
 </ConfigProperty>
@@ -340,9 +332,6 @@ enderchest:
 commands:
   # Only suggest offline players seen within this long. 'all' suggests everyone.
   suggest-offline-within: 30d
-
-permission-chests:
-  enabled: true
 
 temp-enderchest:
   # Lifetime of a temporary chest created on shrink/delete/expire-with-items.

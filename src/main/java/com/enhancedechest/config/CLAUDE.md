@@ -10,7 +10,7 @@ existing installs upgrade.
 | `YamlMigrator` | Applies the renames and adds missing keys on load |
 
 `config.yml` is edited on disk and applied with `/ee reload`. There is no in-game editor — the
-schema-driven `/ee config` dialog was removed in 1.0.14; don't reintroduce it without asking.
+schema-driven `/ee config` dialog was removed in 1.2.0; don't reintroduce it without asking.
 
 ## `PluginConfig`
 

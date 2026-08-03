@@ -1,14 +1,16 @@
 # EnhancedEchest configuration
 # Full guide: https://openvdra.github.io/EnhancedEchest/docs/configuration/
-# Most settings apply on /ee reload. Ones marked RESTART need a full server restart.
+# Most settings apply on /ee reload. Ones marked NEED RESTART need a full server restart.
 
 # Language folder under language/. Bundled: en_US, vi_VN.
 language: en_US
-# Show each player their own Minecraft client language, falling back to the one above.
+# Show each player their own Minecraft client language. Only languages that exist as a folder under
+# language/ can be shown; en_US and vi_VN ship with the plugin, and you can add your own folder for
+# any other language. Every other client language gets the one set above.
 language-auto-detect: true
 
 enderchest:
-  # Size of a player's first chest. Multiple of 9, from 9 to 54.
+  # Size of a player's first chest. One of: 9, 18, 27, 36, 45, 54.
   default-size: 54
 
   # Chest list style: dialog (full menu) or inventory (click to open only, up to 28 chests).
@@ -37,15 +39,10 @@ enderchest:
 commands:
   # Which offline players are offered while you type a name in /ee view, /ee add and the other admin
   # commands. Only players who were online within this long are listed, so the list stays short on a
-  # server with a long history. Use 'all' to list every player the plugin knows.
+  # server with a long history. Use 'all' to list every player the plugin knows (not recommended on large servers).
   # Time format: 20s, 5m, 1h, 7d, or combined like 1d_2h_30m. Units: s m h d w mo y.
   # This only affects the suggestion list: typing a full name always works, however long ago they left.
   suggest-offline-within: 30d
-
-permission-chests:
-  # Grant chests from enhancedechest.additional_amount.<count>.slot.<size> permissions.
-  # Matching permissions stack. Removing one spills its items into a temporary chest.
-  enabled: true
 
 temp-enderchest:
   # Items from a shrunk, deleted or expired chest go to a temporary chest players can empty.
@@ -67,7 +64,7 @@ temp-enderchest:
       key: minecraft:block.note_block.pling
 
 database:
-  # RESTART: every setting here except autosave-interval.
+  # NEED RESTART: every setting here except autosave-interval.
   # Backend: sqlite | mysql | mariadb | postgres
   type: sqlite
   # Prefix for this plugin's tables. Letters, digits and underscore. Existing tables are renamed
@@ -89,7 +86,7 @@ database:
   pool-size: 10
 
 cross-server:
-  # RESTART: every setting here.
+  # NEED RESTART: every setting here.
   # Let several servers share one database, so chests follow players between them. Needs a
   # mysql/mariadb/postgres database shared by every server, plus a reachable Redis. Redis stores no
   # chest data, it only decides which server currently owns a player. SQLite cannot be shared.
@@ -125,10 +122,13 @@ activity-log:
   enabled: false
   # Also write visits where the player changed nothing. Off keeps the log readable.
   log-unchanged: false
-  # Also list what a shulker box held when it was put in or taken out. Costs nothing per visit:
-  # the list is built once per shulker and reused, but it does make the lines longer.
+  # Also list what a shulker box held when it was put in or taken out, so items carried inside
+  # one are still visible. Makes those lines longer.
   shulker-contents: true
-  # RESTART: the three settings below.
+  # Also write a HAVE line under each header listing everything the chest held at that moment,
+  # in the order the items sit in it. Log files fill up several times faster.
+  chest-contents: true
+  # NEED RESTART: the three settings below.
   # Finished visits allowed to wait for the disk. Only caps memory if the disk stalls.
   queue-capacity: 4096
   # Start a new log file past this size. The old one is renamed and compressed.

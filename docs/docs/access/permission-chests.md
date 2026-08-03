@@ -23,9 +23,7 @@ Use `enhancedechest.additional_amount.<count>.slot.<size>` to grant **extra** ch
 - **Nodes stack**: granting `...1.slot.9` and `...2.slot.9` gives the player three 9-slot chests total.
 - **Revocation is clean**: losing a node removes those chests, moving items to a temporary chest the player can take them back from. The base chest is never touched.
 
-::: warning
-Permission grants only apply while `enabled` under `permission-chests` is `true` in `config.yml`. Disabling it stops syncing but leaves already-granted chests in place.
-:::
+- **Always active**: there is nothing to switch on in `config.yml`. A player gets exactly the chests their permissions say they get.
 
 ## Permission Chests vs. `/ee add` Chests
 

@@ -158,6 +158,7 @@ public final class ChestActivityLogger {
     private volatile boolean enabled;
     private volatile boolean logUnchanged;
     private volatile boolean containerContents;
+    private volatile boolean chestContents;
     private volatile boolean stopping;
     private volatile long stopDeadlineNanos = Long.MAX_VALUE;
 
@@ -167,6 +168,7 @@ public final class ChestActivityLogger {
 
     public ChestActivityLogger(Path dataFolder, Logger logger, Telemetry telemetry,
                                boolean enabled, boolean logUnchanged, boolean containerContents,
+                               boolean chestContents,
                                int queueCapacity, int maxFileSizeMb, int retentionDays) {
         this.directory = dataFolder.resolve("logs");
         this.activeFile = directory.resolve(ACTIVE_FILE_NAME);
@@ -175,6 +177,7 @@ public final class ChestActivityLogger {
         this.enabled = enabled;
         this.logUnchanged = logUnchanged;
         this.containerContents = containerContents;
+        this.chestContents = chestContents;
         this.queue = new ArrayBlockingQueue<>(queueCapacity);
         this.maxFileBytes = maxFileSizeMb * 1024L * 1024L;
         this.retentionDays = retentionDays;
@@ -206,6 +209,15 @@ public final class ChestActivityLogger {
         if (this.containerContents == containerContents) return;
         this.containerContents = containerContents;
         META_CACHE.clear();
+    }
+
+    /**
+     * When true, each entry also carries a HAVE line under both headers listing what the chest held at
+     * that moment. Purely a formatting choice: both snapshots are captured and queued either way, so
+     * this costs nothing on a Bukkit thread and everything on disk.
+     */
+    public void setChestContents(boolean chestContents) {
+        this.chestContents = chestContents;
     }
 
     /**
@@ -785,10 +797,10 @@ public final class ChestActivityLogger {
 
     /**
      * Renders one visit: when it was opened, what was added and taken while it was open, and when it
-     * was closed. Only the totals are written, never the chest layout, so an entry stays one to four
-     * short lines however full the chest was.
+     * was closed. Item positions are never written, only totals, so an entry stays a handful of lines
+     * however full the chest was — long ones, when {@code chestContents} adds the HAVE lines.
      */
-    private static String formatSection(ClosedCycle cycle) {
+    private String formatSection(ClosedCycle cycle) {
         OpenKey key = cycle.key();
         OpenCycle open = cycle.open();
         String actorName = open.actorName() == null || open.actorName().isBlank()
@@ -796,8 +808,10 @@ public final class ChestActivityLogger {
         String access = key.actor().equals(key.owner())
                 ? "" : " access=ADMIN_ACCESS owner=" + key.owner();
 
-        StringBuilder out = new StringBuilder(256);
+        boolean withContents = chestContents;   // read once: a reload must not split one entry
+        StringBuilder out = new StringBuilder(withContents ? 1024 : 256);
         appendHeader(out, "OPEN", open.openedAt(), actorName, key, open.snapshot().size(), access);
+        if (withContents) appendContents(out, open.snapshot());
 
         Diff diff = diff(open.snapshot(), cycle.closing());
         if (!diff.added().isEmpty()) {
@@ -808,7 +822,26 @@ public final class ChestActivityLogger {
         }
 
         appendHeader(out, "CLOSE", cycle.closedAt(), actorName, key, cycle.closing().size(), access);
+        if (withContents) appendContents(out, cycle.closing());
         return out.append(LINE).toString();
+    }
+
+    /**
+     * The HAVE line: everything the chest held at one end of the visit, on one line however long.
+     * Kept to a single line on purpose, so grepping for an item still returns its whole context.
+     *
+     * <p><b>Deliberately unsorted</b>, unlike ADD/TAKE. {@link #capture} walks the slots in order into
+     * a {@link LinkedHashMap} and {@code merge} does not reorder an existing key, so iterating the
+     * totals reproduces the order the items appear in the chest — first-appearance order, since equal
+     * items from several slots are totalled into the entry where the first of them sat. That reads
+     * like the chest itself, which is what this line is for; ADD/TAKE stay alphabetical because they
+     * are scanned for one item and compared between entries.
+     */
+    private static void appendContents(StringBuilder out, Snapshot snapshot) {
+        Map<String, Group> totals = snapshot.totals();
+        out.append("  HAVE  ")
+                .append(totals.isEmpty() ? "(empty)" : formatGroups(new ArrayList<>(totals.values())))
+                .append(LINE);
     }
 
     private static void appendHeader(StringBuilder out, String event, Instant at, String actorName,

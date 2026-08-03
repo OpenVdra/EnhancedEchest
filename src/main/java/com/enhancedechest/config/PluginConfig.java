@@ -63,6 +63,7 @@ public final class PluginConfig {
     private volatile boolean activityLogEnabled;
     private volatile boolean activityLogUnchanged;
     private volatile boolean activityLogShulkerContents;
+    private volatile boolean activityLogChestContents;
     private int activityLogQueueCapacity;
     private int activityLogMaxFileSizeMb;
     private int activityLogRetentionDays;
@@ -74,9 +75,6 @@ public final class PluginConfig {
      * typed in full always resolves. Runtime-tunable: pushed into {@code PlayerNameIndex} on reload.
      */
     private volatile long suggestOfflineWithinMillis;
-
-    // Permission-granted chests (enhancedechest.additional_amount.<count>.slot.<size>)
-    private boolean permissionChestsEnabled;
 
     // Temporary chests (overflow on shrink/delete/expire)
     private long tempExpiryMillis;
@@ -169,6 +167,7 @@ public final class PluginConfig {
         activityLogEnabled = config.getBoolean("activity-log.enabled", false);
         activityLogUnchanged = config.getBoolean("activity-log.log-unchanged", false);
         activityLogShulkerContents = config.getBoolean("activity-log.shulker-contents", true);
+        activityLogChestContents = config.getBoolean("activity-log.chest-contents", true);
         activityLogQueueCapacity = Math.max(256,
                 Math.min(65_536, config.getInt("activity-log.queue-capacity", 4096)));
         activityLogMaxFileSizeMb = Math.max(1,
@@ -178,8 +177,6 @@ public final class PluginConfig {
 
         suggestOfflineWithinMillis = parseSuggestWindow(
                 config.getString("commands.suggest-offline-within", "30d"));
-
-        permissionChestsEnabled = config.getBoolean("permission-chests.enabled", true);
 
         tempExpiryMillis          = parseDuration(config.getString("temp-enderchest.expiry", "7d"), "7d");
         expiryCheckIntervalMillis = parseDuration(config.getString("temp-enderchest.check-interval", "5m"), "5m");

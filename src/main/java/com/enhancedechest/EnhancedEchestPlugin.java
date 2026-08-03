@@ -173,7 +173,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         settingsCache  = new PlayerSettingsCache(storage, dbExecutor, getSLF4JLogger(), playerNameIndex, telemetry);
         activityLogger = new ChestActivityLogger(getDataFolder().toPath(), getSLF4JLogger(), telemetry,
                 pluginConfig.isActivityLogEnabled(), pluginConfig.isActivityLogUnchanged(),
-                pluginConfig.isActivityLogShulkerContents(),
+                pluginConfig.isActivityLogShulkerContents(), pluginConfig.isActivityLogChestContents(),
                 pluginConfig.getActivityLogQueueCapacity(),
                 pluginConfig.getActivityLogMaxFileSizeMb(), pluginConfig.getActivityLogRetentionDays());
         sessionManager = new ChestSessionManager(languageManager, codec, storage,
@@ -205,7 +205,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 languageManager, scheduler, dbExecutor, getSLF4JLogger(), telemetry,
                 pluginConfig.getTempExpiryMillis());
         permissionChestService = new PermissionChestService(storageGateway, spillService,
-                pluginConfig.isPermissionChestsEnabled(), pluginConfig.getDefaultSize());
+                pluginConfig.getDefaultSize());
         databaseImportService = new DatabaseImportService(storage, pluginConfig, getSLF4JLogger(),
                 getDataFolder().toPath());
         chestOpener    = new ChestOpener(sessionManager, storageGateway, settingsCache, storage,
@@ -340,8 +340,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         spillService.setTempConfig(pluginConfig.getTempExpiryMillis(), pluginConfig.isTempAutoReclaim());
         chestTransferService.setTempExpiry(pluginConfig.getTempExpiryMillis());
         migrationService.setTempExpiry(pluginConfig.getTempExpiryMillis());
-        permissionChestService.setConfig(pluginConfig.isPermissionChestsEnabled(),
-                pluginConfig.getDefaultSize());
+        permissionChestService.setConfig(pluginConfig.getDefaultSize());
         expirySweeper.reschedule(pluginConfig.getExpiryCheckIntervalMillis());
         backupService.reschedule(pluginConfig.isBackupEnabled(), pluginConfig.getBackupIntervalMillis(),
                 pluginConfig.getBackupKeep());
@@ -349,6 +348,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         activityLogger.setEnabled(pluginConfig.isActivityLogEnabled());
         activityLogger.setLogUnchanged(pluginConfig.isActivityLogUnchanged());
         activityLogger.setContainerContents(pluginConfig.isActivityLogShulkerContents());
+        activityLogger.setChestContents(pluginConfig.isActivityLogChestContents());
         playerNameIndex.setSuggestWindowMillis(pluginConfig.getSuggestOfflineWithinMillis());
         // Re-reads plugins/EnhancedEchest/icons/lang/*.json, so a file added or edited since startup
         // (or since the last reload) takes effect immediately.

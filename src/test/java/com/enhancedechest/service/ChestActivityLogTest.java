@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <ul>
  *   <li><b>Format</b> — an OPEN header, the totals added and taken while the chest was open, and a
- *       CLOSE header. Chest layout is never written, so an entry stays a handful of lines however full
- *       the chest was.</li>
+ *       CLOSE header, plus a HAVE line under each header when {@code chest-contents} is on. Chest
+ *       layout is never written, so an entry stays a handful of lines however full the chest was.</li>
  *   <li><b>Retention</b> — rotated {@code echest-*.log(.gz)} files are deleted past their age, and
  *       {@code echest-latest.log} never is.</li>
  * </ul>
@@ -107,6 +107,52 @@ class ChestActivityLogTest {
 
         assertTrue(log.contains("  TAKE  minecraft:stone x160"), "stacks not totalled: " + log);
         assertEquals(1, log.lines().filter(l -> l.contains("minecraft:stone")).count());
+    }
+
+    /**
+     * With {@code chest-contents} on, each header gains a HAVE line for what the chest held at that
+     * moment, <b>in chest order</b>. The fixture's order (stone, dirt, sword, torch) is deliberately not
+     * its alphabetical order, so an accidental sort would fail here.
+     */
+    @Test
+    void writesWhatTheChestHeldInChestOrder() throws Exception {
+        Path dir = Files.createTempDirectory("echest-activity-have");
+        UUID player = UUID.randomUUID();
+
+        ChestActivityLogger logger = newLogger(dir, "have", true);
+        logger.setChestContents(true);
+        logger.recordCapturedCycle("Alex", player, player, 1, CHEST_SIZE, opened(), closed());
+        logger.shutdown();
+
+        String log = readLog(dir);
+        deleteTree(dir);
+
+        List<String> lines = log.lines().filter(l -> !l.isBlank()).toList();
+        assertEquals(6, lines.size(), "expected OPEN, HAVE, ADD, TAKE, CLOSE, HAVE: " + lines);
+        assertEquals("  HAVE  minecraft:stone x64, minecraft:dirt x12, " + SWORD
+                + " x1, minecraft:torch x16", lines.get(1));
+        assertEquals("  HAVE  minecraft:stone x32, minecraft:dirt x12, " + SWORD
+                + " x1, minecraft:torch x16, minecraft:redstone x24", lines.get(5));
+        // ADD/TAKE stay alphabetical; the two orders serve different questions and must not converge.
+        assertEquals("  ADD   minecraft:redstone x24", lines.get(2));
+        assertEquals("  TAKE  minecraft:stone x32", lines.get(3));
+    }
+
+    /** An emptied chest must say so, or it reads the same as the feature being switched off. */
+    @Test
+    void marksAnEmptiedChestExplicitly() throws Exception {
+        Path dir = Files.createTempDirectory("echest-activity-have-empty");
+        UUID player = UUID.randomUUID();
+
+        ChestActivityLogger logger = newLogger(dir, "have-empty", true);
+        logger.setChestContents(true);
+        logger.recordCapturedCycle("Alex", player, player, 1, CHEST_SIZE, opened(), List.of());
+        logger.shutdown();
+
+        String log = readLog(dir);
+        deleteTree(dir);
+
+        assertTrue(log.contains("  HAVE  (empty)"), "an emptied chest is not marked: " + log);
     }
 
     /** The default: opening a chest, touching nothing and closing it leaves no trace at all. */
@@ -221,7 +267,7 @@ class ChestActivityLogTest {
 
     private static ChestActivityLogger newLogger(Path dir, String label, boolean enabled) {
         return new ChestActivityLogger(dir, LoggerFactory.getLogger("activity-" + label),
-                Telemetry.NOOP, enabled, false, true, 64, 1, RETENTION_DAYS);
+                Telemetry.NOOP, enabled, false, true, false, 64, 1, RETENTION_DAYS);
     }
 
     private static String readLog(Path dir) throws Exception {

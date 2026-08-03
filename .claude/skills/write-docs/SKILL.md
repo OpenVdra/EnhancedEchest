@@ -1,6 +1,6 @@
 ---
 name: write-docs
-description: Write EnhancedEchest end-user content - CHANGELOG entries and VitePress documentation pages. Use when adding a changelog entry for a release, or writing/editing pages on the docs site (docs/). Enforces the plain, non-technical writing style and the site's component and Lucide-icon conventions.
+description: Write EnhancedEchest end-user content - CHANGELOG entries, VitePress documentation pages, and the comments in config.yml. Use when adding a changelog entry for a release, writing/editing pages on the docs site (docs/), or adding/rewording a setting's comment in src/main/resources/config.yml. Enforces the plain, non-technical writing style and the site's component and Lucide-icon conventions.
 ---
 
 # Writing EnhancedEchest docs and changelog
@@ -55,6 +55,20 @@ You are writing for **server owners and players**, not developers. They install 
 - A renamed or removed command, permission, or config key is breaking. Put it first in `Changed`, prefix it with **Breaking:**, give old to new, and name the one action the admin must take.
 - Reserve `Notes` for required upgrade actions, compatibility details, or a brief "no action required" statement. Do not repeat other sections or document every edge case.
 
+## Config comments (`src/main/resources/config.yml`)
+
+The comment above a setting is the only documentation most admins ever read. It has to answer "what does this do and what happens if I change it" in one or two lines, in the same plain voice as the docs site.
+
+- **Say what the setting does to the server, not how the plugin implements it.** An admin does not know what a capture, a cache, a queue, a thread or a tick is, and telling them it is free "per visit" or costs no "server time" means nothing to them. Translate the consequence into something they can see: log files filling faster, longer lines, more disk used, a slower login.
+- Keep it to one or two lines under 100 characters each. If a setting genuinely needs more, link the docs site instead of writing a paragraph.
+- Name the trade-off when there is one. `# Log files fill up several times faster.` is worth more than a sentence explaining the feature twice.
+- **List the accepted values in full** when there is a fixed set, rather than describing the rule: `# One of: 9, 18, 27, 36, 45, 54.` beats "a multiple of 9 from 9 to 54". For free-form values, give the format and an example: `# Time format: 20s, 5m, 1h, 7d, or 1d_2h_30m. Units: s m h d w mo y.`
+- Say what the setting cannot do when that is a likely wrong assumption, for example that only languages with a folder under `language/` can be shown.
+- Settings that need a full restart are marked `# NEED RESTART:` on the line above, covering either one setting or a named group of them. Everything else applies on `/ee reload`, which the file header already states, so never repeat it per setting.
+- No em-dash, no emoji, no second person outside the header lines that already use it.
+- A new key needs its default in three places that must agree: the value in `config.yml`, the fallback in `PluginConfig`, and the `value` prop of its `<ConfigProperty>` in both `docs/docs/configuration/index.md` and `docs/vi/docs/configuration/index.md`.
+- Removing a key means removing its `<ConfigGroup>` or `<ConfigProperty>` from both index pages **and** from the full-file example lower down the same pages, then adding a **Breaking:** changelog entry under `Changed`.
+
 ## Documentation site (VitePress, in `docs/`)
 
 - Bilingual. English lives in `docs/docs/`, Vietnamese in `docs/vi/docs/`. When you add or change a page, update both languages so they stay in sync.
@@ -99,4 +113,5 @@ You are writing for **server owners and players**, not developers. They install 
 - Search changelog changes for second-person wording such as `you`, `your`, and `yours`, and rewrite it.
 - Search your output for the em-dash character and any emoji, and remove them.
 - If you touched a docs page, confirm the matching page in the other language was updated too.
+- If you touched `config.yml`, re-read each comment you wrote and cut any word that describes the plugin's internals rather than what the admin will notice.
 </content>
