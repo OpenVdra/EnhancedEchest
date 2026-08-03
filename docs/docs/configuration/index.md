@@ -112,6 +112,18 @@ How often the plugin scans for expired chests. Lower values remove expired chest
 Whether a temporary chest's items move into a new chest on their own. When a player is granted a new, empty chest with at least as many slots as one of their temporary chests, the items move in and the temporary chest disappears. Every item keeps the slot it was on. A temporary chest that does not fit is left alone rather than split across several chests, and the one closest to expiring moves first.
 </ConfigProperty>
 
+<ConfigProperty name="reclaim-notify.enabled" value="true" type="boolean">
+Whether to tell the player when that move happens. They get a chat message and an action bar naming the chest number their items landed in, so the items do not appear to have vanished from the temporary chest. A player who is offline at the time is not told; the items are simply waiting in their chest. Set to <code>false</code> for no message.
+</ConfigProperty>
+
+<ConfigProperty name="reclaim-notify.sound.enabled" value="true" type="boolean">
+Whether to play a sound alongside that message. Set to <code>false</code> for no sound.
+</ConfigProperty>
+
+<ConfigProperty name="reclaim-notify.sound.key" value="minecraft:entity.player.levelup" type="string">
+Which sound to play. Any Minecraft sound name works.
+</ConfigProperty>
+
 <ConfigProperty name="deny-sound.enabled" value="true" type="boolean">
 Whether to play a sound when a player tries to put an item into a take-only temporary chest. Set to <code>false</code> for no sound.
 </ConfigProperty>
@@ -340,6 +352,12 @@ temp-enderchest:
   check-interval: 5m
   # Move a temporary chest's items into a new, empty chest that is large enough for them.
   auto-reclaim: true
+  # Tell the player which chest those items were moved into.
+  reclaim-notify:
+    enabled: true
+    sound:
+      enabled: true
+      key: minecraft:entity.player.levelup
   # Sound played to a player who tries to deposit into a take-only temporary chest.
   deny-sound:
     enabled: true

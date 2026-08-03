@@ -13,6 +13,7 @@ if you change one thing here, change it knowing why the current shape exists.
 | `ChestSpillService` | Item-moving ops: resize/delete spill, expiry disposal, clear, sort, temp auto-reclaim |
 | `ChestTransferService` | `/ee transfer`: move a player's NORMAL chests onto another account |
 | `PermissionChestService` | Grants/resizes/revokes `kind = PERM` chests from permissions; reconcile-on-open |
+| `TempReclaimNotifier` | Tells the owner which chest an auto-reclaim moved their temp-chest items into |
 | `ChestActivityLogger` | Bounded, batched audit pipeline: who opened what, what they added or took |
 | `StorageGateway` | Thin async wrappers over `EnderChestStorage` (list/create/rename/icon/primary/name lookup) |
 | `PlayerSettingsCache` | Write-through per-player settings cache, bounded by online players |
@@ -130,6 +131,12 @@ not relax them: only a temp chest whose size ≤ the target's is eligible and th
 **verbatim** (no decode/merge/repack, every item keeps its slot); one temp chest per new chest, the one
 expiring soonest first, ties on lowest index; `CachedStorage.reclaimTemp` re-checks every precondition
 under the cache lock and returns `false` rather than doing a partial move.
+
+A move that returns `true` is announced to the owner by `TempReclaimNotifier`
+(`temp-enderchest.reclaim-notify`, default on), chat + action bar + sound like the join reminder. The
+hook sits on the tail of `reclaimTempInto`, **not** at its call sites, so a new way of granting a chest
+cannot forget it; the notifier never throws, because it runs on the reclaim future and the move is
+already durable. An offline owner is skipped rather than queued.
 
 Expiry itself is **swept, not lazy on access** (`expiry/ExpirySweeper`, `temp-enderchest.check-interval`,
 default `5m`), so the hot open/close path stays free of expiry filtering and the dangerous mutation is

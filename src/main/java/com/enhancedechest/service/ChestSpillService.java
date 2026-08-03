@@ -30,6 +30,8 @@ public final class ChestSpillService {
     private final EnderChestStorage storage;
     private final ContainerCodec codec;
     private final StorageGateway storageGateway;
+    /** Announces a successful {@link #reclaimTempInto} to the owner, if they are online. */
+    private final TempReclaimNotifier reclaimNotifier;
 
     // Runtime-tunable via /ee reload (see setTempConfig). volatile so the values written on the main
     // thread during a reload are visible to the async threads that stamp a freshly spilled temp chest.
@@ -40,11 +42,13 @@ public final class ChestSpillService {
 
     public ChestSpillService(ChestSessionManager sessions, EnderChestStorage storage,
                              ContainerCodec codec, StorageGateway storageGateway,
+                             TempReclaimNotifier reclaimNotifier,
                              long tempExpiryMillis, boolean autoReclaim) {
         this.sessions         = sessions;
         this.storage          = storage;
         this.codec            = codec;
         this.storageGateway   = storageGateway;
+        this.reclaimNotifier  = reclaimNotifier;
         this.tempExpiryMillis = tempExpiryMillis;
         this.autoReclaim      = autoReclaim;
     }
@@ -128,6 +132,9 @@ public final class ChestSpillService {
      * never reshuffled — a partially fitting temp chest is left alone rather than merged in. When several
      * temp chests fit, the one expiring soonest is taken first: it is the one closest to being lost.
      *
+     * <p>A move that actually happened is announced to the owner through {@link TempReclaimNotifier}
+     * ({@code temp-enderchest.reclaim-notify}), so items do not silently change chest number under them.
+     *
      * <p>Dupe-safety follows the same model as the spills above, widened to the two chests involved:
      * both GUIs are force-closed (flushing any live session), then the swap runs behind the pending saves
      * of <i>both</i> keys via {@link ChestSessionManager#runExclusiveAcross}, and the storage call
@@ -159,7 +166,15 @@ public final class ChestSpillService {
             return sessions.forceCloseAll(owner, tempIndex)
                     .thenCompose(v -> sessions.forceCloseAll(owner, targetIndex))
                     .thenCompose(v -> sessions.runExclusiveAcross(refs,
-                            () -> storage.reclaimTemp(owner, tempIndex, targetIndex)));
+                            () -> storage.reclaimTemp(owner, tempIndex, targetIndex)))
+                    // Announce only a move that actually happened: reclaimTemp re-checks every
+                    // precondition under the cache lock and answers false rather than half-moving.
+                    .thenApply(moved -> {
+                        if (Boolean.TRUE.equals(moved)) {
+                            reclaimNotifier.notifyReclaimed(owner, targetIndex);
+                        }
+                        return moved;
+                    });
         });
     }
 

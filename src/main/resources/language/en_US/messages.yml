@@ -15,6 +15,10 @@ chest:
   # action bar are shown at the same time.
   temp-join-chat: '{prefix}<red>You have items in {count} temporary ender chest(s). Collect them before they expire. Soonest in {time}.'
   temp-join-actionbar: '<red>Items in a temporary ender chest. Collect within {time}!'
+  # Shown when items waiting in a temporary chest are moved into a new chest automatically.
+  # {chest} = the number of the chest they landed in. Chat and action bar are shown at the same time.
+  temp-reclaim-chat: '{prefix}<green>Your items from a temporary ender chest have been moved into chest #{chest}.'
+  temp-reclaim-actionbar: '<green>Temporary chest items moved into chest #{chest}.'
   # Folia only: an admin opening a chest someone else already has open.
   in-use: '{prefix}That ender chest is currently in use. Please try again in a moment.'
   # Admin viewing another player's chest without the edit permission.

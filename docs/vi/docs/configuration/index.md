@@ -112,6 +112,18 @@ Bao lâu plugin quét rương hết hạn một lần. Giá trị thấp hơn x�
 Vật phẩm trong rương tạm có tự chuyển sang rương mới hay không. Khi người chơi được cấp một rương mới còn trống có số ô bằng hoặc lớn hơn một rương tạm của họ, vật phẩm sẽ chuyển vào rương đó và rương tạm biến mất. Mỗi vật phẩm giữ nguyên ô cũ. Rương tạm không vừa sẽ được giữ nguyên thay vì bị chia nhỏ sang nhiều rương, và rương tạm sắp hết hạn nhất được chuyển trước.
 </ConfigProperty>
 
+<ConfigProperty name="reclaim-notify.enabled" value="true" type="boolean">
+Có báo cho người chơi biết khi việc chuyển đó diễn ra hay không. Họ nhận một tin nhắn chat và một dòng action bar ghi rõ số rương mà vật phẩm đã chuyển sang, để đồ không giống như bị biến mất khỏi rương tạm. Người chơi đang ngoại tuyến lúc đó sẽ không được báo; vật phẩm vẫn nằm chờ sẵn trong rương của họ. Đặt thành <code>false</code> để tắt tin nhắn.
+</ConfigProperty>
+
+<ConfigProperty name="reclaim-notify.sound.enabled" value="true" type="boolean">
+Có phát âm thanh kèm theo tin nhắn đó hay không. Đặt thành <code>false</code> để tắt âm thanh.
+</ConfigProperty>
+
+<ConfigProperty name="reclaim-notify.sound.key" value="minecraft:entity.player.levelup" type="string">
+Âm thanh được phát. Dùng được mọi tên âm thanh của Minecraft.
+</ConfigProperty>
+
 <ConfigProperty name="deny-sound.enabled" value="true" type="boolean">
 Có phát âm thanh khi người chơi cố bỏ vật phẩm vào rương tạm chỉ-cho-lấy-ra hay không. Đặt thành <code>false</code> để tắt âm thanh.
 </ConfigProperty>
@@ -341,6 +353,12 @@ temp-enderchest:
   check-interval: 5m
   # Chuyển đồ trong rương tạm sang một rương mới còn trống đủ chỗ chứa.
   auto-reclaim: true
+  # Báo cho người chơi biết vật phẩm đã được chuyển sang rương nào.
+  reclaim-notify:
+    enabled: true
+    sound:
+      enabled: true
+      key: minecraft:entity.player.levelup
   # Âm thanh phát cho người chơi cố bỏ đồ vào rương tạm chỉ-cho-lấy-ra.
   deny-sound:
     enabled: true

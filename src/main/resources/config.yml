@@ -1,6 +1,8 @@
 # EnhancedEchest configuration
 # Full guide: https://openvdra.github.io/EnhancedEchest/docs/configuration/
 # Most settings apply on /ee reload. Ones marked NEED RESTART need a full server restart.
+# Time format, wherever a setting takes one: 20s, 5m, 1h, 7d, or combined like 1d_2h_30m.
+# Units: s m h d w mo y.
 
 # Language folder under language/. Bundled: en_US, vi_VN.
 language: en_US
@@ -40,18 +42,22 @@ commands:
   # Which offline players are offered while you type a name in /ee view, /ee add and the other admin
   # commands. Only players who were online within this long are listed, so the list stays short on a
   # server with a long history. Use 'all' to list every player the plugin knows (not recommended on large servers).
-  # Time format: 20s, 5m, 1h, 7d, or combined like 1d_2h_30m. Units: s m h d w mo y.
   # This only affects the suggestion list: typing a full name always works, however long ago they left.
   suggest-offline-within: 30d
 
 temp-enderchest:
   # Items from a shrunk, deleted or expired chest go to a temporary chest players can empty.
-  # Time format: 20s, 5m, 1h, 7d, or 1d_2h_30m. Units: s m h d w mo y.
   expiry: 7d
   # How often to scan for expired chests.
   check-interval: 5m
   # Move a temporary chest's items into a new chest of at least the same size, automatically.
   auto-reclaim: true
+  # Tell the player when that move happens, so they know where their items went.
+  reclaim-notify:
+    enabled: true
+    sound:
+      enabled: true
+      key: minecraft:entity.player.levelup
   # Sound when someone tries to put items into a take-only temporary chest.
   deny-sound:
     enabled: true

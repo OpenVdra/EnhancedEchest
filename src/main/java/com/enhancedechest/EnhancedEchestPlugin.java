@@ -33,6 +33,7 @@ import com.enhancedechest.service.PlayerNameIndex;
 import com.enhancedechest.service.PlayerSettingsCache;
 import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.service.StorageGateway;
+import com.enhancedechest.service.TempReclaimNotifier;
 import com.enhancedechest.storage.AutosaveService;
 import com.enhancedechest.storage.CachedStorage;
 import com.enhancedechest.storage.StorageBackend;
@@ -200,6 +201,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
             });
         }
         spillService   = new ChestSpillService(sessionManager, storage, codec, storageGateway,
+                new TempReclaimNotifier(pluginConfig, languageManager, scheduler, getSLF4JLogger(),
+                        telemetry),
                 pluginConfig.getTempExpiryMillis(), pluginConfig.isTempAutoReclaim());
         chestTransferService = new ChestTransferService(sessionManager, storage, codec, storageGateway,
                 languageManager, scheduler, dbExecutor, getSLF4JLogger(), telemetry,

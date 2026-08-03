@@ -13,6 +13,7 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 - The activity log now lists what a shulker box held when one was put into or taken out of a chest. Items moved by packing them into a shulker are no longer missing from the record. Turn it off with `shulker-contents` in `config.yml`.
 - The activity log now records everything a chest held when it was opened and again when it was closed, in the order the items sit in it. Turn it off with `chest-contents` in `config.yml`.
+- Players are now told when items waiting in a temporary chest are moved into a newly granted chest, naming the chest number they landed in. Turn it off with `reclaim-notify` in `config.yml`.
 - Added `/endersee <player>` as a shorthand for `/ee view <player>`. It takes the same `list` and chest-number arguments and requires the same `enhancedechest.admin.view` permission.
 - Admin commands now suggest only players who were online in the last 30 days, so the name list stays short on a server with years of history. Change it with `commands.suggest-offline-within` in `config.yml`, or set it to `all` for every known player. Typing a full name always works regardless.
 

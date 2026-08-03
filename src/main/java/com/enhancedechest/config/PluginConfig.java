@@ -94,6 +94,13 @@ public final class PluginConfig {
     private volatile boolean tempAutoReclaim;
     /** Sound played alongside the join reminder above; null when disabled. */
     private Sound tempJoinNotifySound;
+    /**
+     * When on (default), the player is told which chest their temp-chest items were moved into by an
+     * auto-reclaim. Read from the DB executor once a reclaim reports success, so volatile.
+     */
+    private volatile boolean tempReclaimNotifyEnabled;
+    /** Sound played alongside the reclaim notice above; null when disabled. */
+    private volatile Sound tempReclaimNotifySound;
 
     // Database — common
     private String databaseType;
@@ -185,6 +192,9 @@ public final class PluginConfig {
         tempJoinNotifyEnabled     = config.getBoolean("temp-enderchest.join-notify.enabled", true);
         tempJoinNotifySound       = parseSound(config, "temp-enderchest.join-notify.sound",
                 "minecraft:block.note_block.pling");
+        tempReclaimNotifyEnabled  = config.getBoolean("temp-enderchest.reclaim-notify.enabled", true);
+        tempReclaimNotifySound    = parseSound(config, "temp-enderchest.reclaim-notify.sound",
+                "minecraft:entity.player.levelup");
 
         databaseType = config.getString("database.type", "sqlite");
         tablePrefix  = sanitizeTablePrefix(config.getString("database.table-prefix", "echest_"));

@@ -15,6 +15,10 @@ chest:
   # Chat và action bar hiện cùng lúc.
   temp-join-chat: '{prefix}<red>Bạn còn vật phẩm trong {count} rương ender tạm. Hãy lấy ra trước khi hết hạn. Gần nhất sau {time}.'
   temp-join-actionbar: '<red>Còn vật phẩm trong rương ender tạm. Hãy lấy ra trong {time}!'
+  # Hiện khi vật phẩm đang chờ trong rương tạm được tự động chuyển sang một rương mới.
+  # {chest} = số của rương nhận. Chat và action bar hiện cùng lúc.
+  temp-reclaim-chat: '{prefix}<green>Vật phẩm trong rương ender tạm của bạn đã được chuyển sang rương #{chest}.'
+  temp-reclaim-actionbar: '<green>Đã chuyển vật phẩm từ rương tạm sang rương #{chest}.'
   # Chỉ Folia: quản trị viên mở rương người khác đang mở.
   in-use: '{prefix}Rương ender đó đang được sử dụng. Vui lòng thử lại sau giây lát.'
   # Quản trị viên xem rương người khác mà không có quyền sửa.
