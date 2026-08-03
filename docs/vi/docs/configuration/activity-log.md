@@ -22,6 +22,22 @@ Mỗi lượt mở có thay đổi tạo ra một mục: lúc mở rương, nh�
 - `chest=2` là số rương của người chơi, đúng số họ thấy trong `/eclist`. `size=54` là số ô của rương đó.
 - Vị trí đồ trong rương không được ghi lại. Nhật ký cho biết thứ gì đã dịch chuyển, không cho biết nó nằm ở ô nào.
 
+### Shulker Box
+
+Shulker box vẫn tính là một vật phẩm, nhưng thứ nó đang đựng được liệt kê ngay sau đó, nên đồ mang ra mang vào bên trong shulker vẫn nhìn thấy được.
+
+```
+[2026-08-03 09:41:12.507 ICT] OPEN player=Steve uuid=925c51aa-... chest=1 size=27
+  TAKE  minecraft:shulker_box{meta=8f31c2,contents=[minecraft:diamond x192, minecraft:netherite_ingot x7]} x1
+[2026-08-03 09:41:58.140 ICT] CLOSE player=Steve uuid=925c51aa-... chest=1 size=27
+```
+
+Đồ bên trong cũng được cộng dồn như vậy, nên ba chồng kim cương chỉ ra một mục. Chỉ liệt kê một lớp: món đồ nằm trong shulker được ghi bằng tên của chính nó, không mở tiếp xem nó đựng gì.
+
+Sắp xếp lại shulker khi nó đang nằm trong rương làm nó khác đi, nên nhật ký ghi thành lấy cái cũ ra và bỏ cái mới vào. So hai danh sách `contents` sẽ thấy thứ gì đã dịch chuyển.
+
+Muốn giữ shulker box chỉ là một vật phẩm không kèm danh sách, đặt `shulker-contents` thành `false` trong nhóm `activity-log` của `config.yml`.
+
 ### Khi Ai Đó Mở Rương Của Người Khác
 
 Khi quản trị viên mở rương không phải của mình, cả hai dòng đều được đánh dấu và ghi rõ chủ rương:
@@ -53,9 +69,5 @@ File đã nén cũ hơn `retention-days` sẽ tự động bị xóa. File đang
 Để đọc file đã nén, mở bằng 7-Zip, WinRAR hoặc bất kỳ công cụ nào hỗ trợ `.gz`.
 
 ::: tip Đổi các thiết lập file
-`enabled` và `log-unchanged` có hiệu lực khi chạy `/ee reload`. Ba thiết lập còn lại chỉ được đọc lúc server khởi động, nên đổi chúng thì phải khởi động lại toàn bộ server.
+`enabled`, `log-unchanged` và `shulker-contents` có hiệu lực khi chạy `/ee reload`. Ba thiết lập còn lại chỉ được đọc lúc server khởi động, nên đổi chúng thì phải khởi động lại toàn bộ server.
 :::
-
-## Chưa Hỗ Trợ
-
-**Xem đồ bên trong shulker box.** Shulker box được ghi như một vật phẩm đơn lẻ, giống mọi món khác. Nhật ký cho thấy có một cái được bỏ vào hay lấy ra khỏi rương, nhưng không cho biết bên trong đựng gì, nên đồ bị chuyển đi bằng cách nhồi vào shulker sẽ không được liệt kê từng món.

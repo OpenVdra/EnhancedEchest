@@ -125,6 +125,9 @@ activity-log:
   enabled: false
   # Also write visits where the player changed nothing. Off keeps the log readable.
   log-unchanged: false
+  # Also list what a shulker box held when it was put in or taken out. Costs nothing per visit:
+  # the list is built once per shulker and reused, but it does make the lines longer.
+  shulker-contents: true
   # RESTART: the three settings below.
   # Finished visits allowed to wait for the disk. Only caps memory if the disk stalls.
   queue-capacity: 4096

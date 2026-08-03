@@ -221,7 +221,7 @@ class ChestActivityLogTest {
 
     private static ChestActivityLogger newLogger(Path dir, String label, boolean enabled) {
         return new ChestActivityLogger(dir, LoggerFactory.getLogger("activity-" + label),
-                Telemetry.NOOP, enabled, false, 64, 1, RETENTION_DAYS);
+                Telemetry.NOOP, enabled, false, true, 64, 1, RETENTION_DAYS);
     }
 
     private static String readLog(Path dir) throws Exception {

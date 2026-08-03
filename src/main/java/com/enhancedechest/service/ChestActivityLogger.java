@@ -1,6 +1,8 @@
 package com.enhancedechest.service;
 
 import com.enhancedechest.telemetry.Telemetry;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -50,6 +52,14 @@ import java.util.zip.GZIPOutputStream;
  * capture cheap enough to sit on a region thread. Two different stacks of the same material whose
  * metadata hashes collide would be totalled as one line in a single cycle; that is an acceptable
  * trade for a human-readable log and cannot affect stored chest contents.
+ *
+ * <p><b>Container contents are rendered, not accounted.</b> A shulker box is still <i>one</i> entry in
+ * a snapshot; what it holds is spelled out in the text of that entry only. That placement is the whole
+ * reason the feature is affordable: the text is built inside {@link #buildMetaId}, which runs on a
+ * {@link #META_CACHE} miss and never again for that exact shulker, whereas folding the inner items
+ * into {@link Snapshot#totals()} would have to unpack every container on every capture — up to 27
+ * items per occupied slot, on a region thread. The diff still sees a repacked shulker change, because
+ * {@code ItemMeta.hashCode()} already covers the container component.
  */
 public final class ChestActivityLogger {
 
@@ -118,6 +128,13 @@ public final class ChestActivityLogger {
     private static final int META_CACHE_MAX = 4096;
     private static final ConcurrentHashMap<Long, ItemId> META_CACHE = new ConcurrentHashMap<>();
 
+    /**
+     * How many distinct kinds of item one container's line may list. A shulker box has 27 slots, so in
+     * vanilla play this is never reached; it exists so a crafted CONTAINER component cannot turn one
+     * cached detail string into an arbitrarily large one.
+     */
+    private static final int MAX_CONTENT_ENTRIES = 27;
+
     /** Same idea for the simulation's pre-captured identities; never touched in production. */
     private static final ConcurrentHashMap<String, ItemId> CAPTURED_IDS = new ConcurrentHashMap<>();
 
@@ -140,6 +157,7 @@ public final class ChestActivityLogger {
 
     private volatile boolean enabled;
     private volatile boolean logUnchanged;
+    private volatile boolean containerContents;
     private volatile boolean stopping;
     private volatile long stopDeadlineNanos = Long.MAX_VALUE;
 
@@ -148,7 +166,7 @@ public final class ChestActivityLogger {
     private long activeFileBytes;
 
     public ChestActivityLogger(Path dataFolder, Logger logger, Telemetry telemetry,
-                               boolean enabled, boolean logUnchanged,
+                               boolean enabled, boolean logUnchanged, boolean containerContents,
                                int queueCapacity, int maxFileSizeMb, int retentionDays) {
         this.directory = dataFolder.resolve("logs");
         this.activeFile = directory.resolve(ACTIVE_FILE_NAME);
@@ -156,6 +174,7 @@ public final class ChestActivityLogger {
         this.telemetry = telemetry;
         this.enabled = enabled;
         this.logUnchanged = logUnchanged;
+        this.containerContents = containerContents;
         this.queue = new ArrayBlockingQueue<>(queueCapacity);
         this.maxFileBytes = maxFileSizeMb * 1024L * 1024L;
         this.retentionDays = retentionDays;
@@ -175,6 +194,18 @@ public final class ChestActivityLogger {
      */
     public void setLogUnchanged(boolean logUnchanged) {
         this.logUnchanged = logUnchanged;
+    }
+
+    /**
+     * When true, a shulker box's line also spells out what it holds. Flipping this drops
+     * {@link #META_CACHE}, whose detail strings were rendered under the old setting — the identities in
+     * a snapshot taken before the flip still compare by value, so a visit straddling a reload is
+     * diffed correctly, it just loses the reference-equality shortcut for one cycle.
+     */
+    public void setContainerContents(boolean containerContents) {
+        if (this.containerContents == containerContents) return;
+        this.containerContents = containerContents;
+        META_CACHE.clear();
     }
 
     /**
@@ -356,7 +387,7 @@ public final class ChestActivityLogger {
      * cached per-material identity; a metadata-bearing stack costs one {@link ItemStack#getItemMeta()}
      * and a cache lookup, with the description built only the first time that exact item is seen.
      */
-    static Snapshot capture(ItemStack[] contents) {
+    Snapshot capture(ItemStack[] contents) {
         // Sized for the distinct-item count a full chest realistically holds, so accumulating the
         // totals never rehashes on the calling thread.
         Map<String, Group> totals = new LinkedHashMap<>(64);
@@ -376,7 +407,7 @@ public final class ChestActivityLogger {
                         running.amount() + incoming.amount()));
     }
 
-    private static ItemId metaId(ItemStack item) {
+    private ItemId metaId(ItemStack item) {
         Material type = item.getType();
         ItemMeta meta = item.getItemMeta();      // the only Bukkit allocation on this path
         if (meta == null) return MaterialTables.plain(type);
@@ -384,14 +415,14 @@ public final class ChestActivityLogger {
         long cacheKey = ((long) type.ordinal() << 32) | (hash & 0xFFFFFFFFL);
         ItemId cached = META_CACHE.get(cacheKey);
         if (cached != null) return cached;
-        ItemId built = buildMetaId(type, meta, hash);
+        ItemId built = buildMetaId(item, type, meta, hash);
         if (META_CACHE.size() >= META_CACHE_MAX) META_CACHE.clear();
         META_CACHE.put(cacheKey, built);
         return built;
     }
 
     /** Called once per distinct metadata-bearing item per capture thread, then cached. */
-    private static ItemId buildMetaId(Material type, ItemMeta meta, int hash) {
+    private ItemId buildMetaId(ItemStack item, Material type, ItemMeta meta, int hash) {
         String key = MaterialTables.key(type);
         String fingerprint = Integer.toHexString(hash);
         List<String> details = new ArrayList<>(4);
@@ -414,8 +445,73 @@ public final class ChestActivityLogger {
         }
         // Covers all other custom components/NBT without dumping their potentially huge payload.
         details.add("meta=" + fingerprint);
+        if (containerContents) {
+            String packed = describeContents(item);
+            if (packed != null) details.add("contents=[" + packed + "]");
+        }
         return new ItemId("meta:" + key + ":" + fingerprint,
                 key + "{" + String.join(",", details) + "}");
+    }
+
+    /**
+     * Spells out what a shulker box holds, as the same {@code item xN} list the ADD/TAKE lines use.
+     * Reached only from {@link #buildMetaId}, i.e. once per distinct shulker <i>and its exact
+     * contents</i> — the outer hash covers the container component, so a repacked shulker is a
+     * different cache entry and gets described again, and an untouched one never is.
+     *
+     * <p><b>One level deep, deliberately.</b> An item inside is described by material plus, at most,
+     * its custom name; its own container is never opened. Vanilla cannot nest shulkers, so the depth
+     * costs nothing real, and refusing to recurse is what stops a crafted item from turning a single
+     * capture into an unbounded walk. Inner identities are not interned either: they exist only long
+     * enough to build this string, and caching them would spend the shared cache on items no diff
+     * ever compares.
+     *
+     * @return the rendered list, or {@code null} when the item carries no container or it is empty
+     */
+    @SuppressWarnings("UnstableApiUsage")
+    private String describeContents(ItemStack item) {
+        ItemContainerContents container;
+        try {
+            container = item.getData(DataComponentTypes.CONTAINER);
+        } catch (RuntimeException e) {
+            // A malformed component must cost the log one detail string, never a chest close.
+            telemetry.error(e, "activity-log.container-contents");
+            return null;
+        }
+        if (container == null) return null;
+
+        Map<String, Group> totals = new LinkedHashMap<>(32);
+        int hidden = 0;
+        for (ItemStack inner : container.contents()) {
+            if (isEmpty(inner)) continue;
+            ItemId id = innerId(inner);
+            if (totals.size() >= MAX_CONTENT_ENTRIES && !totals.containsKey(id.identity())) {
+                hidden++;
+                continue;
+            }
+            add(totals, id, inner.getAmount());
+        }
+        if (totals.isEmpty()) return null;
+
+        List<Group> groups = new ArrayList<>(totals.values());
+        groups.sort(Comparator.comparing(Group::detail));
+        String rendered = formatGroups(groups);
+        return hidden == 0 ? rendered : rendered + ", +" + hidden + " more";
+    }
+
+    /** Shallow identity of an item packed inside a container: never expanded, never cached. */
+    private static ItemId innerId(ItemStack inner) {
+        Material type = inner.getType();
+        if (!inner.hasItemMeta()) return MaterialTables.plain(type);
+        ItemMeta meta = inner.getItemMeta();
+        if (meta == null) return MaterialTables.plain(type);
+        String key = MaterialTables.key(type);
+        String fingerprint = Integer.toHexString(meta.hashCode());
+        String detail = meta.hasCustomName()
+                ? key + "{name=\"" + escape(PlainTextComponentSerializer.plainText()
+                        .serialize(meta.customName())) + "\"}"
+                : key + "{meta=" + fingerprint + "}";
+        return new ItemId("inner:" + key + ":" + fingerprint, detail);
     }
 
     /**

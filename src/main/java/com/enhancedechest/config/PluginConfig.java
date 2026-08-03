@@ -62,6 +62,7 @@ public final class PluginConfig {
     // Human-readable OPEN / ADD / TAKE / CLOSE audit log.
     private volatile boolean activityLogEnabled;
     private volatile boolean activityLogUnchanged;
+    private volatile boolean activityLogShulkerContents;
     private int activityLogQueueCapacity;
     private int activityLogMaxFileSizeMb;
     private int activityLogRetentionDays;
@@ -167,6 +168,7 @@ public final class PluginConfig {
         renameColorsEnabled = config.getBoolean("enderchest.features.rename-colors", true);
         activityLogEnabled = config.getBoolean("activity-log.enabled", false);
         activityLogUnchanged = config.getBoolean("activity-log.log-unchanged", false);
+        activityLogShulkerContents = config.getBoolean("activity-log.shulker-contents", true);
         activityLogQueueCapacity = Math.max(256,
                 Math.min(65_536, config.getInt("activity-log.queue-capacity", 4096)));
         activityLogMaxFileSizeMb = Math.max(1,

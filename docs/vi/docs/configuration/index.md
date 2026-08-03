@@ -271,6 +271,10 @@ Khi để <code>false</code> (mặc định), lượt mở rương mà người 
 Chỉ bỏ qua khi giống hệt nhau, nên người chơi chỉ sắp xếp lại đồ vẫn được ghi.
 </ConfigProperty>
 
+<ConfigProperty name="shulker-contents" value="true" type="boolean">
+Liệt kê thứ shulker box đang đựng ngay trên dòng ghi nó, nhờ vậy đồ mang ra mang vào bên trong shulker vẫn nhìn thấy được. Chỉ liệt kê một lớp. Đặt <code>false</code> để ghi shulker box như một vật phẩm đơn lẻ và giữ dòng nhật ký ngắn gọn. Có hiệu lực khi chạy <code>/ee reload</code>.
+</ConfigProperty>
+
 <ConfigProperty name="queue-capacity" value="4096" type="number">
 Số lượt mở rương đã xong được phép chờ ghi xuống đĩa. Thiết lập này chỉ để giới hạn bộ nhớ khi đĩa bị nghẽn; nếu đầy, các lượt mới nhất bị bỏ qua và nhật ký sẽ ghi rõ bỏ bao nhiêu. Giá trị mặc định đủ cho server 300 đến 500 người chơi. Cần khởi động lại server.
 </ConfigProperty>

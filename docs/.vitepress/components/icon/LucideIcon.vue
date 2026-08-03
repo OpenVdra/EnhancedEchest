@@ -6,7 +6,8 @@ import {
   MousePointer2, Sliders, List, Star, Wrench, Eye, BarChart2,
   RefreshCw, Bell, FileText, Box, SquareStack,
   Pencil, MessageCircle, Heart, Github, Languages, Check, BookOpen,
-  Tag, Bug, ArrowUpRight, Database, Search, ChevronLeft, ChevronRight, X
+  Tag, Bug, ArrowUpRight, Database, Search, ChevronLeft, ChevronRight, X,
+  Binary, Copy
 } from 'lucide-vue-next'
 
 const ICONS = {
@@ -15,7 +16,8 @@ const ICONS = {
   MousePointer2, Sliders, List, Star, Wrench, Eye, BarChart2,
   RefreshCw, Bell, FileText, Box, SquareStack,
   Pencil, MessageCircle, Heart, Github, Languages, Check, BookOpen,
-  Tag, Bug, ArrowUpRight, Database, Search, ChevronLeft, ChevronRight, X
+  Tag, Bug, ArrowUpRight, Database, Search, ChevronLeft, ChevronRight, X,
+  Binary, Copy
 }
 
 const props = defineProps({

@@ -175,6 +175,14 @@ queue, so a stalled disk can never grow the heap. Item identity is `Material` + 
 interned in a shared cache — it only ever has to be stable **within one OPEN/CLOSE cycle**, which is
 what makes the capture cheap enough for a region thread.
 
+A shulker box's contents are **rendered, not accounted** (`activity-log.shulker-contents`, default on).
+The list is built in `buildMetaId`, i.e. only on a `META_CACHE` miss, so a given shulker is unpacked
+once and every later capture of it is a cache hit — that placement is the whole point. Folding the
+inner items into `Snapshot.totals` instead would unpack every container on **every** capture (up to 27
+items per occupied slot, on a region thread) and is what was deliberately not built. Expansion is one
+level deep and inner identities are never interned; both rules exist so a crafted CONTAINER component
+cannot turn one capture into an unbounded walk or evict the shared cache.
+
 `ChestSessionManager` drives it: `opened(...)` when the first viewer attaches, `closed(...)` on detach,
 `abandon(...)` when `needsCapture(s.touched)` says nobody touched the chest. The `touched` flag and
 `isRecording()` exist so a disabled log costs nothing on the hot path — keep those checks in front of

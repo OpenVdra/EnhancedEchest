@@ -173,6 +173,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         settingsCache  = new PlayerSettingsCache(storage, dbExecutor, getSLF4JLogger(), playerNameIndex, telemetry);
         activityLogger = new ChestActivityLogger(getDataFolder().toPath(), getSLF4JLogger(), telemetry,
                 pluginConfig.isActivityLogEnabled(), pluginConfig.isActivityLogUnchanged(),
+                pluginConfig.isActivityLogShulkerContents(),
                 pluginConfig.getActivityLogQueueCapacity(),
                 pluginConfig.getActivityLogMaxFileSizeMb(), pluginConfig.getActivityLogRetentionDays());
         sessionManager = new ChestSessionManager(languageManager, codec, storage,
@@ -347,6 +348,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         autosaveService.reschedule(pluginConfig.getAutosaveIntervalMillis());
         activityLogger.setEnabled(pluginConfig.isActivityLogEnabled());
         activityLogger.setLogUnchanged(pluginConfig.isActivityLogUnchanged());
+        activityLogger.setContainerContents(pluginConfig.isActivityLogShulkerContents());
         playerNameIndex.setSuggestWindowMillis(pluginConfig.getSuggestOfflineWithinMillis());
         // Re-reads plugins/EnhancedEchest/icons/lang/*.json, so a file added or edited since startup
         // (or since the last reload) takes effect immediately.

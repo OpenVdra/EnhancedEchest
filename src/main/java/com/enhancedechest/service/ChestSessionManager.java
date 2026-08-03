@@ -610,7 +610,7 @@ public final class ChestSessionManager {
             }
             return;
         }
-        ChestActivityLogger.Snapshot snapshot = ChestActivityLogger.capture(s.inv.getContents());
+        ChestActivityLogger.Snapshot snapshot = activityLog.capture(s.inv.getContents());
         for (UUID viewer : new ArrayList<>(s.viewers)) {
             Player player = Bukkit.getPlayer(viewer);
             activityLog.closed(player != null ? player.getName() : null,

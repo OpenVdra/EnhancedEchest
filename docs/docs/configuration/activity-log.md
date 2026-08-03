@@ -22,6 +22,22 @@ Every visit that changed something produces one entry: when the chest was opened
 - `chest=2` is the player's chest number, the same one they see in `/eclist`. `size=54` is how many slots it has.
 - The chest layout is not recorded. The log tells you what moved, not which slot it sat in.
 
+### Shulker Boxes
+
+A shulker box counts as one item, but what it held is listed after it, so items carried in and out inside a shulker are still visible.
+
+```
+[2026-08-03 09:41:12.507 ICT] OPEN player=Steve uuid=925c51aa-... chest=1 size=27
+  TAKE  minecraft:shulker_box{meta=8f31c2,contents=[minecraft:diamond x192, minecraft:netherite_ingot x7]} x1
+[2026-08-03 09:41:58.140 ICT] CLOSE player=Steve uuid=925c51aa-... chest=1 size=27
+```
+
+Items inside are totalled the same way, so three stacks of diamonds read as one entry. Only the first level is listed: an item packed inside is shown by its own name, never by what it might contain in turn.
+
+Repacking a shulker while it sits in the chest changes it, so the log records the old one being taken out and the new one put in. Comparing the two `contents` lists shows what moved.
+
+To keep shulker boxes as a single unnamed item instead, set `shulker-contents` to `false` under `activity-log` in `config.yml`.
+
 ### Someone Opening Another Player's Chest
 
 When an admin opens a chest that is not theirs, both lines are marked and name the owner:
@@ -53,9 +69,5 @@ Compressed files older than `retention-days` are deleted automatically. The file
 To read a compressed file, open it with 7-Zip, WinRAR, or any tool that handles `.gz`.
 
 ::: tip Changing file settings
-`enabled` and `log-unchanged` apply on `/ee reload`. The other three settings are read once when the server starts, so changing them needs a full restart.
+`enabled`, `log-unchanged` and `shulker-contents` apply on `/ee reload`. The other three settings are read once when the server starts, so changing them needs a full restart.
 :::
-
-## Not Yet Supported
-
-**Items inside a shulker box.** A shulker box is recorded as a single item, the same as any other. The log shows one being put into or taken out of a chest, but not what was packed inside it, so items moved by filling a shulker are not listed one by one.

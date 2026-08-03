@@ -21,7 +21,7 @@ const copy = computed(() => isVi.value ? {
   download: 'Tải file .db',
   close: 'Đóng',
   modified: 'Có thay đổi chưa tải xuống',
-  editHint: 'Bấm vào một ô để sửa. Ô BLOB chỉ đọc.',
+  editHint: 'Bấm vào một ô để sửa. Ô BLOB chỉ đọc — bấm để xem hoặc tải về.',
   saveEdit: 'Lưu thay đổi',
   cancelEdit: 'Hủy',
   setNull: 'Đặt NULL',
@@ -35,6 +35,15 @@ const copy = computed(() => isVi.value ? {
   page: 'Trang',
   of: '/',
   blob: 'BLOB',
+  blobOpen: 'Bấm để xem hoặc tải dữ liệu BLOB',
+  blobTitle: 'Nội dung BLOB',
+  blobDownload: 'Tải BLOB',
+  blobCopy: 'Sao chép dạng hex',
+  blobCopied: 'Đã sao chép',
+  blobHex: 'Hex',
+  blobText: 'Văn bản',
+  blobEmpty: 'Ô BLOB này không có dữ liệu.',
+  blobTruncated: (shown, total) => `Chỉ hiển thị ${shown} byte đầu trong tổng số ${total} byte. Tải file xuống để xem toàn bộ.`,
   emptyDb: 'Cơ sở dữ liệu không có bảng nào để hiển thị.',
   invalidDb: 'Không thể mở file này. Hãy chọn một cơ sở dữ liệu SQLite hợp lệ.',
   readError: 'Không thể đọc dữ liệu từ bảng đã chọn.',
@@ -56,7 +65,7 @@ const copy = computed(() => isVi.value ? {
   download: 'Download .db',
   close: 'Close',
   modified: 'Changes not downloaded',
-  editHint: 'Click a cell to edit it. BLOB cells are read-only.',
+  editHint: 'Click a cell to edit it. BLOB cells are read-only — click one to view or download it.',
   saveEdit: 'Save change',
   cancelEdit: 'Cancel',
   setNull: 'Set NULL',
@@ -70,6 +79,15 @@ const copy = computed(() => isVi.value ? {
   page: 'Page',
   of: 'of',
   blob: 'BLOB',
+  blobOpen: 'Click to view or download this blob',
+  blobTitle: 'Blob contents',
+  blobDownload: 'Download blob',
+  blobCopy: 'Copy as hex',
+  blobCopied: 'Copied',
+  blobHex: 'Hex',
+  blobText: 'Text',
+  blobEmpty: 'This blob cell holds no data.',
+  blobTruncated: (shown, total) => `Showing the first ${shown} of ${total} bytes. Download the file to see all of it.`,
   emptyDb: 'This database has no tables to display.',
   invalidDb: 'This file could not be opened. Choose a valid SQLite database.',
   readError: 'The selected table could not be read.',
@@ -85,6 +103,11 @@ const copy = computed(() => isVi.value ? {
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024
 const PAGE_SIZE = 25
+// A chest blob is a few kilobytes, but nothing stops a foreign database from
+// storing megabytes in one cell — rendering that as hex would freeze the tab,
+// so the preview stops here and the download stays the way to get everything.
+const BLOB_PREVIEW_BYTES = 4096
+const HEX_COLUMNS = 16
 
 const input = ref(null)
 // sql.js Database wraps WASM state and must not be deep-proxied by Vue.
@@ -106,6 +129,13 @@ const editingCell = ref(null)
 const editError = ref('')
 const tableHasRowid = ref(true)
 const rowidAlias = ref('__sqlite_editor_rowid__')
+// The bytes are held raw: a Uint8Array behind a normal ref would still be
+// skipped by Vue's reactivity, but shallowRef makes that guarantee explicit
+// for a value that can reach tens of megabytes.
+const blobView = shallowRef(null)
+const blobMode = ref('hex')
+const blobCopied = ref(false)
+const blobDialog = ref(null)
 
 const selectedTableInfo = computed(() =>
   tables.value.find(table => table.name === selectedTable.value)
@@ -171,6 +201,9 @@ const buildFilter = () => {
 const loadRows = () => {
   if (!database.value || !selectedTable.value) return
   error.value = ''
+  // The rows behind an open preview are about to be replaced, so keeping the
+  // dialog up would show bytes that no longer belong to anything on screen.
+  blobView.value = null
   try {
     const table = quoteIdentifier(selectedTable.value)
     const filter = buildFilter()
@@ -229,6 +262,8 @@ const loadTable = (name) => {
 
 const reset = ({ clearSession = true } = {}) => {
   if (clearSession) clearTransientSqliteSession()
+  blobView.value = null
+  blobCopied.value = false
   database.value?.close()
   database.value = null
   fileName.value = ''
@@ -306,6 +341,94 @@ const openFile = async (file) => {
 const isBlobColumn = (column) => column.type.toUpperCase().includes('BLOB')
 const isBlobValue = (value) => value instanceof Uint8Array
 const canSetNull = (column) => !column.notNull && column.primaryKey === 0
+
+const sanitizeFilePart = (value) => String(value).replace(/[^\w.-]+/g, '_').replace(/^_+|_+$/g, '') || 'value'
+
+const rowLabel = (row, rowIndex) => {
+  if (Object.hasOwn(row.identity, 'rowid')) return `row${row.identity.rowid}`
+  const key = row.identity.primaryKey?.map(part => part.value).filter(value => !isBlobValue(value)).join('-')
+  return key ? sanitizeFilePart(key) : `row${(currentPage.value - 1) * PAGE_SIZE + rowIndex + 1}`
+}
+
+const openBlobView = (rowIndex, column) => {
+  const row = rows.value[rowIndex]
+  const value = row?.values[column.name]
+  if (!isBlobValue(value)) return
+  cancelEdit()
+  blobCopied.value = false
+  blobMode.value = 'hex'
+  const base = sanitizeFilePart((fileName.value || 'database').replace(/\.[^.]+$/, ''))
+  blobView.value = {
+    bytes: value,
+    column: column.name,
+    table: selectedTable.value,
+    downloadName: `${base}-${sanitizeFilePart(selectedTable.value)}-${sanitizeFilePart(column.name)}-${rowLabel(row, rowIndex)}.bin`,
+  }
+}
+
+const closeBlobView = () => {
+  blobView.value = null
+  blobCopied.value = false
+}
+
+const blobPreviewBytes = computed(() => {
+  const bytes = blobView.value?.bytes
+  if (!bytes) return null
+  return bytes.byteLength > BLOB_PREVIEW_BYTES ? bytes.subarray(0, BLOB_PREVIEW_BYTES) : bytes
+})
+
+const blobHexLines = computed(() => {
+  const bytes = blobPreviewBytes.value
+  if (!bytes) return []
+  const lines = []
+  for (let offset = 0; offset < bytes.byteLength; offset += HEX_COLUMNS) {
+    const chunk = bytes.subarray(offset, offset + HEX_COLUMNS)
+    const hex = Array.from(chunk, byte => byte.toString(16).padStart(2, '0'))
+    lines.push({
+      offset: offset.toString(16).padStart(8, '0'),
+      hex: `${hex.join(' ')}${'   '.repeat(HEX_COLUMNS - chunk.length)}`,
+      ascii: Array.from(chunk, byte => (byte >= 0x20 && byte < 0x7f ? String.fromCharCode(byte) : '·')).join(''),
+    })
+  }
+  return lines
+})
+
+const blobText = computed(() => {
+  const bytes = blobPreviewBytes.value
+  if (!bytes) return ''
+  // Chest blobs are compressed NBT, so most of this is unreadable — the point
+  // is to surface the plain-text fragments (item ids, custom names) that are.
+  return new TextDecoder('utf-8').decode(bytes).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '·')
+})
+
+const downloadBlob = () => {
+  const view = blobView.value
+  if (!view) return
+  const blob = new Blob([view.bytes], { type: 'application/octet-stream' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = view.downloadName
+  link.hidden = true
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
+let copiedTimer
+const copyBlobHex = async () => {
+  const bytes = blobPreviewBytes.value
+  if (!bytes) return
+  try {
+    await navigator.clipboard.writeText(Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join(''))
+    blobCopied.value = true
+    clearTimeout(copiedTimer)
+    copiedTimer = setTimeout(() => { blobCopied.value = false }, 1600)
+  } catch (cause) {
+    console.error(cause)
+  }
+}
 
 const startEdit = (rowIndex, column) => {
   if (isBlobColumn(column)) return
@@ -430,10 +553,30 @@ watch(search, () => {
 })
 watch(currentPage, loadRows)
 
-onMounted(restoreSession)
+// The dialog is teleported to <body>, so Escape has to be caught on the
+// document rather than on an ancestor of the editor.
+const onWindowKeydown = (event) => {
+  if (event.key === 'Escape' && blobView.value) closeBlobView()
+}
+
+watch(blobView, async (view) => {
+  if (typeof document === 'undefined') return
+  document.body.style.overflow = view ? 'hidden' : ''
+  if (!view) return
+  await nextTick()
+  blobDialog.value?.focus()
+})
+
+onMounted(() => {
+  window.addEventListener('keydown', onWindowKeydown)
+  restoreSession()
+})
 
 onBeforeUnmount(() => {
   clearTimeout(searchTimer)
+  clearTimeout(copiedTimer)
+  window.removeEventListener('keydown', onWindowKeydown)
+  if (typeof document !== 'undefined') document.body.style.overflow = ''
   if (database.value) {
     setTransientSqliteSession({
       bytes: database.value.export(),
@@ -598,14 +741,24 @@ onBeforeUnmount(() => {
                       <small v-if="editError" class="sqlite-cell-edit-error" role="alert">{{ editError }}</small>
                       <small v-else-if="!canSetNull(column)" class="sqlite-cell-edit-note">{{ copy.nullNotAllowed }}</small>
                     </div>
+                    <button
+                      v-else-if="isBlobValue(row.values[column.name])"
+                      type="button"
+                      class="sqlite-cell-blob"
+                      :title="copy.blobOpen"
+                      @click="openBlobView(rowIndex, column)"
+                    >
+                      <LucideIcon name="Binary" :size="12" />
+                      {{ formatCell(row.values[column.name], column.name).text }}
+                    </button>
                     <span
                       v-else
                       :class="[
                         `sqlite-cell-${formatCell(row.values[column.name], column.name).kind}`,
-                        { 'sqlite-cell-editable': !isBlobColumn(column) && !isBlobValue(row.values[column.name]) },
+                        { 'sqlite-cell-editable': !isBlobColumn(column) },
                       ]"
                       :title="formatCell(row.values[column.name], column.name).title"
-                      :tabindex="isBlobColumn(column) || isBlobValue(row.values[column.name]) ? undefined : 0"
+                      :tabindex="isBlobColumn(column) ? undefined : 0"
                       @click="startEdit(rowIndex, column)"
                       @keydown.enter.prevent="startEdit(rowIndex, column)"
                     >{{ formatCell(row.values[column.name], column.name).text }}</span>
@@ -618,6 +771,62 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="blobView"
+        class="sqlite-blob-overlay"
+        @click.self="closeBlobView"
+      >
+        <div
+          ref="blobDialog"
+          class="sqlite-blob-dialog"
+          role="dialog"
+          aria-modal="true"
+          tabindex="-1"
+          :aria-label="copy.blobTitle"
+        >
+          <header class="sqlite-blob-header">
+            <div>
+              <strong>{{ blobView.table }}.{{ blobView.column }}</strong>
+              <span>{{ copy.blob }} · {{ formatBytes(blobView.bytes.byteLength) }}</span>
+            </div>
+            <div class="sqlite-blob-actions">
+              <button type="button" class="sqlite-download-button" @click="downloadBlob">
+                <LucideIcon name="Download" :size="14" />
+                {{ copy.blobDownload }}
+              </button>
+              <button type="button" class="sqlite-ghost-button" :disabled="!blobView.bytes.byteLength" @click="copyBlobHex">
+                <LucideIcon :name="blobCopied ? 'Check' : 'Copy'" :size="14" />
+                {{ blobCopied ? copy.blobCopied : copy.blobCopy }}
+              </button>
+              <button type="button" class="sqlite-ghost-button" :title="copy.close" @click="closeBlobView">
+                <LucideIcon name="X" :size="14" />
+              </button>
+            </div>
+          </header>
+
+          <div class="sqlite-blob-modes">
+            <button type="button" :class="{ active: blobMode === 'hex' }" @click="blobMode = 'hex'">{{ copy.blobHex }}</button>
+            <button type="button" :class="{ active: blobMode === 'text' }" @click="blobMode = 'text'">{{ copy.blobText }}</button>
+          </div>
+
+          <div class="sqlite-blob-body">
+            <p v-if="!blobView.bytes.byteLength" class="sqlite-blob-empty">{{ copy.blobEmpty }}</p>
+            <pre v-else-if="blobMode === 'hex'" class="sqlite-blob-hex"><span
+              v-for="line in blobHexLines"
+              :key="line.offset"
+              class="sqlite-blob-line"
+            ><i>{{ line.offset }}</i>{{ line.hex }}<b>{{ line.ascii }}</b></span></pre>
+            <pre v-else class="sqlite-blob-text">{{ blobText }}</pre>
+          </div>
+
+          <footer v-if="blobView.bytes.byteLength > BLOB_PREVIEW_BYTES" class="sqlite-blob-footer">
+            {{ copy.blobTruncated(BLOB_PREVIEW_BYTES, blobView.bytes.byteLength) }}
+          </footer>
+        </div>
+      </div>
+    </Teleport>
   </section>
 </template>
 
@@ -854,7 +1063,22 @@ onBeforeUnmount(() => {
 .sqlite-cell-edit-error { max-width: 360px; color: var(--vp-c-danger-1); font-size: 0.68rem; line-height: 1.35; white-space: normal; }
 .sqlite-cell-edit-note { max-width: 360px; color: var(--vp-c-text-3); font-size: 0.68rem; line-height: 1.35; white-space: normal; }
 .sqlite-cell-null { color: var(--vp-c-text-3); }
-.sqlite-cell-blob { padding: 2px 7px; border-radius: 6px; background: var(--sqlite-line-soft); color: var(--vp-c-text-2); font-family: var(--vp-font-family-mono); font-size: 0.72rem; }
+.sqlite-cell-blob {
+  display: inline-flex;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--sqlite-line-soft);
+  color: var(--vp-c-text-2);
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.72rem;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.sqlite-cell-blob:hover,
+.sqlite-cell-blob:focus-visible { border-color: var(--vp-c-brand-1); background: var(--vp-c-brand-soft); color: var(--vp-c-brand-1); outline: none; }
 .sqlite-cell-date { font-variant-numeric: tabular-nums; }
 .sqlite-empty { display: grid; min-height: 305px; color: var(--vp-c-text-3); font-size: 0.86rem; place-items: center; }
 
@@ -864,6 +1088,113 @@ onBeforeUnmount(() => {
 .sqlite-pagination button:hover:not(:disabled) { background: var(--vp-c-bg-mute); color: var(--vp-c-brand-1); }
 .sqlite-pagination button:disabled,
 .sqlite-primary-button:disabled { cursor: not-allowed; opacity: 0.4; }
+
+/* Teleported to <body>, so it can only rely on VitePress' own variables —
+   the --sqlite-* ones live on .sqlite-editor and are out of reach here. */
+.sqlite-blob-overlay {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  place-items: center;
+}
+
+.sqlite-blob-dialog {
+  display: flex;
+  width: min(860px, 100%);
+  max-height: min(680px, calc(100vh - 48px));
+  border: 1px solid color-mix(in srgb, var(--vp-c-text-1) 10%, transparent);
+  border-radius: 18px;
+  outline: none;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sqlite-blob-header {
+  display: flex;
+  min-height: 62px;
+  padding: 10px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--vp-c-text-1) 6%, transparent);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sqlite-blob-header > div:first-child { display: flex; min-width: 0; flex-direction: column; }
+.sqlite-blob-header strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--vp-font-family-mono); font-size: 0.86rem; }
+.sqlite-blob-header span { color: var(--vp-c-text-3); font-size: 0.78rem; }
+.sqlite-blob-actions { display: flex; gap: 4px; }
+.sqlite-blob-actions button {
+  display: inline-flex;
+  padding: 7px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--vp-c-text-1);
+  font: inherit;
+  font-size: 0.8rem;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.sqlite-blob-actions button:disabled { cursor: not-allowed; opacity: 0.4; }
+.sqlite-blob-actions .sqlite-download-button { color: var(--vp-c-brand-1); font-weight: 600; }
+.sqlite-blob-actions .sqlite-download-button:hover { background: var(--vp-c-brand-soft); }
+.sqlite-blob-actions .sqlite-ghost-button:hover:not(:disabled) { background: var(--vp-c-bg-mute); }
+
+.sqlite-blob-modes {
+  display: flex;
+  padding: 10px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--vp-c-text-1) 6%, transparent);
+  background: color-mix(in srgb, var(--vp-c-bg-soft) 88%, transparent);
+  gap: 6px;
+}
+
+.sqlite-blob-modes button {
+  padding: 5px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.sqlite-blob-modes button:hover { background: var(--vp-c-bg-mute); }
+.sqlite-blob-modes button.active { background: var(--vp-c-brand-soft); color: var(--vp-c-brand-1); font-weight: 600; }
+
+.sqlite-blob-body { overflow: auto; padding: 14px 18px; flex: 1; }
+.sqlite-blob-body pre { margin: 0; padding: 0; background: transparent; font-family: var(--vp-font-family-mono); font-size: 0.74rem; line-height: 1.7; }
+.sqlite-blob-hex { display: flex; width: max-content; flex-direction: column; }
+.sqlite-blob-line { white-space: pre; }
+.sqlite-blob-line i { margin-right: 14px; color: var(--vp-c-text-3); font-style: normal; }
+.sqlite-blob-line b { margin-left: 14px; color: var(--vp-c-brand-1); font-weight: 400; }
+.sqlite-blob-text { white-space: pre-wrap; word-break: break-word; }
+.sqlite-blob-empty { margin: 0; padding: 28px 0; color: var(--vp-c-text-3); font-size: 0.86rem; text-align: center; }
+
+.sqlite-blob-footer {
+  padding: 10px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--vp-c-text-1) 6%, transparent);
+  background: color-mix(in srgb, var(--vp-c-bg-soft) 88%, transparent);
+  color: var(--vp-c-text-3);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .sqlite-blob-overlay { padding: 12px; }
+  .sqlite-blob-dialog { max-height: calc(100vh - 24px); }
+  .sqlite-blob-header { align-items: flex-start; flex-direction: column; }
+  .sqlite-blob-actions { width: 100%; flex-wrap: wrap; }
+  .sqlite-blob-body pre { font-size: 0.68rem; }
+}
 
 @media (max-width: 760px) {
   .sqlite-editor {

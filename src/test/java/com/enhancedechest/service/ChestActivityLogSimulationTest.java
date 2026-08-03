@@ -409,7 +409,7 @@ class ChestActivityLogSimulationTest {
     private static ChestActivityLogger newLogger(Path dir, String label, boolean enabled,
                                                  boolean logUnchanged) {
         return new ChestActivityLogger(dir, LoggerFactory.getLogger("activity-stress-" + label),
-                Telemetry.NOOP, enabled, logUnchanged,
+                Telemetry.NOOP, enabled, logUnchanged, true,
                 QUEUE_CAPACITY, 1, 14);   // 1 MiB deliberately exercises rotation + gzip in these runs
     }
 

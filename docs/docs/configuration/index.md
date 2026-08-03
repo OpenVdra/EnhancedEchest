@@ -271,6 +271,10 @@ When <code>false</code> (default), a visit where the player changed nothing at a
 Only an exact match is skipped, so a player who merely moved items around is still recorded.
 </ConfigProperty>
 
+<ConfigProperty name="shulker-contents" value="true" type="boolean">
+List what a shulker box held on the line that records it, so items carried in and out inside a shulker stay visible. Only the first level is listed. Set to <code>false</code> to record a shulker box as a single item and keep the lines short. Takes effect on <code>/ee reload</code>.
+</ConfigProperty>
+
 <ConfigProperty name="queue-capacity" value="4096" type="number">
 How many finished visits may wait to be written to disk. This only caps memory use if the disk stalls; if it ever fills, the newest visits are skipped and the log says how many. The default suits a 300 to 500 player server. Needs a server restart.
 </ConfigProperty>
