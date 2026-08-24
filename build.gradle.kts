@@ -88,7 +88,7 @@ dependencies {
     // Java 25 and would conflict with the toolchain above. MockBukkit declares paper-api as
     // compileOnly itself (not api), so it isn't pulled in transitively — repeat it here for tests
     // (compileOnly above doesn't reach the test source set either).
-    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.116.3")
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 }
 
