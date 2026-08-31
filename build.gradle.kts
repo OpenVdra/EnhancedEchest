@@ -63,7 +63,7 @@ dependencies {
     }
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
-    compileOnly("org.xerial:sqlite-jdbc:3.53.2.1")
+    compileOnly("org.xerial:sqlite-jdbc:3.53.4.0")
 
     // Same deal for gson: Paper ships 2.13.2 on the server classpath (verified on both 1.21.11 and
     // 26.x). Used by IconCatalog and by the shaded Jedis, both of which resolve it from there.
@@ -79,7 +79,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.slf4j:slf4j-simple:2.0.18")
-    testRuntimeOnly("org.xerial:sqlite-jdbc:3.53.2.1")
+    testRuntimeOnly("org.xerial:sqlite-jdbc:3.53.4.0")
 
     // MockBukkit — mocks the Bukkit/Paper server so Bukkit-dependent code (listeners, scheduler,
     // commands) can run under plain JUnit instead of a live server. Pinned to the "v1.21" artifact
