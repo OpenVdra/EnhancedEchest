@@ -71,8 +71,8 @@ dependencies {
     // to a package that no longer exists in the jar.
     compileOnly("com.google.code.gson:gson:2.14.0")
 
-    compileOnly("org.projectlombok:lombok:1.18.46")
-    annotationProcessor("org.projectlombok:lombok:1.18.46")
+    compileOnly("org.projectlombok:lombok:1.18.48")
+    annotationProcessor("org.projectlombok:lombok:1.18.48")
 
     // Test-only: JUnit 5 + a real sqlite driver (compileOnly for the plugin, Paper bundles it at
     // runtime) + an slf4j binding so CachedStorage's logger has somewhere to print.
