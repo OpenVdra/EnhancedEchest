@@ -54,7 +54,7 @@ dependencies {
         exclude(group = "org.checkerframework")
     }
     shade("org.bstats:bstats-bukkit:3.2.1")
-    shade("dev.faststats.metrics:bukkit:0.29.4")
+    shade("dev.faststats.metrics:bukkit:0.30.1")
     // Redis client for the cross-server owner-lock coordination (cross-server.enabled)
     shade("redis.clients:jedis:8.0.1") {
         // Jedis pulls gson, but the server already has it (see the compileOnly below) — carrying a
