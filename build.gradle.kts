@@ -78,7 +78,7 @@ dependencies {
     // runtime) + an slf4j binding so CachedStorage's logger has somewhere to print.
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.slf4j:slf4j-simple:2.0.18")
+    testImplementation("org.slf4j:slf4j-simple:2.0.19")
     testRuntimeOnly("org.xerial:sqlite-jdbc:3.53.4.0")
 
     // MockBukkit — mocks the Bukkit/Paper server so Bukkit-dependent code (listeners, scheduler,
