@@ -8,6 +8,7 @@ import com.enhancedechest.command.admin.MigrateCustomEnderChestCommand;
 import com.enhancedechest.command.admin.MigratePlayerVaultsXCommand;
 import com.enhancedechest.command.admin.ChestTransferCommand;
 import com.enhancedechest.command.admin.ImportCommand;
+import com.enhancedechest.command.admin.LogCommand;
 import com.enhancedechest.command.admin.MigrateVanillaCommand;
 import com.enhancedechest.command.admin.ReloadCommand;
 import com.mojang.brigadier.LiteralMessage;
@@ -51,6 +52,8 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     // /ee view requires this; modifying (take/add) further requires enhancedechest.admin.edit,
     // checked per-click in EnderChestGuiListener so a view-only admin can look but not touch.
     private static final String ADMIN_VIEW_PERMISSION = "enhancedechest.admin.view";
+    // /ee log — opens the in-game chest activity log viewer for a player.
+    private static final String ADMIN_LOG_PERMISSION = "enhancedechest.admin.log";
     // /ee benchmark — developer builds only; the node below is registered only when DEV_BUILD is true.
     private static final String ADMIN_BENCHMARK_PERMISSION = "enhancedechest.admin.benchmark";
 
@@ -91,6 +94,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
             ADMIN_TRANSFER_PERMISSION,
             ADMIN_IMPORT_PERMISSION,
             ADMIN_VIEW_PERMISSION,
+            ADMIN_LOG_PERMISSION,
     };
 
     /** True when the sender holds at least one admin node, i.e. {@code /ee} has something to offer them. */
@@ -515,6 +519,14 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                         .then(Commands.literal("view")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_VIEW_PERMISSION))
                                 .then(viewPlayerArgument()))
+                        // /ee log <player> — open the in-game chest activity log viewer for a player.
+                        .then(Commands.literal("log")
+                                .requires(src -> src.getSender().hasPermission(ADMIN_LOG_PERMISSION))
+                                .then(Commands.argument("player", StringArgumentType.word())
+                                        .suggests(KNOWN_PLAYERS)
+                                        .executes(ctx -> LogCommand.log(
+                                                ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "player")))))
                         // /ee resize <player> <index> <size>
                         .then(Commands.literal("resize")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_RESIZE_PERMISSION))

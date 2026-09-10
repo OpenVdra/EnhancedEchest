@@ -3,6 +3,7 @@ package com.enhancedechest.service;
 import com.enhancedechest.gui.EnderChestAnimator;
 import com.enhancedechest.gui.EnderChestHolder;
 import com.enhancedechest.lang.LanguageManager;
+import com.enhancedechest.log.ChestLogService;
 import com.enhancedechest.model.ChestKind;
 import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.scheduler.Scheduler;
@@ -121,7 +122,7 @@ public final class ChestSessionManager {
     private final Scheduler scheduler;
     private final DbExecutor db;
     private final Telemetry telemetry;
-    private final ChestActivityLogger activityLog;
+    private final ChestLogService activityLog;
 
     private final ConcurrentHashMap<SaveKey, CompletableFuture<Void>> pendingSaves =
             new ConcurrentHashMap<>();
@@ -131,7 +132,7 @@ public final class ChestSessionManager {
 
     public ChestSessionManager(LanguageManager lang, ContainerCodec codec,
                                EnderChestStorage storage, Logger logger, Scheduler scheduler,
-                               DbExecutor db, Telemetry telemetry, ChestActivityLogger activityLog) {
+                               DbExecutor db, Telemetry telemetry, ChestLogService activityLog) {
         this.lang      = lang;
         this.codec     = codec;
         this.storage   = storage;
@@ -610,7 +611,14 @@ public final class ChestSessionManager {
             }
             return;
         }
-        ChestActivityLogger.Snapshot snapshot = activityLog.capture(s.inv.getContents());
+        ChestLogService.Capture snapshot = activityLog.capture(s.inv.getContents());
+        if (snapshot == null) {
+            // Encoding failed once; drop every viewer's baseline rather than leave them orphaned.
+            for (UUID viewer : new ArrayList<>(s.viewers)) {
+                activityLog.abandon(viewer, s.owner, s.index);
+            }
+            return;
+        }
         for (UUID viewer : new ArrayList<>(s.viewers)) {
             Player player = Bukkit.getPlayer(viewer);
             activityLog.closed(player != null ? player.getName() : null,

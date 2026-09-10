@@ -12,6 +12,7 @@ import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.listener.ChestListMenuListener;
 import com.enhancedechest.listener.EnderChestGuiListener;
 import com.enhancedechest.listener.JoinMigrationListener;
+import com.enhancedechest.listener.LogMenuListener;
 import com.enhancedechest.listener.PlayerQuitListener;
 import com.enhancedechest.listener.PlayerSettingsListener;
 import com.enhancedechest.listener.TempChestJoinNotifyListener;
@@ -21,10 +22,12 @@ import com.enhancedechest.migration.CustomEnderChestMigrationService;
 import com.enhancedechest.migration.DatabaseImportService;
 import com.enhancedechest.migration.MigrationService;
 import com.enhancedechest.migration.PlayerVaultsXMigrationService;
+import com.enhancedechest.log.ChestLogService;
+import com.enhancedechest.log.ChestLogStore;
 import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.service.ChestOpener;
-import com.enhancedechest.service.ChestActivityLogger;
 import com.enhancedechest.service.ChestSessionManager;
+import com.enhancedechest.service.LogViewer;
 import com.enhancedechest.service.ChestSpillService;
 import com.enhancedechest.service.ChestTransferService;
 import com.enhancedechest.service.DbExecutor;
@@ -65,7 +68,9 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     private PlayerNameIndex playerNameIndex;
     private PlayerSettingsCache settingsCache;
     private ChestSessionManager sessionManager;
-    private ChestActivityLogger activityLogger;
+    private ChestLogStore chestLogStore;
+    private ChestLogService activityLogger;
+    private LogViewer logViewer;
     private ChestSpillService spillService;
     private ChestTransferService chestTransferService;
     private PermissionChestService permissionChestService;
@@ -172,11 +177,24 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 pluginConfig.getSuggestOfflineWithinMillis());
         playerNameIndex.loadAll();
         settingsCache  = new PlayerSettingsCache(storage, dbExecutor, getSLF4JLogger(), playerNameIndex, telemetry);
-        activityLogger = new ChestActivityLogger(getDataFolder().toPath(), getSLF4JLogger(), telemetry,
-                pluginConfig.isActivityLogEnabled(), pluginConfig.isActivityLogUnchanged(),
-                pluginConfig.isActivityLogShulkerContents(), pluginConfig.isActivityLogChestContents(),
-                pluginConfig.getActivityLogQueueCapacity(),
-                pluginConfig.getActivityLogMaxFileSizeMb(), pluginConfig.getActivityLogRetentionDays());
+        // Chest activity log: its own SQLite database (log.db), deliberately separate from the chest-data
+        // store so a busy audit log never contends with players' items. If it fails to open, the whole
+        // feature stays inert (storeReady=false) rather than taking the plugin down.
+        chestLogStore = new ChestLogStore(getDataFolder().toPath(), "log.db", getSLF4JLogger(), telemetry);
+        boolean logStoreReady;
+        try {
+            chestLogStore.init();
+            logStoreReady = true;
+        } catch (Exception e) {
+            logStoreReady = false;
+            getSLF4JLogger().error("Could not open the chest activity log database; /ee log is disabled", e);
+            telemetry.error(e, "log.init");
+        }
+        activityLogger = new ChestLogService(codec, getSLF4JLogger(), telemetry, chestLogStore,
+                logStoreReady, pluginConfig.isActivityLogEnabled(), pluginConfig.isActivityLogUnchanged(),
+                pluginConfig.getActivityLogQueueCapacity(), pluginConfig.getActivityLogRetentionDays(),
+                pluginConfig.getActivityLogMaxEntriesPerPlayer(),
+                pluginConfig.getActivityLogPruneIntervalMillis());
         sessionManager = new ChestSessionManager(languageManager, codec, storage,
                 getSLF4JLogger(), scheduler, dbExecutor, telemetry, activityLogger);
 
@@ -214,6 +232,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         chestOpener    = new ChestOpener(sessionManager, storageGateway, settingsCache, storage,
                 dbExecutor, languageManager, scheduler, getSLF4JLogger(), pluginConfig.getDefaultSize(),
                 permissionChestService, spillService, pluginConfig, databaseImportService, telemetry);
+        logViewer      = new LogViewer(chestLogStore, codec, dbExecutor, scheduler, languageManager,
+                getSLF4JLogger(), telemetry);
 
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger(),
                 sessionManager, scheduler, telemetry, pluginConfig.getTempExpiryMillis());
@@ -247,6 +267,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         pm.registerEvents(new VanillaEnderChestListener(chestOpener, pluginConfig), this);
         pm.registerEvents(new EnderChestGuiListener(sessionManager, scheduler, languageManager, pluginConfig), this);
         pm.registerEvents(new ChestListMenuListener(chestOpener), this);
+        pm.registerEvents(new LogMenuListener(logViewer), this);
         pm.registerEvents(new PlayerQuitListener(sessionManager, scheduler), this);
         pm.registerEvents(new JoinMigrationListener(pluginConfig, migrationService, storage,
                 dbExecutor, getSLF4JLogger(), telemetry), this);
@@ -298,8 +319,13 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         if (sessionManager != null) {
             sessionManager.shutdown();
         }
+        // Drain the log writer (persists any queued OPEN/CLOSE events), then close its database. Ordered
+        // after the session flush so the final closes it logs are captured before the writer stops.
         if (activityLogger != null) {
             activityLogger.shutdown();
+        }
+        if (chestLogStore != null) {
+            chestLogStore.close();
         }
         // After the session flush, so a save failure during that flush is still reported before the
         // final telemetry submission goes out.
@@ -350,8 +376,9 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         autosaveService.reschedule(pluginConfig.getAutosaveIntervalMillis());
         activityLogger.setEnabled(pluginConfig.isActivityLogEnabled());
         activityLogger.setLogUnchanged(pluginConfig.isActivityLogUnchanged());
-        activityLogger.setContainerContents(pluginConfig.isActivityLogShulkerContents());
-        activityLogger.setChestContents(pluginConfig.isActivityLogChestContents());
+        activityLogger.setRetention(pluginConfig.getActivityLogRetentionDays(),
+                pluginConfig.getActivityLogMaxEntriesPerPlayer(),
+                pluginConfig.getActivityLogPruneIntervalMillis());
         playerNameIndex.setSuggestWindowMillis(pluginConfig.getSuggestOfflineWithinMillis());
         // Re-reads plugins/EnhancedEchest/icons/lang/*.json, so a file added or edited since startup
         // (or since the last reload) takes effect immediately.

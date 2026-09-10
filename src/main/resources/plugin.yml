@@ -19,7 +19,7 @@ commands:
   enhancedechest:
     description: EnhancedEchest admin commands
     aliases: [ ee ]
-    usage: /enhancedechest <migrate vanilla|axvaults> | reload | import | add | resize | delete | view | transfer
+    usage: /enhancedechest <migrate vanilla|axvaults> | reload | import | add | resize | delete | view | log | transfer
   endersee:
     description: Open another player's ender chest (same as /ee view)
     usage: /endersee <player> [list | <index>]
@@ -53,6 +53,9 @@ permissions:
     default: op
   enhancedechest.admin.view:
     description: Open another player's chest
+    default: op
+  enhancedechest.admin.log:
+    description: Open the chest activity log viewer (/ee log)
     default: op
   enhancedechest.admin.edit:
     description: Take/add items while viewing another player's chest

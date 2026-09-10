@@ -33,6 +33,8 @@ Each `/ee` command requires only its own node. There is no separate base permiss
 
 **`enhancedechest.admin.clear`** - shows the red **(Admin) Clear chest** button in the `/ee view` menu and allows emptying a chest with it.
 
+**`enhancedechest.admin.log`** - `/ee log`: open the chest activity log viewer for a player.
+
 **`enhancedechest.admin.transfer`** - `/ee transfer`: move a player's chests onto another account.
 
 **`enhancedechest.admin.reload`** - `/ee reload`: reload config and language files.

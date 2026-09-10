@@ -58,7 +58,7 @@ hub: every service is a field on it, constructed by hand. There is no DI contain
 3. the cross-server coordinator when `cross-server.enabled` (a misconfiguration **disables the plugin**, it never degrades silently)
 4. `StorageFactory.create` → wrapped in `CachedStorage` → `init()` (DDL + `SchemaMigrator`; no bulk load)
 5. `LanguageManager`, then its translator registered once on Adventure's `GlobalTranslator`
-6. service layer bottom-up: `DbExecutor` → `StorageGateway` / `PlayerNameIndex` / `PlayerSettingsCache` → `ChestActivityLogger` → `ChestSessionManager` → `ChestSpillService` / `ChestTransferService` / `PermissionChestService` / `DatabaseImportService` → `ChestOpener`
+6. service layer bottom-up: `DbExecutor` → `StorageGateway` / `PlayerNameIndex` / `PlayerSettingsCache` → `ChestLogStore` + `ChestLogService` → `ChestSessionManager` → `ChestSpillService` / `ChestTransferService` / `PermissionChestService` / `DatabaseImportService` → `ChestOpener` → `LogViewer`
 7. the migration services, `ExpirySweeper`, `BackupService`, `AutosaveService`
 8. listeners, pin + preload already-online players, update check, bStats, startup banner
 
@@ -154,7 +154,7 @@ keep them pure (immutable/volatile `PluginConfig` reads only, never platform or 
 - One class per file; package layout mirrors feature boundaries. Records for data, `final` classes for services.
 - Constructor injection by hand, from `EnhancedEchestPlugin`. A new service means: construct it in `onEnable` in the right place in the chain, re-apply its runtime-tunable settings in `reload()`, and shut it down in `onDisable` in the right place in the chain.
 - `getSLF4JLogger()` (SLF4J, `{}` placeholders), not `System.out` and not `java.util.logging`.
-- Long files are normal here (`ChestDialogs` 730, `ChestActivityLogger` 807, `ChestOpener` 688, `ChestSessionManager` 664, `CachedStorage` 635). Read the surrounding region before editing rather than pattern-matching on one method.
+- Long files are normal here (`ChestDialogs` 730, `ChestOpener` 688, `ChestSessionManager` 664, `CachedStorage` 635). Read the surrounding region before editing rather than pattern-matching on one method.
 - Comments explain *why a choice is load-bearing*, not what the line does. That is the house style — keep it when editing.
 
 ## Documentation and releases

@@ -259,7 +259,7 @@ Folder (inside <code>plugins/EnhancedEchest/</code>) where backup files are save
 
 <ConfigGroup name="activity-log">
 <template #info>
-Records who opened which chest and what they put in or took out. See the <a href="/docs/configuration/activity-log">Activity Log</a> page for how to read the file.
+Records every open and close of an ender chest, with a snapshot of what it held each time, viewed in game with <code>/ee log &lt;player&gt;</code>. See the <a href="/docs/configuration/activity-log">Activity Log</a> page.
 </template>
 
 <ConfigProperty name="enabled" value="false" type="boolean">
@@ -267,28 +267,24 @@ Turn the activity log on or off. Off by default. Takes effect on <code>/ee reloa
 </ConfigProperty>
 
 <ConfigProperty name="log-unchanged" value="false" type="boolean">
-When <code>false</code> (default), a visit where the player changed nothing at all is not written. Most visits are someone opening their chest, looking, and closing it, and those entries bury the ones that matter. Set to <code>true</code> to record every visit.<br><br>
-Only an exact match is skipped, so a player who merely moved items around is still recorded.
+When <code>false</code> (default), a visit where the player changed nothing keeps only its open entry, not a close entry. Most visits are someone opening their chest, looking, and closing it. Set to <code>true</code> to keep a close entry for those too.<br><br>
+Only an exact match is treated as unchanged, so a player who merely moved items around is still recorded.
 </ConfigProperty>
 
-<ConfigProperty name="shulker-contents" value="true" type="boolean">
-List what a shulker box held on the line that records it, so items carried in and out inside a shulker stay visible. Only the first level is listed. Set to <code>false</code> to record a shulker box as a single item and keep the lines short. Takes effect on <code>/ee reload</code>.
+<ConfigProperty name="retention-days" value="30" type="number">
+Delete log entries older than this many days. Takes effect on <code>/ee reload</code>.
 </ConfigProperty>
 
-<ConfigProperty name="chest-contents" value="true" type="boolean">
-Add a <code>HAVE</code> line under each header listing everything the chest held at that moment, in the order the items sit in it. Set to <code>false</code> to leave it out: these lines enlarge every entry several times over, and more again when shulker boxes are listed too, so log files reach their size limit much sooner. Takes effect on <code>/ee reload</code>.
+<ConfigProperty name="max-entries-per-player" value="2000" type="number">
+Keep at most this many entries per player, deleting the oldest beyond it. Stops one very active player, or a bot, from filling the log. Takes effect on <code>/ee reload</code>.
+</ConfigProperty>
+
+<ConfigProperty name="prune-interval" value="6h" type="string">
+How often old entries are cleaned up to the limits above. Time format: <code>20s</code>, <code>5m</code>, <code>1h</code>, <code>7d</code>. Takes effect on <code>/ee reload</code>.
 </ConfigProperty>
 
 <ConfigProperty name="queue-capacity" value="4096" type="number">
-How many finished visits may wait to be written to disk. This only caps memory use if the disk stalls; if it ever fills, the newest visits are skipped and the log says how many. The default suits a 300 to 500 player server. Needs a server restart.
-</ConfigProperty>
-
-<ConfigProperty name="max-file-size-mb" value="64" type="number">
-Start a new log file once the current one passes this size. The old file is then compressed to roughly a fiftieth of its size. Needs a server restart.
-</ConfigProperty>
-
-<ConfigProperty name="retention-days" value="14" type="number">
-Delete compressed old log files after this many days. The file being written right now is never deleted. Needs a server restart.
+How many finished visits may wait to be saved. This only caps memory use if the disk stalls; if it ever fills, the newest visits are skipped and the console says how many. The default suits a 300 to 500 player server. Needs a server restart.
 </ConfigProperty>
 
 </ConfigGroup>

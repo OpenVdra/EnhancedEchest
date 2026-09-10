@@ -75,6 +75,10 @@ admin:
   cannot-modify-default-size: '{prefix}Rương ender {index} của {player} có kích thước do một quyền quy định và không thể đổi kích thước.'
   # /ee view <player>: người được xem chưa có rương nào.
   view-no-chests: '{prefix}{player} chưa có rương ender nào.'
+  # /ee log <player>: trình xem nhật ký hoạt động rương.
+  log-empty: '{prefix}{player} chưa có hoạt động rương nào được ghi lại.'
+  log-failed: '{prefix}Không đọc được nhật ký hoạt động rương. Vui lòng kiểm tra console.'
+  log-snapshot-failed: '{prefix}Không mở được ảnh chụp đó — có thể nó đã bị dọn.'
   chest-added: '{prefix}Đã thêm rương ender {index} với {size} ô cho {player}.'
   chest-added-expiring: '{prefix}Đã thêm rương ender {index} với {size} ô cho {player}. Rương sẽ hết hạn sau {duration}.'
   chests-added: '{prefix}Đã thêm {count} rương ender ({range}) với {size} ô cho {player}.'

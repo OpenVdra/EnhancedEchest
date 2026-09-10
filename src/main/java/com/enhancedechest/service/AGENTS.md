@@ -14,7 +14,7 @@ if you change one thing here, change it knowing why the current shape exists.
 | `ChestTransferService` | `/ee transfer`: move a player's NORMAL chests onto another account |
 | `PermissionChestService` | Grants/resizes/revokes `kind = PERM` chests from permissions; reconcile-on-open |
 | `TempReclaimNotifier` | Tells the owner which chest an auto-reclaim moved their temp-chest items into |
-| `ChestActivityLogger` | Bounded, batched audit pipeline: who opened what, what they added or took |
+| `LogViewer` | Opens the `/ee log` viewer + snapshot previews (async read on `DbExecutor`, build on entity thread). The pipeline itself is `com.enhancedechest.log` (`ChestLogService` + `ChestLogStore`) |
 | `StorageGateway` | Thin async wrappers over `EnderChestStorage` (list/create/rename/icon/primary/name lookup) |
 | `PlayerSettingsCache` | Write-through per-player settings cache, bounded by online players |
 | `PlayerNameIndex` | In-memory name → UUID index for command suggestions and offline lookups |
@@ -175,33 +175,24 @@ transaction inside `runExclusiveAcross`.
 
 ## Activity log
 
-`ChestActivityLogger` writes `logs/echest-latest.log` under the plugin folder (`activity-log.enabled`,
-default off). The Bukkit-thread side captures each occupied slot into immutable strings and numbers
-**once**; no `ItemStack`, `ItemMeta`, registry lookup or component serializer crosses the thread
-boundary. Diffing, rendering, rotation and all file I/O happen on one dedicated worker behind a bounded
-queue, so a stalled disk can never grow the heap. Item identity is `Material` + `ItemMeta.hashCode()`,
-interned in a shared cache — it only ever has to be stable **within one OPEN/CLOSE cycle**, which is
-what makes the capture cheap enough for a region thread.
+The log lives in its own package, `com.enhancedechest.log` (`ChestLogService` + `ChestLogStore`), not
+here — this section covers only how `service/` touches it. It records OPEN/CLOSE events with a
+per-event contents snapshot into a **separate SQLite database** (`log.db`), viewed in-game with
+`/ee log <player>` (`admin/LogCommand` → `LogViewer`). `activity-log.enabled`, default off. Replaced the
+old plain-text `ChestActivityLogger` on 2026-09-10.
 
-A shulker box's contents are **rendered, not accounted** (`activity-log.shulker-contents`, default on).
-The list is built in `buildMetaId`, i.e. only on a `META_CACHE` miss, so a given shulker is unpacked
-once and every later capture of it is a cache hit — that placement is the whole point. Folding the
-inner items into `Snapshot.totals` instead would unpack every container on **every** capture (up to 27
-items per occupied slot, on a region thread) and is what was deliberately not built. Expansion is one
-level deep and inner identities are never interned; both rules exist so a crafted CONTAINER component
-cannot turn one capture into an unbounded walk or evict the shared cache.
+`ChestSessionManager` drives capture through the same API the old logger exposed: `opened(...)` when a
+viewer attaches (**always writes an OPEN row**), `closed(...)` on detach, `abandon(...)` when
+`needsCapture(s.touched)` says nobody touched the chest (so a peek leaves just its OPEN entry unless
+`log-unchanged` is on). `capture(...)` returns a `Capture` (encoded bytes + per-material totals) so a
+force-close/shutdown can snapshot one shared inventory once and log a CLOSE for every viewer.
+`isRecording()` gates the hot path — keep it in front of any new capture site. The encode to bytes
+stays on the Bukkit thread (the codebase invariant); the writer thread only inserts and prunes, and the
+`/ee log` reads decode on the `DbExecutor`.
 
-`activity-log.chest-contents` (default **on**) adds a `HAVE` line under each header listing what the
-chest held at that moment. It is pure formatting: both snapshots are captured and queued either way, so
-the flag costs nothing on a Bukkit thread and only multiplies bytes on disk (roughly 3x, or far more
-once shulker contents are rendered into it). `HAVE` is **unsorted on purpose** — `capture` fills a
-`LinkedHashMap` in slot order and `merge` does not reorder an existing key, so iterating the totals
-reproduces the chest's own order. ADD/TAKE stay alphabetical; the two lines answer different questions.
-
-`ChestSessionManager` drives it: `opened(...)` when the first viewer attaches, `closed(...)` on detach,
-`abandon(...)` when `needsCapture(s.touched)` says nobody touched the chest. The `touched` flag and
-`isRecording()` exist so a disabled log costs nothing on the hot path — keep those checks in front of
-any new capture site.
+`LogViewer` is the one `service/` class of the feature: it opens the viewer and the snapshot preview. A
+snapshot preview is a throwaway inventory (`LogSnapshotHolder`) that never funnels through the session
+manager and is discarded on close — its dupe-proof sandbox rules live in `listener/LogMenuListener`.
 
 ## Gotchas
 

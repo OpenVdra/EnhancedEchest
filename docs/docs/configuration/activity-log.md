@@ -1,90 +1,46 @@
 # Activity Log
 
-EnhancedEchest records who opened which ender chest and what they put in or took out. It writes a plain text file you can open in any editor, at `plugins/EnhancedEchest/logs/echest-latest.log`.
+EnhancedEchest can record every time an ender chest is opened and closed, keeping a snapshot of what the chest held each time. The record is viewed in game with `/ee log <player>`.
 
 This is evidence for investigating a theft. It does **not** restore items. For that, see [Backups](/docs/configuration/#backup).
 
 It is off by default. Turn it on with the `enabled` setting under `activity-log` in `config.yml`, then run `/ee reload`.
 
-## Reading an Entry
+The log is kept in its own file, `plugins/EnhancedEchest/log.db`, separate from the main chest data. It is a database, not a text file, so it is read through the in-game viewer rather than opened in an editor.
 
-Every visit that changed something produces one entry: when the chest was opened, what was added and taken while it was open, and when it was closed.
+## Viewing a Player's Log
 
-```
-[2026-07-28 15:10:23.913 ICT] OPEN player=Steve uuid=925c51aa-... chest=2 size=54
-  ADD   minecraft:redstone x24
-  TAKE  minecraft:stone x32
-[2026-07-28 15:12:41.002 ICT] CLOSE player=Steve uuid=925c51aa-... chest=2 size=54
-```
+Run `/ee log <player>` to open the viewer for that player's ender chests. It needs the `enhancedechest.admin.log` permission.
 
-- `ADD` lists everything put in during that visit, `TAKE` everything taken out. Identical items are totalled, so ten stacks of stone taken from five slots read as one line.
-- Items with a name, enchantments or other custom data are spelled out in full on their own line.
-- `chest=2` is the player's chest number, the same one they see in `/eclist`. `size=54` is how many slots it has.
-- The chest layout is not recorded. The log tells you what moved, not which slot it sat in.
+Each open and close is one pane, newest first:
 
-### Everything the Chest Held
+- A **green** pane is an open. A **red** pane is a close.
+- The pane name is the action and the time it happened.
+- The lore names who did it and the chest number, and on a close it lists what changed: a green `+` line for each item added to the chest, a red `-` line for each item taken out.
+- The bottom row pages through older and newer entries.
 
-Each header carries a `HAVE` line listing what the chest held at that moment:
+## Viewing a Chest at a Moment in Time
 
-```
-[2026-08-03 15:10:23.913 ICT] OPEN player=Steve uuid=925c51aa-... chest=2 size=54
-  HAVE  minecraft:stone x128, minecraft:redstone x8, minecraft:oak_log x64
-  ADD   minecraft:redstone x24
-  TAKE  minecraft:stone x32
-[2026-08-03 15:12:41.002 ICT] CLOSE player=Steve uuid=925c51aa-... chest=2 size=54
-  HAVE  minecraft:stone x96, minecraft:redstone x32, minecraft:oak_log x64
-```
+Click any pane to see the exact contents the chest held at that moment. Items can be picked up and moved around inside this preview to inspect them, but nothing can be taken out of it, and closing it changes nothing. The stored record is never altered.
 
-Items are listed in the order they sit in the chest, so the line can be read against a screenshot or against `/ee view`. Identical items are still totalled into one entry, placed where the first of them sat. A chest holding nothing reads `HAVE  (empty)`.
+## Someone Opening Another Player's Chest
 
-These lines make every entry several times larger, and larger again when shulker boxes are listed as well, so log files reach their size limit much sooner. To leave them out, set `chest-contents` to `false` under `activity-log` in `config.yml`.
-
-### Shulker Boxes
-
-A shulker box counts as one item, but what it held is listed after it, so items carried in and out inside a shulker are still visible.
-
-```
-[2026-08-03 09:41:12.507 ICT] OPEN player=Steve uuid=925c51aa-... chest=1 size=27
-  TAKE  minecraft:shulker_box{meta=8f31c2,contents=[minecraft:diamond x192, minecraft:netherite_ingot x7]} x1
-[2026-08-03 09:41:58.140 ICT] CLOSE player=Steve uuid=925c51aa-... chest=1 size=27
-```
-
-Items inside are totalled the same way, so three stacks of diamonds read as one entry. Only the first level is listed: an item packed inside is shown by its own name, never by what it might contain in turn.
-
-Repacking a shulker while it sits in the chest changes it, so the log records the old one being taken out and the new one put in. Comparing the two `contents` lists shows what moved.
-
-To keep shulker boxes as a single unnamed item instead, set `shulker-contents` to `false` under `activity-log` in `config.yml`.
-
-### Someone Opening Another Player's Chest
-
-When an admin opens a chest that is not theirs, both lines are marked and name the owner:
-
-```
-[2026-07-28 15:23:25.085 ICT] OPEN player=Notch uuid=... chest=1 size=54 access=ADMIN_ACCESS owner=5ef5f7b2-...
-```
+When an admin opens a chest that is not theirs, the entry records the admin as the person who did it, so admin access shows up in the owner's log alongside the owner's own visits.
 
 ## Visits That Changed Nothing
 
-Most people open their chest, look at it, and close it again. Those entries are not written, so the log stays short enough to actually read. A chest whose items were only moved around counts as unchanged too: nothing was gained or lost.
+Most people open their chest, look at it, and close it again. For those visits only the open is kept, so the log stays short enough to read. A chest whose items were only moved around counts as unchanged too: nothing was gained or lost.
 
-To record every single visit instead, set `log-unchanged` to `true` under `activity-log` in `config.yml`.
+To also keep a close entry for visits that changed nothing, set `log-unchanged` to `true` under `activity-log` in `config.yml`.
 
-## Log Files and Disk Space
+## How Much Is Kept
 
-When `echest-latest.log` passes the size set by `max-file-size-mb`, it is renamed and a new one is started. The renamed file is then compressed, which shrinks it to roughly a fiftieth of its size, so old logs cost very little.
+Old entries are cleaned up automatically so the log cannot grow forever:
 
-| File | What it is |
-|------|------------|
-| `echest-latest.log` | The file being written right now. Always this name, never deleted. |
-| `echest-20260728-151023-913.log.gz` | An older file, compressed. The name is the date and time it was closed. |
-| `echest-20260728-151023-913.log` | An older file that has not been compressed yet. |
+- Entries older than `retention-days` are deleted.
+- Each player keeps at most `max-entries-per-player` entries, so one very active player, or a bot, cannot fill the log.
+- `prune-interval` sets how often this cleanup runs.
 
-Because the date runs from year down to milliseconds, sorting the folder by name also sorts it by time. The times are your server's local time.
-
-Compressed files older than `retention-days` are deleted automatically. The file being written right now is never deleted.
-
-To read a compressed file, open it with 7-Zip, WinRAR, or any tool that handles `.gz`.
-
-::: tip Changing file settings
-`enabled`, `log-unchanged`, `shulker-contents` and `chest-contents` apply on `/ee reload`. The other three settings are read once when the server starts, so changing them needs a full restart.
+::: tip Changing settings
+`enabled`, `log-unchanged`, `retention-days`, `max-entries-per-player` and `prune-interval` apply on `/ee reload`. `queue-capacity` is read once when the server starts, so changing it needs a full restart.
 :::

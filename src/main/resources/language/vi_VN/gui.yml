@@ -85,3 +85,23 @@ dialog:
   import-type-sqlite: 'Loại: <yellow>SQLite'
   import-type-server: 'Loại: <yellow>Máy chủ'
   import-type-desc: 'Loại cơ sở dữ liệu nguồn. Bấm để đổi.<newline><gray>SQLite đọc một tệp; Máy chủ đọc host MySQL, MariaDB hoặc PostgreSQL (dùng cổng 5432 cho PostgreSQL).'
+
+# ===== Trình xem nhật ký hoạt động rương (/ee log <player>) =====
+log:
+  # Tiêu đề cửa sổ. {player} = chủ rương.
+  title: 'Nhật ký rương của {player}'
+  # Tên ô sự kiện. {time} = thời điểm xảy ra.
+  pane-open: '<green>● Đã mở <dark_gray>· <gray>{time}'
+  pane-close: '<red>● Đã đóng <dark_gray>· <gray>{time}'
+  # Mô tả ô.
+  lore-actor: '<gray>Bởi: <white>{actor}'
+  lore-chest: '<gray>Rương #{index} <dark_gray>· <gray>{size} ô'
+  lore-no-change: '<dark_gray>Không có thay đổi'
+  lore-click: '<yellow>Nhấn để xem nội dung'
+  # Nút điều hướng và sách thông tin. {page}/{pages} tính từ 1.
+  nav-newer: '<green>« Mới hơn'
+  nav-older: '<green>Cũ hơn »'
+  info: '<gold>{player} <gray>· Trang {page}/{pages}'
+  # Tiêu đề cửa sổ ảnh chụp. {index} = số rương, {time} = thời điểm chụp.
+  snapshot-title-open: 'Rương {player} #{index} · Mở {time}'
+  snapshot-title-close: 'Rương {player} #{index} · Đóng {time}'

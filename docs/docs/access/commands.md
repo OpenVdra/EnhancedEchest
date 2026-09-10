@@ -72,6 +72,14 @@ Opens a per-chest menu for another player's chests (works offline). From the men
 
 </CommandRow>
 
+### /ee log
+
+<CommandRow commands="/ee log &lt;player&gt;" permission="enhancedechest.admin.log">
+
+Opens the activity log viewer for a player's ender chests (works offline). Each open and close is a pane, newest first, showing the time, who did it, and what was added or taken. Click a pane to see the exact contents the chest held at that moment, to inspect without changing anything. The activity log must be on in `config.yml`.
+
+</CommandRow>
+
 ### /ee transfer
 
 <CommandRow commands="/ee transfer &lt;from&gt; &lt;to&gt; &lt;#index | name | all&gt; [override | temp]" permission="enhancedechest.admin.transfer">

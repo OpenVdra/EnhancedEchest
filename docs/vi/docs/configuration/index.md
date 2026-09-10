@@ -259,7 +259,7 @@ Thư mục (bên trong <code>plugins/EnhancedEchest/</code>) nơi lưu các file
 
 <ConfigGroup name="activity-log">
 <template #info>
-Ghi lại ai đã mở rương nào và bỏ vào hay lấy ra thứ gì. Xem trang <a href="/vi/docs/configuration/activity-log">Nhật ký hoạt động</a> để biết cách đọc file.
+Ghi lại mỗi lần mở và đóng một rương ender, kèm ảnh chụp nội dung rương mỗi lần, xem trong game bằng <code>/ee log &lt;player&gt;</code>. Xem trang <a href="/vi/docs/configuration/activity-log">Nhật ký hoạt động</a>.
 </template>
 
 <ConfigProperty name="enabled" value="false" type="boolean">
@@ -267,28 +267,24 @@ Bật hoặc tắt nhật ký hoạt động. Mặc định tắt. Có hiệu l�
 </ConfigProperty>
 
 <ConfigProperty name="log-unchanged" value="false" type="boolean">
-Khi để <code>false</code> (mặc định), lượt mở rương mà người chơi không thay đổi gì sẽ không được ghi. Phần lớn lượt mở chỉ là mở ra nhìn rồi đóng lại, và những dòng đó làm chìm mất các dòng thật sự đáng chú ý. Đặt <code>true</code> để ghi lại mọi lượt mở.<br><br>
-Chỉ bỏ qua khi giống hệt nhau, nên người chơi chỉ sắp xếp lại đồ vẫn được ghi.
+Khi để <code>false</code> (mặc định), lượt mở rương mà người chơi không thay đổi gì chỉ giữ mục mở, không có mục đóng. Phần lớn lượt mở chỉ là mở ra nhìn rồi đóng lại. Đặt <code>true</code> để giữ cả mục đóng cho những lượt đó.<br><br>
+Chỉ coi là không đổi khi giống hệt nhau, nên người chơi chỉ sắp xếp lại đồ vẫn được ghi.
 </ConfigProperty>
 
-<ConfigProperty name="shulker-contents" value="true" type="boolean">
-Liệt kê thứ shulker box đang đựng ngay trên dòng ghi nó, nhờ vậy đồ mang ra mang vào bên trong shulker vẫn nhìn thấy được. Chỉ liệt kê một lớp. Đặt <code>false</code> để ghi shulker box như một vật phẩm đơn lẻ và giữ dòng nhật ký ngắn gọn. Có hiệu lực khi chạy <code>/ee reload</code>.
+<ConfigProperty name="retention-days" value="30" type="number">
+Xóa các mục nhật ký cũ hơn bấy nhiêu ngày. Có hiệu lực khi chạy <code>/ee reload</code>.
 </ConfigProperty>
 
-<ConfigProperty name="chest-contents" value="true" type="boolean">
-Thêm một dòng <code>HAVE</code> dưới mỗi header, liệt kê toàn bộ đồ rương đang có tại thời điểm đó, theo đúng thứ tự nằm trong rương. Đặt <code>false</code> để bỏ đi: những dòng này làm mỗi mục nhật ký phình lên vài lần, và phình thêm nữa khi liệt kê cả nội dung shulker, nên file nhật ký chạm giới hạn kích thước sớm hơn nhiều. Có hiệu lực khi chạy <code>/ee reload</code>.
+<ConfigProperty name="max-entries-per-player" value="2000" type="number">
+Giữ tối đa bấy nhiêu mục mỗi người chơi, xóa các mục cũ hơn. Ngăn một người chơi rất tích cực, hay một bot, làm đầy nhật ký. Có hiệu lực khi chạy <code>/ee reload</code>.
+</ConfigProperty>
+
+<ConfigProperty name="prune-interval" value="6h" type="string">
+Tần suất dọn các mục cũ theo giới hạn ở trên. Định dạng thời gian: <code>20s</code>, <code>5m</code>, <code>1h</code>, <code>7d</code>. Có hiệu lực khi chạy <code>/ee reload</code>.
 </ConfigProperty>
 
 <ConfigProperty name="queue-capacity" value="4096" type="number">
-Số lượt mở rương đã xong được phép chờ ghi xuống đĩa. Thiết lập này chỉ để giới hạn bộ nhớ khi đĩa bị nghẽn; nếu đầy, các lượt mới nhất bị bỏ qua và nhật ký sẽ ghi rõ bỏ bao nhiêu. Giá trị mặc định đủ cho server 300 đến 500 người chơi. Cần khởi động lại server.
-</ConfigProperty>
-
-<ConfigProperty name="max-file-size-mb" value="64" type="number">
-Bắt đầu file nhật ký mới khi file hiện tại vượt quá kích thước này. File cũ sau đó được nén lại còn khoảng một phần năm mươi. Cần khởi động lại server.
-</ConfigProperty>
-
-<ConfigProperty name="retention-days" value="14" type="number">
-Xóa các file nhật ký cũ đã nén sau bấy nhiêu ngày. File đang được ghi không bao giờ bị xóa. Cần khởi động lại server.
+Số lượt mở rương đã xong được phép chờ lưu lại. Thiết lập này chỉ để giới hạn bộ nhớ khi đĩa bị nghẽn; nếu đầy, các lượt mới nhất bị bỏ qua và console sẽ ghi rõ bỏ bao nhiêu. Giá trị mặc định đủ cho server 300 đến 500 người chơi. Cần khởi động lại server.
 </ConfigProperty>
 
 </ConfigGroup>

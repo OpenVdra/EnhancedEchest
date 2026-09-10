@@ -123,24 +123,24 @@ backup:
   folder: backups
 
 activity-log:
-  # Records who opened which chest and what they added or took, to logs/echest-latest.log.
-  # Evidence for investigating theft; it does not restore items, use 'backup' for that.
+  # Records every time a chest is opened and closed, keeping a snapshot of its contents each time in a
+  # separate database (log.db). View it in-game with /ee log <player>: click an entry to see exactly
+  # what the chest held at that moment. Evidence for investigating theft; it does not restore items,
+  # use 'backup' for that.
   enabled: false
-  # Also write visits where the player changed nothing. Off keeps the log readable.
+  # Also keep close entries where the player changed nothing. Off (default) leaves just the open entry
+  # for a visit where nothing was taken or added, which keeps the log readable.
   log-unchanged: false
-  # Also list what a shulker box held when it was put in or taken out, so items carried inside
-  # one are still visible. Makes those lines longer.
-  shulker-contents: true
-  # Also write a HAVE line under each header listing everything the chest held at that moment,
-  # in the order the items sit in it. Log files fill up several times faster.
-  chest-contents: true
-  # NEED RESTART: the three settings below.
-  # Finished visits allowed to wait for the disk. Only caps memory if the disk stalls.
+  # Delete log entries older than this many days.
+  retention-days: 30
+  # Also keep at most this many entries per player, deleting the oldest beyond that. Stops one very
+  # active player (or a bot) from filling the log.
+  max-entries-per-player: 2000
+  # How often old entries are cleaned up to the limits above.
+  prune-interval: 6h
+  # NEED RESTART: how many finished visits may wait to be saved. Only matters if the disk stalls; if it
+  # fills, the newest visits are skipped and the console says how many. Default suits 300-500 players.
   queue-capacity: 4096
-  # Start a new log file past this size. The old one is renamed and compressed.
-  max-file-size-mb: 64
-  # Delete compressed old log files after this many days.
-  retention-days: 14
 
 migration:
   # Import a player's vanilla ender chest when they join, once per player.

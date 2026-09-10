@@ -72,6 +72,14 @@ Mở menu từng rương của người chơi khác (hoạt động kể cả kh
 
 </CommandRow>
 
+### /ee log
+
+<CommandRow commands="/ee log &lt;player&gt;" permission="enhancedechest.admin.log">
+
+Mở trình xem nhật ký hoạt động cho các rương ender của một người chơi (hoạt động kể cả khi họ ngoại tuyến). Mỗi lần mở và đóng là một ô, mới nhất trước, cho biết thời điểm, ai đã làm, và những gì được bỏ vào hay lấy ra. Nhấn vào một ô để xem chính xác nội dung rương ở thời điểm đó, chỉ để kiểm tra chứ không thay đổi gì. Nhật ký hoạt động phải được bật trong `config.yml`.
+
+</CommandRow>
+
 ### /ee transfer
 
 <CommandRow commands="/ee transfer &lt;from&gt; &lt;to&gt; &lt;#index | name | all&gt; [override | temp]" permission="enhancedechest.admin.transfer">

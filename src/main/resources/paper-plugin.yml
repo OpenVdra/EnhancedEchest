@@ -36,6 +36,9 @@ permissions:
   enhancedechest.admin.view:
     description: Open another player's chest
     default: op
+  enhancedechest.admin.log:
+    description: Open the chest activity log viewer (/ee log)
+    default: op
   enhancedechest.admin.edit:
     description: Take/add items while viewing another player's chest
     default: op

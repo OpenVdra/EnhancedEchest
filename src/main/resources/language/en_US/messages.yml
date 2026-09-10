@@ -75,6 +75,10 @@ admin:
   cannot-modify-default-size: '{prefix}Ender chest {index} of {player} is sized by a permission and cannot be resized.'
   # /ee view <player>: the target owns no chests.
   view-no-chests: '{prefix}{player} does not have any ender chests yet.'
+  # /ee log <player>: the chest activity log viewer.
+  log-empty: '{prefix}{player} has no chest activity logged yet.'
+  log-failed: '{prefix}Could not read the chest activity log. Please check the console.'
+  log-snapshot-failed: '{prefix}Could not open that snapshot — it may have been cleaned up.'
   chest-added: '{prefix}Added ender chest {index} with {size} slots to {player}.'
   chest-added-expiring: '{prefix}Added ender chest {index} with {size} slots to {player}. It will expire in {duration}.'
   chests-added: '{prefix}Added {count} ender chests ({range}) with {size} slots to {player}.'

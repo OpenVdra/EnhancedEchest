@@ -59,14 +59,18 @@ public final class PluginConfig {
      */
     private volatile boolean renameColorsEnabled;
 
-    // Human-readable OPEN / ADD / TAKE / CLOSE audit log.
+    // Chest activity log: OPEN/CLOSE snapshots kept in a separate SQLite database, viewed with /ee log.
     private volatile boolean activityLogEnabled;
+    /** When on, a CLOSE that changed nothing is still recorded; off (default) leaves just the OPEN pane. */
     private volatile boolean activityLogUnchanged;
-    private volatile boolean activityLogShulkerContents;
-    private volatile boolean activityLogChestContents;
+    /** Delete log entries older than this many days. Read live by the writer, so volatile. */
+    private volatile int activityLogRetentionDays;
+    /** Keep at most this many entries per player, trimming the oldest. Read live by the writer. */
+    private volatile int activityLogMaxEntriesPerPlayer;
+    /** How often the writer prunes the log to its retention limits. Read live by the writer. */
+    private volatile long activityLogPruneIntervalMillis;
+    /** NEED RESTART: bounds the in-memory hand-off queue; only caps memory if the disk stalls. */
     private int activityLogQueueCapacity;
-    private int activityLogMaxFileSizeMb;
-    private int activityLogRetentionDays;
 
     /**
      * How recently an <b>offline</b> player must have been seen to be offered in an admin command's
@@ -173,14 +177,14 @@ public final class PluginConfig {
         renameColorsEnabled = config.getBoolean("enderchest.features.rename-colors", true);
         activityLogEnabled = config.getBoolean("activity-log.enabled", false);
         activityLogUnchanged = config.getBoolean("activity-log.log-unchanged", false);
-        activityLogShulkerContents = config.getBoolean("activity-log.shulker-contents", true);
-        activityLogChestContents = config.getBoolean("activity-log.chest-contents", true);
+        activityLogRetentionDays = Math.max(1,
+                Math.min(3650, config.getInt("activity-log.retention-days", 30)));
+        activityLogMaxEntriesPerPlayer = Math.max(10,
+                Math.min(1_000_000, config.getInt("activity-log.max-entries-per-player", 2000)));
+        activityLogPruneIntervalMillis = parseDuration(
+                config.getString("activity-log.prune-interval", "6h"), "6h");
         activityLogQueueCapacity = Math.max(256,
                 Math.min(65_536, config.getInt("activity-log.queue-capacity", 4096)));
-        activityLogMaxFileSizeMb = Math.max(1,
-                Math.min(1024, config.getInt("activity-log.max-file-size-mb", 64)));
-        activityLogRetentionDays = Math.max(1,
-                Math.min(3650, config.getInt("activity-log.retention-days", 14)));
 
         suggestOfflineWithinMillis = parseSuggestWindow(
                 config.getString("commands.suggest-offline-within", "30d"));

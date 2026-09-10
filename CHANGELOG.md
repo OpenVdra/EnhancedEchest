@@ -2,6 +2,21 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.3.0 - 2026-09-10
+
+### Added
+
+- New `/ee log <player>` command opens an in-game viewer of a player's ender chest history. Each open and close is a clickable entry showing the time, who did it, and what was added or taken. Clicking an entry shows the exact contents the chest held at that moment, to inspect without changing anything. Requires the `enhancedechest.admin.log` permission.
+
+### Changed
+
+- **Breaking:** The activity log is now stored in a database (`plugins/EnhancedEchest/log.db`) and viewed in game with `/ee log`, instead of being written to `logs/echest-latest.log`. The plain text log is no longer produced. No action is required beyond using the new command to read it.
+- **Breaking:** The `shulker-contents`, `chest-contents` and `max-file-size-mb` settings in `config.yml` were removed, and `retention-days` now defaults to 30. Two new settings, `max-entries-per-player` and `prune-interval`, control how much history is kept. Review the `activity-log` section in `config.yml` if it was customised.
+
+### Notes
+
+- The activity log is still off by default. Turn it on with `enabled` in the `activity-log` section of `config.yml`. It records access for investigating theft and does not restore items; use `backup` for that.
+
 ## 1.2.1 - 2026-09-10
 
 ### Changed
