@@ -17,7 +17,7 @@ service layer. Business logic does not live here.
 
 - Handles **`EquipmentSlot.HAND` only**. The interact event fires once per hand; without the filter one
   right-click starts two overlapping open flows for the same chest (see the spurious-close hazard in
-  [../service/CLAUDE.md](../service/CLAUDE.md)).
+  [../service/AGENTS.md](../service/AGENTS.md)).
 - Opening by block needs **no permission** — `enhancedechest.command.open` gates the commands only.
 - **Shift + right-click** is a shortcut to the chest list, gated by `enderchest.shift-click-list`; when
   off, a sneaking click opens like any other click.

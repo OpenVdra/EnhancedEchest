@@ -2,7 +2,7 @@
 
 Everything the player looks at: the Paper Dialog API menus, the alternative inventory chooser, and the
 holders that identify our inventories. The click/drag guards that police those inventories live in
-[../listener/CLAUDE.md](../listener/CLAUDE.md).
+[../listener/AGENTS.md](../listener/AGENTS.md).
 
 ## Files
 
@@ -53,7 +53,7 @@ and post-mutation paths re-query and re-push via `player.showDialog`.
 Dialog label text lives in `gui.yml` under `dialog:`, never in `messages.yml`. **Every builder takes a
 `Locale` and renders eagerly**: Paper does *not* run the `GlobalTranslator` for the Dialog API or for
 inventory item names, so a deferred `Component.translatable` reaches the client as its raw key. See
-[../lang/CLAUDE.md](../lang/CLAUDE.md). Item and block icons are Adventure sprite object components — no
+[../lang/AGENTS.md](../lang/AGENTS.md). Item and block icons are Adventure sprite object components — no
 resource pack needed.
 
 ### Edit-mode persistence

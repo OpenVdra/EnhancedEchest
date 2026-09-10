@@ -42,3 +42,6 @@ local-docs/
 
 # Secrets injected at build time
 secrets.properties
+
+# Local agent workspace (kept locally, not tracked)
+.claude/

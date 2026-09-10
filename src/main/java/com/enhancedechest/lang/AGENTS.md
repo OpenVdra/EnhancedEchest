@@ -55,10 +55,10 @@ placeholder inside a `<click:...>` attribute is **not** substituted per viewer.
 **Adding a key** means adding it to *every* bundled locale — a missing key falls back, but a missing
 English key shows the raw key. **Adding a bundled locale** means a folder under
 `src/main/resources/language/` plus an entry in `BUNDLED_LOCALES` (and, for icon-picker search,
-a table under `icons/lang/` — see [../gui/CLAUDE.md](../gui/CLAUDE.md)).
+a table under `icons/lang/` — see [../gui/AGENTS.md](../gui/AGENTS.md)).
 
 **Renaming a key** goes through `ConfigMigrations` like a config key does, so existing installs with
-edited language files upgrade cleanly — see [../config/CLAUDE.md](../config/CLAUDE.md).
+edited language files upgrade cleanly — see [../config/AGENTS.md](../config/AGENTS.md).
 
 ## Gotchas
 

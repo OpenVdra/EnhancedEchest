@@ -46,4 +46,4 @@ closes exactly that hole and nothing else.
   a random `srv-xxxxxxxx`.
 - Every `cross-server` key is bound at startup (`needsRestart()` in the schema); a live reload only warns.
 - Jedis is shaded and relocated (`libs.jedis`, plus `libs.commonspool2` / `libs.json`), and its gson
-  dependency comes from the server classpath un-relocated (see the root `CLAUDE.md`).
+  dependency comes from the server classpath un-relocated (see the root `AGENTS.md`).

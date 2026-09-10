@@ -20,7 +20,7 @@ the node (+ `.requires(...)` gate + suggestion provider) in the bootstrap, and t
 
 | Command | Permission | Action |
 |---|---|---|
-| `/enderchest` (`/ec`) | `enhancedechest.command.open` | Open per the routing rules in [../service/CLAUDE.md](../service/CLAUDE.md) |
+| `/enderchest` (`/ec`) | `enhancedechest.command.open` | Open per the routing rules in [../service/AGENTS.md](../service/AGENTS.md) |
 | `/ec <#index \| name>` | `enhancedechest.command.open` | Open one chest by index or custom name (miss → `chest.unknown`) |
 | `/eclist` | `enhancedechest.command.open` | Always open the management UI |
 
@@ -84,7 +84,7 @@ execution only, never on suggestions.
 
 Opens the target's chest by joining the **shared session** (`ChestOpener.adminOpen`), so the admin sees
 and edits the *same* inventory the owner has open — no dupe is possible. Every entry point funnels
-through the shared detail dialog with an admin `DetailContext` (see [../gui/CLAUDE.md](../gui/CLAUDE.md)):
+through the shared detail dialog with an admin `DetailContext` (see [../gui/AGENTS.md](../gui/AGENTS.md)):
 
 - **no argument** — 0 chests → `admin.view-no-chests`, 1 → the detail dialog, 2+ → the admin picker
 - **`list`** — always the picker, even for a single chest
@@ -126,4 +126,4 @@ grants, not gates. Every node must also be declared in `plugin.yml` / `paper-plu
 - `add`, `resize`, `delete`, `view` and `transfer` accept **offline** targets (`PlayerResolver` →
   `OfflinePlayer#hasPlayedBefore` / the name index), so their handlers must not assume a `Player`.
 - Anything reported back to the sender goes through `LanguageManager` keys — see
-  [../lang/CLAUDE.md](../lang/CLAUDE.md).
+  [../lang/AGENTS.md](../lang/AGENTS.md).

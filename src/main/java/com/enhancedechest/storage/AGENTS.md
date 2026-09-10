@@ -61,7 +61,7 @@ failed flush re-marks the rows dirty and retries on the next autosave. Dirty key
 Consequences: memory stays proportional to the online-player count; gameplay open/close costs **zero
 queries** once a player is loaded; a hard crash loses at most one autosave interval, and only for
 players who were online the whole time. **Cross-server sharing is unsupported by default** — see
-[../crossserver/CLAUDE.md](../crossserver/CLAUDE.md) for the mode that makes it safe.
+[../crossserver/AGENTS.md](../crossserver/AGENTS.md) for the mode that makes it safe.
 
 Whole-database questions still go to the backend: `findExpired` takes the backend's candidates, loads
 each candidate owner, and lets the authoritative in-memory row decide; `countChests`, `findUuidByName`
@@ -116,7 +116,7 @@ the name index.
 `ChestOpener.reconcileForOpen` when the loaded name is stale. It only mutates the resident row and marks
 it dirty, so calling it twice a session costs no extra statement — the write rides the next batched
 flush. That is what keeps the name index complete **without ever reading the `playerdata` folder**; see
-[../service/CLAUDE.md](../service/CLAUDE.md).
+[../service/AGENTS.md](../service/AGENTS.md).
 
 **To add a setting:** a component on `PlayerSettings`, a column in all three DDLs **plus** a
 `SchemaMigrator` step, a field on `RawPlayerRow` mapped in `loadAllPlayers`/`batchPlayers`, and the

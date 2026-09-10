@@ -80,15 +80,15 @@ Both are hand-maintained — update them when you add, remove or rename a class.
 
 | Task | Location |
 |---|---|
-| Opening a chest, sessions, dupe-safety, spill/sort/transfer, permission chests, activity log | `service/` (see [service/CLAUDE.md](src/main/java/com/enhancedechest/service/CLAUDE.md)) |
-| The cache, the SQL backends, the schema, autosave, backup | `storage/` (see [storage/CLAUDE.md](src/main/java/com/enhancedechest/storage/CLAUDE.md)) |
-| Any dialog or inventory menu, the icon picker | `gui/` (see [gui/CLAUDE.md](src/main/java/com/enhancedechest/gui/CLAUDE.md)) |
-| Adding or changing a command, permission nodes | `command/` (see [command/CLAUDE.md](src/main/java/com/enhancedechest/command/CLAUDE.md)) |
-| Messages, GUI text, per-viewer localization | `lang/` (see [lang/CLAUDE.md](src/main/java/com/enhancedechest/lang/CLAUDE.md)) |
-| A config key, renaming a key safely | `config/` (see [config/CLAUDE.md](src/main/java/com/enhancedechest/config/CLAUDE.md)) |
-| Redis owner locks, running several servers on one database | `crossserver/` (see [crossserver/CLAUDE.md](src/main/java/com/enhancedechest/crossserver/CLAUDE.md)) |
-| Importing from vanilla, AxVaults, PlayerVaultsX, CustomEnderChest, another database | `migration/` (see [migration/CLAUDE.md](src/main/java/com/enhancedechest/migration/CLAUDE.md)) |
-| Join/quit lifecycle, click and drag guards, right-click interception | `listener/` (see [listener/CLAUDE.md](src/main/java/com/enhancedechest/listener/CLAUDE.md)) |
+| Opening a chest, sessions, dupe-safety, spill/sort/transfer, permission chests, activity log | `service/` (see [service/AGENTS.md](src/main/java/com/enhancedechest/service/AGENTS.md)) |
+| The cache, the SQL backends, the schema, autosave, backup | `storage/` (see [storage/AGENTS.md](src/main/java/com/enhancedechest/storage/AGENTS.md)) |
+| Any dialog or inventory menu, the icon picker | `gui/` (see [gui/AGENTS.md](src/main/java/com/enhancedechest/gui/AGENTS.md)) |
+| Adding or changing a command, permission nodes | `command/` (see [command/AGENTS.md](src/main/java/com/enhancedechest/command/AGENTS.md)) |
+| Messages, GUI text, per-viewer localization | `lang/` (see [lang/AGENTS.md](src/main/java/com/enhancedechest/lang/AGENTS.md)) |
+| A config key, renaming a key safely | `config/` (see [config/AGENTS.md](src/main/java/com/enhancedechest/config/AGENTS.md)) |
+| Redis owner locks, running several servers on one database | `crossserver/` (see [crossserver/AGENTS.md](src/main/java/com/enhancedechest/crossserver/AGENTS.md)) |
+| Importing from vanilla, AxVaults, PlayerVaultsX, CustomEnderChest, another database | `migration/` (see [migration/AGENTS.md](src/main/java/com/enhancedechest/migration/AGENTS.md)) |
+| Join/quit lifecycle, click and drag guards, right-click interception | `listener/` (see [listener/AGENTS.md](src/main/java/com/enhancedechest/listener/AGENTS.md)) |
 | Folia-safe scheduling | [Scheduler.java](src/main/java/com/enhancedechest/scheduler/Scheduler.java) |
 | `ItemStack[] ⇄ byte[]`, the stored blob format | [ContainerCodec.java](src/main/java/com/enhancedechest/serialization/ContainerCodec.java) |
 | Expiry sweeps of temp/expiring chests | [ExpirySweeper.java](src/main/java/com/enhancedechest/expiry/ExpirySweeper.java) |
@@ -106,7 +106,7 @@ Both are hand-maintained — update them when you add, remove or rename a class.
 pending-save wait on reopen. Every open path funnels through `ChestSessionManager.open`; a second,
 independently loaded `Inventory` reintroduces duping. The encode on save is synchronous on the global
 thread — do not move it off-thread. Details in
-[service/CLAUDE.md](src/main/java/com/enhancedechest/service/CLAUDE.md).
+[service/AGENTS.md](src/main/java/com/enhancedechest/service/AGENTS.md).
 
 **Residency.** The `EnderChestStorage` everyone sees is `CachedStorage`, authoritative for every
 resident owner. Per-owner operations go through `withOwner` (residency re-check + operation in one
@@ -129,7 +129,7 @@ rule) — don't add new platform branches elsewhere. Never touch an entity or bl
 **Player-facing strings are never literals.** Everything goes through `LanguageManager` with a key
 that must exist in every bundled locale. Dialogs and inventory item names must be rendered **eagerly
 with the viewer's `Locale`**; only chat and inventory window titles are auto-rendered by Paper. See
-[lang/CLAUDE.md](src/main/java/com/enhancedechest/lang/CLAUDE.md).
+[lang/AGENTS.md](src/main/java/com/enhancedechest/lang/AGENTS.md).
 
 **Commands are registered in the bootstrap, not `plugin.yml`.** Paper Brigadier on
 `LifecycleEvents.COMMANDS`, each node gated by `.requires(...)`. Admin permissions default to `op`.
