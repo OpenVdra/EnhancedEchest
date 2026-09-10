@@ -60,3 +60,6 @@ permissions:
   enhancedechest.admin.clear:
     description: Empty a chest from the admin view (Clear chest button)
     default: op
+  enhancedechest.admin.benchmark:
+    description: Run /ee benchmark (developer builds only; the command is not registered in release jars)
+    default: op

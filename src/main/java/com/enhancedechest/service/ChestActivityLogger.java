@@ -89,13 +89,6 @@ public final class ChestActivityLogger {
 
     private record Diff(List<Group> added, List<Group> taken) {}
 
-    /** Pure-Java stack input used by the load simulation to exercise the real async pipeline. */
-    record CapturedStack(String identity, String description, int amount) {}
-
-    /** Observable pipeline totals; package-private for the stress simulation. */
-    record PipelineStats(long accepted, long written, long dropped, long unchanged, int queued,
-                         long workerCpuNanos, long uncompressedBytes) {}
-
     private static final DateTimeFormatter TIME =
             DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss.SSS z").withZone(ZoneId.systemDefault());
     private static final DateTimeFormatter ROTATED_TIME =
@@ -134,9 +127,6 @@ public final class ChestActivityLogger {
      * cached detail string into an arbitrarily large one.
      */
     private static final int MAX_CONTENT_ENTRIES = 27;
-
-    /** Same idea for the simulation's pre-captured identities; never touched in production. */
-    private static final ConcurrentHashMap<String, ItemId> CAPTURED_IDS = new ConcurrentHashMap<>();
 
     private final Path directory;
     private final Path activeFile;
@@ -303,82 +293,6 @@ public final class ChestActivityLogger {
         return true;
     }
 
-    /**
-     * Feeds already-captured immutable snapshots through the exact production queue/diff/format/I/O
-     * path. This deliberately bypasses Bukkit objects so the 300-500 player simulation can run under
-     * plain JUnit; production calls continue to use {@link #opened} and {@link #closed}.
-     */
-    void recordCapturedCycle(String actorName, UUID actor, UUID owner, int chestIndex, int size,
-                             List<CapturedStack> opened, List<CapturedStack> closed) {
-        if (!isRecording()) return;
-        if (queue.remainingCapacity() == 0) {
-            markDropped(1);
-            return;
-        }
-        Instant now = Instant.now();
-        OpenKey key = new OpenKey(actor, owner, chestIndex);
-        OpenCycle open = new OpenCycle(now, actorName, capturedSnapshot(size, opened));
-        Snapshot closing = capturedSnapshot(size, closed);
-        if (isUnchanged(open.snapshot(), closing)) return;
-        offer(new ClosedCycle(key, open, actorName, closing, now));
-    }
-
-    /**
-     * The {@link #opened} twin of {@link #recordCapturedCycle}: takes a snapshot the caller already
-     * captured, so the server-less leak simulation can drive real OPEN/CLOSE <i>lifecycles</i> —
-     * and therefore {@link #openCycles} — rather than only the queue behind them.
-     */
-    void openCaptured(String actorName, UUID actor, UUID owner, int chestIndex, int size,
-                      List<CapturedStack> contents) {
-        if (!isRecording()) return;
-        openCycles.put(new OpenKey(actor, owner, chestIndex),
-                new OpenCycle(Instant.now(), actorName, capturedSnapshot(size, contents)));
-    }
-
-    /** The {@link #closed} twin of {@link #openCaptured}. */
-    void closeCaptured(String actorName, UUID actor, UUID owner, int chestIndex, int size,
-                       List<CapturedStack> contents) {
-        closed(actorName, actor, owner, chestIndex, capturedSnapshot(size, contents));
-    }
-
-    /**
-     * Visits opened but not yet closed. Bounded by the number of chests actually open right now, so a
-     * close path that ever failed to consume its baseline would show up here as unbounded growth.
-     */
-    int openCycleCount() {
-        return openCycles.size();
-    }
-
-    /** Size and hard ceiling of the shared identity caches, for the leak simulation's bound check. */
-    static int identityCacheSize() {
-        return META_CACHE.size() + CAPTURED_IDS.size();
-    }
-
-    static int identityCacheLimit() {
-        return META_CACHE_MAX;
-    }
-
-    PipelineStats pipelineStats() {
-        return new PipelineStats(acceptedCycles.get(), writtenCycles.get(), totalDroppedCycles.get(),
-                unchangedCycles.get(), queue.size(), workerCpuNanos.get(), uncompressedBytes.get());
-    }
-
-    private static Snapshot capturedSnapshot(int size, List<CapturedStack> stacks) {
-        Map<String, Group> totals = new LinkedHashMap<>(64);
-        // Interned in a shared map exactly like the production cache, so the simulation measures the
-        // queue/diff/format/IO pipeline and the unchanged-visit check as they actually behave.
-        for (CapturedStack stack : stacks) {
-            ItemId id = CAPTURED_IDS.get(stack.identity());
-            if (id == null) {
-                id = new ItemId(stack.identity(), stack.description());
-                if (CAPTURED_IDS.size() >= META_CACHE_MAX) CAPTURED_IDS.clear();
-                CAPTURED_IDS.put(stack.identity(), id);
-            }
-            add(totals, id, stack.amount());
-        }
-        return new Snapshot(size, totals);
-    }
-
     private void offer(ClosedCycle cycle) {
         if (queue.offer(cycle)) {
             acceptedCycles.incrementAndGet();
@@ -527,8 +441,8 @@ public final class ChestActivityLogger {
     }
 
     /**
-     * Lazily filled per-material tables. Loading is deferred to the first {@link #capture} so a
-     * server-less unit test driving {@link #recordCapturedCycle} never touches the Bukkit registry.
+     * Lazily filled per-material tables. Loading is deferred to the first {@link #capture}, so the
+     * tables are built from the Bukkit registry only once an item is actually described.
      */
     private static final class MaterialTables {
         private static final String[] KEYS = new String[Material.values().length];

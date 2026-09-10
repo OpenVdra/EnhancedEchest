@@ -48,6 +48,28 @@ or its holders can no longer see `/ee` at all.
 | `delete <player> <count> [force]` | `admin.delete` | Delete the `count` newest **NORMAL** chests; chest #1 always kept; `force` discards items; PERM skipped |
 | `view <player> [list \| index]` | `admin.view` | Open the target's chest through the **shared session**. Also registered standalone as `/endersee <player> …` — Paper aliases a whole root literal, not a subcommand, so the shorthand is a second `commands.register` sharing `viewPlayerArgument()` and the same handlers |
 | `transfer <from> <to> <#index \| name \| all> [override \| temp]` | `admin.transfer` | Move a player's NORMAL chests onto another account |
+| `benchmark` | `admin.benchmark` | **Dev builds only.** Real in-server storage performance + memory benchmark (see below) |
+
+## `/ee benchmark` (developer builds only)
+
+A **real, in-server** performance and memory benchmark of the storage engine
+([../benchmark/StorageBenchmark.java](../benchmark/StorageBenchmark.java)), driven by
+[admin/BenchmarkCommand.java](admin/BenchmarkCommand.java). It replaces the deleted offline JUnit
+`*Simulation*` / `stressTest` tests: instead of a bare JVM, it runs the actual `CachedStorage` +
+`OwnerResidencyCache` + `ChestCacheState` classes **inside the live server process** over an
+**isolated throwaway SQLite DB** in `plugins/EnhancedEchest/benchmark/` (never the live data; deleted
+when the run ends). It reports per-op latency percentiles, throughput, thread-allocation-per-op
+(`com.sun.management.ThreadMXBean`), GC-settled retained heap ("memory ∝ online players"), a
+concurrent join→play→quit phase, and a residency-structure leak check; the report is streamed to the
+sender and written to `benchmark/storage-benchmark-report.txt`.
+
+- **Gated to dev builds by construction.** The command node is added to the `/ee` tree only when
+  `EnhancedEchestBootstrap.DEV_BUILD` is true — read from the same baked-in `build-info.properties`
+  `dev` flag as [BuildInfo](../BuildInfo.java), which is only true for `./gradlew runServer`. It is
+  **not registered at all** in a release jar, so it cannot be run on a production server.
+- **Off the main thread.** The run is heavy (real disk I/O, `System.gc()` settling, an ~8s
+  concurrency phase), so `BenchmarkCommand` dispatches it to a dedicated daemon thread and streams
+  progress back; an `AtomicBoolean` guard rejects overlapping invocations. The server stays up.
 
 ## Suggestion providers
 

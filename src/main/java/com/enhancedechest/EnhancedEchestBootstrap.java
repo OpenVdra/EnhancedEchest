@@ -1,6 +1,7 @@
 package com.enhancedechest;
 
 import com.enhancedechest.command.EnderChestOpenCommand;
+import com.enhancedechest.command.admin.BenchmarkCommand;
 import com.enhancedechest.command.admin.ChestAdminCommand;
 import com.enhancedechest.command.admin.MigrateAxVaultsCommand;
 import com.enhancedechest.command.admin.MigrateCustomEnderChestCommand;
@@ -25,9 +26,11 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
@@ -48,6 +51,28 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     // /ee view requires this; modifying (take/add) further requires enhancedechest.admin.edit,
     // checked per-click in EnderChestGuiListener so a view-only admin can look but not touch.
     private static final String ADMIN_VIEW_PERMISSION = "enhancedechest.admin.view";
+    // /ee benchmark — developer builds only; the node below is registered only when DEV_BUILD is true.
+    private static final String ADMIN_BENCHMARK_PERMISSION = "enhancedechest.admin.benchmark";
+
+    /**
+     * True only for a local developer run ({@code ./gradlew runServer}), read from the
+     * {@code build-info.properties} baked in at build time — the same flag {@link BuildInfo} reads at
+     * runtime, but resolved here from the bootstrap's own classloader since the plugin instance does
+     * not exist yet. Any failure to read the resource is treated as a release build (the safe default),
+     * so {@code /ee benchmark} simply never appears in a shipped jar.
+     */
+    private static final boolean DEV_BUILD = readDevBuild();
+
+    private static boolean readDevBuild() {
+        try (InputStream in = EnhancedEchestBootstrap.class.getResourceAsStream("/build-info.properties")) {
+            if (in == null) return false;
+            Properties props = new Properties();
+            props.load(in);
+            return Boolean.parseBoolean(props.getProperty("dev", "false").trim());
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     /**
      * Every node the {@code /enhancedechest} tree can gate on. The root literal itself carries no
@@ -395,7 +420,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     }
 
     private void registerAdminCommands(Commands commands) {
-        commands.register(
+        var adminRoot =
                 Commands.literal("enhancedechest")
                         // The root has no permission of its own — this gate is only about visibility:
                         // without it Brigadier keeps the root (and the /ee + namespaced aliases) in the
@@ -537,8 +562,18 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                                                                 ctx.getSource(),
                                                                 StringArgumentType.getString(ctx, "from"),
                                                                 StringArgumentType.getString(ctx, "to"),
-                                                                StringArgumentType.getString(ctx, "target")))))))
-                        .build(),
+                                                                StringArgumentType.getString(ctx, "target")))))));
+
+        // /ee benchmark — a real in-server storage performance + memory benchmark. Registered ONLY on a
+        // local developer build (never in the shipped jar), so it cannot be run on a production server.
+        if (DEV_BUILD) {
+            adminRoot.then(Commands.literal("benchmark")
+                    .requires(src -> src.getSender().hasPermission(ADMIN_BENCHMARK_PERMISSION))
+                    .executes(ctx -> BenchmarkCommand.execute(ctx.getSource())));
+        }
+
+        commands.register(
+                adminRoot.build(),
                 "EnhancedEchest admin commands",
                 List.of("ee")
         );

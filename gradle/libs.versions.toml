@@ -24,9 +24,3 @@ jedis = { module = "redis.clients:jedis", version = "8.0.1" }
 # and rewrite gson references to a package that isn't in the jar).
 sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 gson = { module = "com.google.code.gson:gson", version = "2.14.0" }
-
-# Tests.
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "6.1.3" }
-junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-slf4j-simple = { module = "org.slf4j:slf4j-simple", version = "2.0.19" }
-mockbukkit = { module = "org.mockbukkit.mockbukkit:mockbukkit-v1.21", version = "4.116.3" }

@@ -52,40 +52,6 @@ dependencies {
 
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
-
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.launcher)
-    testImplementation(libs.slf4j.simple)
-    testRuntimeOnly(libs.sqlite)
-
-    // Pinned to the v1.21 artifact: it targets paper-api 1.21.11 on Java 21, matching this project
-    // (the v26.x line needs Java 25). MockBukkit declares paper-api compileOnly, so repeat it here.
-    testImplementation(libs.mockbukkit)
-    testImplementation(libs.paper.api)
-}
-
-tasks.test {
-    useJUnitPlatform()
-    exclude("**/*Simulation*")
-}
-
-// ./gradlew stressTest — the 300–500 player concurrency/perf/leak simulation (no server needed).
-tasks.register<Test>("stressTest") {
-    description = "Concurrent 300–500 player load simulation against CachedStorage + SQLite."
-    group = "verification"
-    // A manually registered Test task must be pointed at the test source set or it reports NO-SOURCE.
-    val testSourceSet = sourceSets["test"]
-    testClassesDirs = testSourceSet.output.classesDirs
-    classpath = testSourceSet.runtimeClasspath
-    useJUnitPlatform()
-    include("**/*Simulation*")
-    maxHeapSize = "384m"
-    outputs.upToDateWhen { false }
-    testLogging {
-        showStandardStreams = true
-        events("passed", "failed")
-        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
