@@ -263,12 +263,7 @@ Ghi lại mỗi lần mở và đóng một rương ender, kèm ảnh chụp n�
 </template>
 
 <ConfigProperty name="enabled" value="false" type="boolean">
-Bật hoặc tắt nhật ký hoạt động. Mặc định tắt. Có hiệu lực khi chạy <code>/ee reload</code>.
-</ConfigProperty>
-
-<ConfigProperty name="log-unchanged" value="false" type="boolean">
-Khi để <code>false</code> (mặc định), lượt mở rương mà người chơi không thay đổi gì chỉ giữ mục mở, không có mục đóng. Phần lớn lượt mở chỉ là mở ra nhìn rồi đóng lại. Đặt <code>true</code> để giữ cả mục đóng cho những lượt đó.<br><br>
-Chỉ coi là không đổi khi giống hệt nhau, nên người chơi chỉ sắp xếp lại đồ vẫn được ghi.
+Bật hoặc tắt nhật ký hoạt động. Mặc định tắt. Có hiệu lực khi chạy <code>/ee reload</code>. Lượt không thay đổi gì sẽ không được ghi, nên nhật ký luôn gọn.
 </ConfigProperty>
 
 <ConfigProperty name="retention-days" value="30" type="number">

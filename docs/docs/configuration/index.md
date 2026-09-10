@@ -263,12 +263,7 @@ Records every open and close of an ender chest, with a snapshot of what it held 
 </template>
 
 <ConfigProperty name="enabled" value="false" type="boolean">
-Turn the activity log on or off. Off by default. Takes effect on <code>/ee reload</code>.
-</ConfigProperty>
-
-<ConfigProperty name="log-unchanged" value="false" type="boolean">
-When <code>false</code> (default), a visit where the player changed nothing keeps only its open entry, not a close entry. Most visits are someone opening their chest, looking, and closing it. Set to <code>true</code> to keep a close entry for those too.<br><br>
-Only an exact match is treated as unchanged, so a player who merely moved items around is still recorded.
+Turn the activity log on or off. Off by default. Takes effect on <code>/ee reload</code>. A visit that changed nothing is never recorded, so the log stays small.
 </ConfigProperty>
 
 <ConfigProperty name="retention-days" value="30" type="number">

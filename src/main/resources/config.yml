@@ -128,9 +128,6 @@ activity-log:
   # what the chest held at that moment. Evidence for investigating theft; it does not restore items,
   # use 'backup' for that.
   enabled: false
-  # Also keep close entries where the player changed nothing. Off (default) leaves just the open entry
-  # for a visit where nothing was taken or added, which keeps the log readable.
-  log-unchanged: false
   # Delete log entries older than this many days.
   retention-days: 30
   # Also keep at most this many entries per player, deleting the oldest beyond that. Stops one very

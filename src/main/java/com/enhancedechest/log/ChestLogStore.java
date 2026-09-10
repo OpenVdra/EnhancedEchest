@@ -86,22 +86,22 @@ public final class ChestLogStore {
                         actor       TEXT    NOT NULL,
                         actor_name  TEXT,
                         size        INTEGER NOT NULL,
-                        action      INTEGER NOT NULL,
-                        ts          INTEGER NOT NULL,
-                        diff        TEXT,
+                        opened_at   INTEGER NOT NULL,
+                        closed_at   INTEGER NOT NULL,
+                        diff        TEXT    NOT NULL,
                         snapshot    BLOB    NOT NULL
                     )
                     """.formatted(TABLE));
-            // Newest-first paging per owner is the only list query; ts drives retention.
+            // Newest-first paging per owner is the only list query; closed_at drives retention.
             stmt.execute("CREATE INDEX IF NOT EXISTS " + TABLE + "_owner_id ON " + TABLE + " (owner, id DESC)");
-            stmt.execute("CREATE INDEX IF NOT EXISTS " + TABLE + "_ts ON " + TABLE + " (ts)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS " + TABLE + "_closed ON " + TABLE + " (closed_at)");
         }
     }
 
     /** Inserts a batch of events in one transaction. Called only from the log writer thread. */
     public void insertBatch(List<LogWrite> batch) throws SQLException {
         String sql = "INSERT INTO " + TABLE
-                + " (owner, chest_index, actor, actor_name, size, action, ts, diff, snapshot)"
+                + " (owner, chest_index, actor, actor_name, size, opened_at, closed_at, diff, snapshot)"
                 + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection()) {
             boolean previousAutoCommit = conn.getAutoCommit();
@@ -113,8 +113,8 @@ public final class ChestLogStore {
                     ps.setString(3, w.actor().toString());
                     ps.setString(4, w.actorName());
                     ps.setInt(5, w.size());
-                    ps.setInt(6, w.action().ordinal());
-                    ps.setLong(7, w.ts());
+                    ps.setLong(6, w.openedAt());
+                    ps.setLong(7, w.closedAt());
                     ps.setString(8, w.diff());
                     ps.setBytes(9, gzip(w.snapshot()));
                     ps.addBatch();
@@ -147,7 +147,7 @@ public final class ChestLogStore {
      * needs the headline and diff; the blob is fetched by {@link #loadSnapshot} on click.
      */
     public List<LogEntry> page(UUID owner, int offset, int limit) throws SQLException {
-        String sql = "SELECT id, action, ts, actor_name, chest_index, size, diff FROM " + TABLE
+        String sql = "SELECT id, opened_at, closed_at, actor_name, chest_index, size, diff FROM " + TABLE
                 + " WHERE owner = ? ORDER BY id DESC LIMIT ? OFFSET ?";
         List<LogEntry> out = new ArrayList<>(Math.min(limit, 64));
         try (Connection conn = dataSource.getConnection();
@@ -159,7 +159,7 @@ public final class ChestLogStore {
                 while (rs.next()) {
                     out.add(new LogEntry(
                             rs.getLong(1),
-                            LogAction.fromCode(rs.getInt(2)),
+                            rs.getLong(2),
                             rs.getLong(3),
                             rs.getString(4),
                             rs.getInt(5),
@@ -197,7 +197,7 @@ public final class ChestLogStore {
         int removed = 0;
         try (Connection conn = dataSource.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(
-                    "DELETE FROM " + TABLE + " WHERE ts < ?")) {
+                    "DELETE FROM " + TABLE + " WHERE closed_at < ?")) {
                 ps.setLong(1, cutoffTs);
                 removed += ps.executeUpdate();
             }

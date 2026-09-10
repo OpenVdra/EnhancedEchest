@@ -2,7 +2,6 @@ package com.enhancedechest.gui;
 
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.log.DiffLine;
-import com.enhancedechest.log.LogAction;
 import com.enhancedechest.log.LogEntry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -24,10 +23,10 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Builds the {@code /ee log <player>} viewer: a 54-slot inventory whose top 45 slots hold one pane per
- * OPEN (lime) / CLOSE (red) event, newest first, and whose bottom row is navigation. A pane's name is
- * the action and time; its lore is who did it and — for a CLOSE — the material-level change summary
- * ({@code +} added to the chest, {@code −} taken out). Clicking a pane opens that event's snapshot.
+ * Builds the {@code /ee log <player>} viewer: a 54-slot inventory whose top 45 slots hold one ender
+ * chest pane per visit, newest first, and whose bottom row is navigation. A pane's name is who did it
+ * and when; its lore is the time it was open and the change summary ({@code +} added to the chest,
+ * {@code −} taken out) on the same tooltip. Clicking a pane opens that visit's snapshot.
  *
  * <p>All text is rendered eagerly with the viewer's {@link Locale} (the plugin's localisation invariant);
  * item names in the diff come from the client's own translations via {@link Component#translatable}.
@@ -49,6 +48,8 @@ public final class LogMenu {
 
     private static final DateTimeFormatter TIME =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter CLOCK =
+            DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault());
 
     private final LanguageManager lang;
 
@@ -59,7 +60,7 @@ public final class LogMenu {
     /**
      * Builds one page of the log viewer.
      *
-     * @param entries the page's events, newest first (at most {@link #PAGE_SIZE})
+     * @param entries the page's visits, newest first (at most {@link #PAGE_SIZE})
      * @param page      0-based page index (0 = most recent)
      * @param pageCount total pages
      */
@@ -91,33 +92,27 @@ public final class LogMenu {
         return inv;
     }
 
+    /** One visit as an ender chest pane: who and when in the name, the change summary in the lore. */
     private ItemStack paneFor(Locale locale, LogEntry entry) {
-        boolean open = entry.action() == LogAction.OPEN;
-        ItemStack item = new ItemStack(open ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE);
+        ItemStack item = new ItemStack(Material.ENDER_CHEST);
         ItemMeta meta = item.getItemMeta();
 
-        String time = TIME.format(Instant.ofEpochMilli(entry.ts()));
-        meta.displayName(noItalic(lang.getGui(locale, open ? "log.pane-open" : "log.pane-close",
-                "time", time)));
+        meta.displayName(noItalic(lang.getGui(locale, "log.pane",
+                "actor", entry.actorName() != null ? entry.actorName() : "?",
+                "time", TIME.format(Instant.ofEpochMilli(entry.closedAt())))));
 
         List<Component> lore = new ArrayList<>();
-        lore.add(line(lang.getGui(locale, "log.lore-actor",
-                "actor", entry.actorName() != null ? entry.actorName() : "?")));
+        lore.add(line(lang.getGui(locale, "log.lore-time",
+                "opened", CLOCK.format(Instant.ofEpochMilli(entry.openedAt())),
+                "closed", CLOCK.format(Instant.ofEpochMilli(entry.closedAt())))));
         lore.add(line(lang.getGui(locale, "log.lore-chest",
                 "index", Integer.toString(entry.index()),
                 "size", Integer.toString(entry.size()))));
-
-        if (!open) {
-            lore.add(Component.empty());
-            if (entry.diff().isEmpty()) {
-                lore.add(line(lang.getGui(locale, "log.lore-no-change")));
-            } else {
-                appendDiff(lore, entry.diff());
-            }
-        }
-
+        lore.add(Component.empty());
+        appendDiff(lore, entry.diff());
         lore.add(Component.empty());
         lore.add(line(lang.getGui(locale, "log.lore-click")));
+
         meta.lore(lore);
         item.setItemMeta(meta);
         return item;

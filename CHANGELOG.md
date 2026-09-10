@@ -6,12 +6,12 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 
 ### Added
 
-- New `/ee log <player>` command opens an in-game viewer of a player's ender chest history. Each open and close is a clickable entry showing the time, who did it, and what was added or taken. Clicking an entry shows the exact contents the chest held at that moment, to inspect without changing anything. Requires the `enhancedechest.admin.log` permission.
+- New `/ee log <player>` command opens an in-game viewer of a player's ender chest history. Each visit is one clickable entry showing who opened the chest, how long it was open, and what was added or taken. Clicking an entry shows the exact contents the chest held at that moment, to inspect without changing anything; closing it returns to the same page of the log. Visits that changed nothing are not recorded. Requires the `enhancedechest.admin.log` permission.
 
 ### Changed
 
 - **Breaking:** The activity log is now stored in a database (`plugins/EnhancedEchest/log.db`) and viewed in game with `/ee log`, instead of being written to `logs/echest-latest.log`. The plain text log is no longer produced. No action is required beyond using the new command to read it.
-- **Breaking:** The `shulker-contents`, `chest-contents` and `max-file-size-mb` settings in `config.yml` were removed, and `retention-days` now defaults to 30. Two new settings, `max-entries-per-player` and `prune-interval`, control how much history is kept. Review the `activity-log` section in `config.yml` if it was customised.
+- **Breaking:** The `log-unchanged`, `shulker-contents`, `chest-contents` and `max-file-size-mb` settings in `config.yml` were removed, and `retention-days` now defaults to 30. Two new settings, `max-entries-per-player` and `prune-interval`, control how much history is kept. Review the `activity-log` section in `config.yml` if it was customised.
 
 ### Notes
 

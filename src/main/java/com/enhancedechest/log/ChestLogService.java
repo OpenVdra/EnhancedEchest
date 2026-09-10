@@ -19,33 +19,36 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Captures OPEN/CLOSE chest events and persists each as one row (snapshot + change summary) in the
- * separate {@link ChestLogStore} SQLite database, for the in-game {@code /ee log} viewer. Replaces the
+ * Captures chest visits and persists each as one row (a contents snapshot + a change summary) in the
+ * separate {@link ChestLogStore} SQLite database, for the in-game {@code /ee log} viewer. Replaced the
  * old plain-text audit logger.
  *
- * <h2>Where the work runs</h2>
- * The Bukkit-owned thread does only the minimum: encode the contents to bytes once
- * ({@link ContainerCodec}, the same immutable format chests are stored in) and total them by material.
- * Both results are immutable, so they cross to the single writer thread with no Bukkit object and no
- * further main-thread work. The writer thread batches inserts into one transaction, and prunes on a
- * timer. The queue is bounded, so a stalled disk drops the newest events instead of growing the heap.
+ * <h2>One row per visit</h2>
+ * A visit is opened, maybe changed, then closed. Only the close is written, and only when something
+ * actually changed — a visit that took or added nothing is never stored, so the database stays small
+ * (this is deliberate and not configurable). The stored snapshot is the chest as it was left; the diff
+ * is what moved while it was open, computed against the totals taken at open. Opening therefore does no
+ * disk work and no encoding at all: it just remembers when the chest was opened and what it held.
  *
- * <h2>What a visit produces</h2>
- * Every OPEN writes a row (its snapshot is the "before" the {@code /ee log} pane can show). A CLOSE
- * writes a row only when the visit is worth recording — the caller gates that through
- * {@link #needsCapture(boolean)}: an untouched peek is dropped (leaving just the OPEN pane) unless
- * {@code log-unchanged} is on. The CLOSE row carries a material-level diff against its matching OPEN,
- * computed here from the two totals — the exact truth is always the two snapshots themselves.
+ * <h2>Where the work runs</h2>
+ * The Bukkit-owned thread does the minimum: total the contents by material at open, and at close encode
+ * the contents to bytes once ({@link ContainerCodec}, the same immutable format chests are stored in)
+ * plus total them again for the diff. Both results are immutable, so they cross to the single writer
+ * thread with no Bukkit object. The writer batches inserts into one transaction and prunes on a timer.
+ * The queue is bounded, so a stalled disk drops the newest visits instead of growing the heap.
  */
 public final class ChestLogService {
 
     /** Interned per-material namespaced key, so repeated captures don't re-allocate the same string. */
     private static final String[] MATERIAL_KEYS = new String[Material.values().length];
 
-    /** Identity of one open visit: the same (actor, owner, index) the CLOSE will diff against. */
+    /** Identity of one open visit: the same (actor, owner, index) the close will diff against. */
     private record OpenKey(UUID actor, UUID owner, int index) {}
 
-    /** An encoded, thread-safe capture of a chest at one instant: bytes to store, totals to diff. */
+    /** What a visit looked like at open: when, and its per-material totals for the diff. */
+    private record OpenState(long openedAt, Map<String, Integer> counts) {}
+
+    /** An encoded, thread-safe capture of a chest at close: bytes to store, totals to diff. */
     public record Capture(byte[] blob, Map<String, Integer> counts, int size) {}
 
     private static final int BATCH_SIZE = 128;
@@ -58,12 +61,11 @@ public final class ChestLogService {
     private final boolean storeReady;
 
     private final ArrayBlockingQueue<LogWrite> queue;
-    private final ConcurrentHashMap<OpenKey, Map<String, Integer>> openBaselines = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<OpenKey, OpenState> openBaselines = new ConcurrentHashMap<>();
     private final AtomicLong dropped = new AtomicLong();
     private final Thread worker;
 
     private volatile boolean enabled;
-    private volatile boolean logUnchanged;
     private volatile int retentionDays;
     private volatile int maxPerPlayer;
     private volatile long pruneIntervalMillis;
@@ -71,16 +73,14 @@ public final class ChestLogService {
     private long lastPruneAt;   // worker-thread confined
 
     public ChestLogService(ContainerCodec codec, Logger logger, Telemetry telemetry, ChestLogStore store,
-                           boolean storeReady, boolean enabled, boolean logUnchanged,
-                           int queueCapacity, int retentionDays, int maxPerPlayer,
-                           long pruneIntervalMillis) {
+                           boolean storeReady, boolean enabled, int queueCapacity, int retentionDays,
+                           int maxPerPlayer, long pruneIntervalMillis) {
         this.codec = codec;
         this.logger = logger;
         this.telemetry = telemetry;
         this.store = store;
         this.storeReady = storeReady;
         this.enabled = enabled;
-        this.logUnchanged = logUnchanged;
         this.retentionDays = retentionDays;
         this.maxPerPlayer = maxPerPlayer;
         this.pruneIntervalMillis = pruneIntervalMillis;
@@ -101,10 +101,6 @@ public final class ChestLogService {
         if (!enabled) openBaselines.clear();
     }
 
-    public void setLogUnchanged(boolean logUnchanged) {
-        this.logUnchanged = logUnchanged;
-    }
-
     public void setRetention(int retentionDays, int maxPerPlayer, long pruneIntervalMillis) {
         this.retentionDays = retentionDays;
         this.maxPerPlayer = maxPerPlayer;
@@ -120,43 +116,43 @@ public final class ChestLogService {
 
     /**
      * Whether the closing contents are worth capturing. A chest nobody clicked cannot have changed, so
-     * unless {@code log-unchanged} is on there is nothing to record on close (the OPEN row already
-     * stands). Mirrors the old logger's pre-filter so the session manager's call sites stay unchanged.
+     * there is nothing to record on close. Mirrors the old logger's pre-filter so the session manager's
+     * call sites stay unchanged; a chest that <i>was</i> touched but ends up identical is still dropped
+     * by the exact diff at close.
      */
     public boolean needsCapture(boolean chestTouched) {
-        return isRecording() && (logUnchanged || chestTouched);
+        return isRecording() && chestTouched;
     }
 
-    // ---- capture (Bukkit-owned thread) ----
+    // ---- capture ----
 
     /**
-     * Encodes and totals a chest's contents once, off which both an OPEN and a CLOSE row are built.
-     * Returns {@code null} if encoding fails, so the caller simply skips logging that event rather than
-     * aborting the chest operation.
+     * Encodes and totals a chest's closing contents. Returns {@code null} if encoding fails, so the
+     * caller simply skips logging that visit rather than aborting the chest operation.
      */
     public @Nullable Capture capture(ItemStack[] contents) {
         byte[] blob;
         try {
             blob = codec.encode(contents);
         } catch (Exception e) {
-            logger.warn("Could not encode chest contents for the activity log; skipping this event");
+            logger.warn("Could not encode chest contents for the activity log; skipping this visit");
             telemetry.error(e, "log.encode");
             return null;
         }
         return new Capture(blob, countMaterials(contents), contents.length);
     }
 
-    /** Records an OPEN on the viewer's thread: writes the row and keeps its totals as the close baseline. */
+    /**
+     * Records the open baseline on the viewer's thread: when the chest was opened and what it held. No
+     * disk work and no encoding — the snapshot is only ever taken at close.
+     */
     public void opened(@Nullable String actorName, UUID actor, UUID owner, int index, ItemStack[] contents) {
         if (!isRecording()) return;
-        Capture cap = capture(contents);
-        if (cap == null) return;
-        openBaselines.put(new OpenKey(actor, owner, index), cap.counts());
-        offer(new LogWrite(owner, index, actor, actorName, cap.size(), LogAction.OPEN,
-                System.currentTimeMillis(), null, cap.blob()));
+        openBaselines.put(new OpenKey(actor, owner, index),
+                new OpenState(System.currentTimeMillis(), countMaterials(contents)));
     }
 
-    /** Records a CLOSE from live contents (captures, then delegates to the shared-capture overload). */
+    /** Records a close from live contents (captures, then delegates to the shared-capture overload). */
     public void closed(@Nullable String actorName, UUID actor, UUID owner, int index, ItemStack[] contents) {
         if (!isRecording()) return;
         Capture cap = capture(contents);
@@ -168,18 +164,21 @@ public final class ChestLogService {
     }
 
     /**
-     * Records a CLOSE from an already-taken capture. Force-close and shutdown tear down one shared
-     * inventory with several viewers; capturing once and passing it here keeps that O(1) in chest size
-     * rather than O(viewers).
+     * Records a close from an already-taken capture, writing one row for the whole visit — but only if
+     * the contents actually changed. Force-close and shutdown tear down one shared inventory with
+     * several viewers; capturing once and passing it here keeps that O(1) in chest size.
      */
     public void closed(@Nullable String actorName, UUID actor, UUID owner, int index, Capture cap) {
         if (!isRecording()) return;
-        Map<String, Integer> baseline = openBaselines.remove(new OpenKey(actor, owner, index));
-        offer(new LogWrite(owner, index, actor, actorName, cap.size(), LogAction.CLOSE,
-                System.currentTimeMillis(), buildDiff(baseline, cap.counts()), cap.blob()));
+        OpenState base = openBaselines.remove(new OpenKey(actor, owner, index));
+        if (base == null) return;   // no baseline (e.g. logging enabled mid-visit): nothing to diff against
+        String diff = buildDiff(base.counts(), cap.counts());
+        if (diff == null) return;   // nothing changed: not worth a row
+        offer(new LogWrite(owner, index, actor, actorName, cap.size(),
+                base.openedAt(), System.currentTimeMillis(), diff, cap.blob()));
     }
 
-    /** Drops an open visit's baseline without writing a CLOSE, for a peek not worth recording. */
+    /** Drops an open visit's baseline without writing, for a peek that changed nothing. */
     public void abandon(UUID actor, UUID owner, int index) {
         openBaselines.remove(new OpenKey(actor, owner, index));
     }
@@ -206,17 +205,15 @@ public final class ChestLogService {
     }
 
     /**
-     * Builds the CLOSE change summary as {@code "<delta> <key>"} lines: additions (positive) first, then
-     * removals, each group ordered by key. Returns {@code null} when nothing changed, so the row stores
-     * no diff text.
+     * Builds the change summary as {@code "<delta> <key>"} lines: additions (positive) first, then
+     * removals, each group ordered by key. Returns {@code null} when nothing changed.
      */
-    private static @Nullable String buildDiff(@Nullable Map<String, Integer> open, Map<String, Integer> close) {
-        Map<String, Integer> before = open != null ? open : Map.of();
-        Map<String, Integer> keys = new HashMap<>(before);
+    private static @Nullable String buildDiff(Map<String, Integer> open, Map<String, Integer> close) {
+        Map<String, Integer> keys = new HashMap<>(open);
         close.forEach((k, v) -> keys.putIfAbsent(k, 0));
         List<DiffLine> lines = new ArrayList<>();
         for (String key : keys.keySet()) {
-            int delta = close.getOrDefault(key, 0) - before.getOrDefault(key, 0);
+            int delta = close.getOrDefault(key, 0) - open.getOrDefault(key, 0);
             if (delta != 0) lines.add(new DiffLine(key, delta));
         }
         if (lines.isEmpty()) return null;
@@ -251,14 +248,14 @@ public final class ChestLogService {
             try {
                 store.insertBatch(batch);
             } catch (Exception e) {
-                logger.error("Could not write {} chest-log event(s); dropping them", batch.size(), e);
+                logger.error("Could not write {} chest-log visit(s); dropping them", batch.size(), e);
                 telemetry.error(e, "log.insert");
             } finally {
                 batch.clear();
             }
             long lost = dropped.getAndSet(0);
             if (lost > 0) {
-                logger.warn("Dropped {} chest-log event(s) because the async queue was full", lost);
+                logger.warn("Dropped {} chest-log visit(s) because the async queue was full", lost);
             }
         }
     }
@@ -271,7 +268,7 @@ public final class ChestLogService {
         try {
             int removed = store.prune(cutoff, maxPerPlayer);
             if (removed > 0) {
-                logger.info("Pruned {} old chest-log event(s)", removed);
+                logger.info("Pruned {} old chest-log visit(s)", removed);
             }
         } catch (Exception e) {
             logger.warn("Could not prune the chest log: {}", e.getMessage());
@@ -279,7 +276,7 @@ public final class ChestLogService {
         }
     }
 
-    /** Stops accepting events, drains the queue, and joins the writer (≤5s). */
+    /** Stops accepting visits, drains the queue, and joins the writer (≤5s). */
     public void shutdown() {
         stopping = true;
         openBaselines.clear();

@@ -61,7 +61,7 @@ public final class LogMenuListener implements Listener {
     private void handleMenuClick(Player player, LogMenuHolder holder, int slot) {
         LogEntry entry = holder.entryAt(slot);
         if (entry != null) {
-            viewer.openSnapshot(player, holder.getOwner(), holder.getOwnerName(), entry);
+            viewer.openSnapshot(player, holder.getOwner(), holder.getOwnerName(), entry, holder.getPage());
             return;
         }
         if (slot == LogMenu.SLOT_PREV && holder.getPage() > 0) {
@@ -102,14 +102,18 @@ public final class LogMenuListener implements Listener {
     }
 
     /**
-     * Discards the preview on close. The inventory itself is a throwaway (never saved), so the only thing
-     * that could leak a historical item is one left on the cursor — clear it.
+     * Discards the preview on close and returns to the log. The inventory itself is a throwaway (never
+     * saved); the only thing that could leak a historical item is one left on the cursor, so clear it.
+     * Then re-open the log at the page the admin came from — {@code openLog} does its work asynchronously,
+     * so the actual {@code openInventory} lands a tick later, safely outside this close event.
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onClose(InventoryCloseEvent event) {
-        if (!(event.getView().getTopInventory().getHolder() instanceof LogSnapshotHolder)) return;
-        if (event.getPlayer() instanceof Player player && !player.getItemOnCursor().isEmpty()) {
+        if (!(event.getView().getTopInventory().getHolder() instanceof LogSnapshotHolder holder)) return;
+        if (!(event.getPlayer() instanceof Player player)) return;
+        if (!player.getItemOnCursor().isEmpty()) {
             player.setItemOnCursor(null);
         }
+        viewer.openLog(player, holder.getOwner(), holder.getOwnerName(), holder.getPage());
     }
 }

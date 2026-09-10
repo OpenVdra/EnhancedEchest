@@ -12,16 +12,15 @@ Nhật ký được lưu trong tệp riêng, `plugins/EnhancedEchest/log.db`, t�
 
 Chạy `/ee log <player>` để mở trình xem cho các rương ender của người chơi đó. Cần quyền `enhancedechest.admin.log`.
 
-Mỗi lần mở và đóng là một ô, mới nhất trước:
+Mỗi lượt là một ô, một rương ender, mới nhất trước:
 
-- Ô **xanh lá** là một lần mở. Ô **đỏ** là một lần đóng.
-- Tên ô là hành động và thời điểm xảy ra.
-- Phần mô tả cho biết ai đã làm và số thứ tự rương, và ở một lần đóng nó liệt kê thay đổi: dòng `+` xanh cho mỗi vật phẩm được bỏ vào rương, dòng `-` đỏ cho mỗi vật phẩm được lấy ra.
-- Hàng dưới cùng dùng để lật sang các mục cũ hơn và mới hơn.
+- Tên ô là ai đã mở rương và đóng lúc nào.
+- Phần mô tả cho biết rương mở trong bao lâu, số thứ tự rương, và những gì đã thay đổi khi mở: dòng `+` cho mỗi vật phẩm được bỏ vào rương, dòng `-` cho mỗi vật phẩm được lấy ra, cùng trên một mô tả.
+- Hàng dưới cùng dùng để lật sang các lượt cũ hơn và mới hơn.
 
 ## Xem rương tại một thời điểm
 
-Nhấn vào một ô bất kỳ để xem chính xác nội dung rương ở thời điểm đó. Có thể nhặt và di chuyển vật phẩm trong bản xem này để kiểm tra, nhưng không thể lấy ra khỏi nó, và đóng lại không thay đổi gì. Bản ghi đã lưu không bao giờ bị sửa đổi.
+Nhấn vào một ô bất kỳ để xem chính xác nội dung rương khi lượt đó kết thúc. Có thể nhặt và di chuyển vật phẩm trong bản xem này để kiểm tra, nhưng không thể lấy ra khỏi nó, và đóng lại không thay đổi gì. Bản ghi đã lưu không bao giờ bị sửa đổi. Bấm Esc hoặc E sẽ quay về đúng trang nhật ký lúc nãy.
 
 ## Khi ai đó mở rương của người khác
 
@@ -29,9 +28,7 @@ Khi một quản trị viên mở một rương không phải của mình, mục
 
 ## Những lần không thay đổi gì
 
-Đa số người chơi mở rương, nhìn một lượt rồi đóng lại. Với những lần đó chỉ lần mở được giữ, nên nhật ký đủ ngắn để đọc. Một rương chỉ bị sắp xếp lại vật phẩm cũng tính là không đổi: không được thêm cũng không mất gì.
-
-Để giữ thêm mục đóng cho những lần không thay đổi gì, đặt `log-unchanged` thành `true` trong mục `activity-log` của `config.yml`.
+Đa số người chơi mở rương, nhìn một lượt rồi đóng lại. Những lượt không lấy ra cũng không bỏ vào thứ gì sẽ không được ghi, nên nhật ký chỉ chứa các lượt thực sự có đồ di chuyển. Một rương chỉ bị sắp xếp lại vật phẩm cũng tính là không đổi: không được thêm cũng không mất gì.
 
 ## Giữ bao nhiêu
 
@@ -42,5 +39,5 @@ Các mục cũ được tự động dọn để nhật ký không phình mãi:
 - `prune-interval` đặt tần suất chạy việc dọn dẹp này.
 
 ::: tip Thay đổi thiết lập
-`enabled`, `log-unchanged`, `retention-days`, `max-entries-per-player` và `prune-interval` áp dụng khi chạy `/ee reload`. `queue-capacity` chỉ được đọc một lần khi máy chủ khởi động, nên đổi nó cần khởi động lại toàn bộ.
+`enabled`, `retention-days`, `max-entries-per-player` và `prune-interval` áp dụng khi chạy `/ee reload`. `queue-capacity` chỉ được đọc một lần khi máy chủ khởi động, nên đổi nó cần khởi động lại toàn bộ.
 :::

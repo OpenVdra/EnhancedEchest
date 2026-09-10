@@ -90,18 +90,15 @@ dialog:
 log:
   # Window title. {player} = the chest owner.
   title: '{player}''s Chest Log'
-  # Event pane names. {time} = when it happened.
-  pane-open: '<green>● Opened <dark_gray>· <gray>{time}'
-  pane-close: '<red>● Closed <dark_gray>· <gray>{time}'
-  # Pane lore.
-  lore-actor: '<gray>By: <white>{actor}'
+  # One pane per visit. {actor} = who opened it, {time} = when it was closed.
+  pane: '<gold>{actor} <dark_gray>· <gray>{time}'
+  # Pane lore. {opened}/{closed} are clock times, {index}/{size} the chest number and slots.
+  lore-time: '<gray>Open {opened} <dark_gray>→ <gray>{closed}'
   lore-chest: '<gray>Chest #{index} <dark_gray>· <gray>{size} slots'
-  lore-no-change: '<dark_gray>No items changed'
   lore-click: '<yellow>Click to view contents'
   # Navigation controls and the info book. {page}/{pages} are 1-based.
   nav-newer: '<green>« Newer'
   nav-older: '<green>Older »'
   info: '<gold>{player} <gray>· Page {page}/{pages}'
-  # Snapshot preview window titles. {index} = chest number, {time} = when the snapshot was taken.
-  snapshot-title-open: '{player} #{index} · Opened {time}'
-  snapshot-title-close: '{player} #{index} · Closed {time}'
+  # Snapshot preview window title. {index} = chest number, {time} = when it was closed.
+  snapshot-title: '{player} #{index} · {time}'

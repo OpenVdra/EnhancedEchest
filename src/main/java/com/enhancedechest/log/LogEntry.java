@@ -10,13 +10,15 @@ import java.util.List;
  * Keeping the (potentially multi-KB) blob out of the list query is what lets a page of 45 entries load
  * cheaply.
  *
- * @param id      row id, used to fetch the snapshot on click
- * @param action  OPEN or CLOSE (drives the pane colour)
- * @param ts      epoch millis of the event
- * @param actorName last-known name of who performed it, or {@code null}
- * @param index   1-based chest index
- * @param size    slot count of the chest at that moment
- * @param diff    the CLOSE change summary (empty for OPEN, or a CLOSE that changed nothing)
+ * <p>One entry is one visit: opened, changed, closed. There is no separate open/close event any more.
+ *
+ * @param id        row id, used to fetch the snapshot on click
+ * @param openedAt  epoch millis the chest was opened
+ * @param closedAt  epoch millis it was closed
+ * @param actorName last-known name of who did it, or {@code null}
+ * @param index     1-based chest index
+ * @param size      slot count of the chest
+ * @param diff      the change summary (always non-empty for a stored visit)
  */
-public record LogEntry(long id, LogAction action, long ts, @Nullable String actorName,
+public record LogEntry(long id, long openedAt, long closedAt, @Nullable String actorName,
                        int index, int size, List<DiffLine> diff) {}

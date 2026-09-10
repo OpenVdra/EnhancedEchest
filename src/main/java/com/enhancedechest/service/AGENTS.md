@@ -176,19 +176,20 @@ transaction inside `runExclusiveAcross`.
 ## Activity log
 
 The log lives in its own package, `com.enhancedechest.log` (`ChestLogService` + `ChestLogStore`), not
-here — this section covers only how `service/` touches it. It records OPEN/CLOSE events with a
-per-event contents snapshot into a **separate SQLite database** (`log.db`), viewed in-game with
-`/ee log <player>` (`admin/LogCommand` → `LogViewer`). `activity-log.enabled`, default off. Replaced the
-old plain-text `ChestActivityLogger` on 2026-09-10.
+here — this section covers only how `service/` touches it. It records **one row per visit** (a contents
+snapshot as the chest was left + a material-level diff of what moved) into a **separate SQLite database**
+(`log.db`), viewed in-game with `/ee log <player>` (`admin/LogCommand` → `LogViewer`).
+`activity-log.enabled`, default off. Replaced the old plain-text `ChestActivityLogger` on 2026-09-10.
 
 `ChestSessionManager` drives capture through the same API the old logger exposed: `opened(...)` when a
-viewer attaches (**always writes an OPEN row**), `closed(...)` on detach, `abandon(...)` when
-`needsCapture(s.touched)` says nobody touched the chest (so a peek leaves just its OPEN entry unless
-`log-unchanged` is on). `capture(...)` returns a `Capture` (encoded bytes + per-material totals) so a
-force-close/shutdown can snapshot one shared inventory once and log a CLOSE for every viewer.
-`isRecording()` gates the hot path — keep it in front of any new capture site. The encode to bytes
-stays on the Bukkit thread (the codebase invariant); the writer thread only inserts and prunes, and the
-`/ee log` reads decode on the `DbExecutor`.
+viewer attaches (**stores only an in-RAM baseline — no DB write, no encode**), `closed(...)` on detach,
+`abandon(...)` when `needsCapture(s.touched)` says nobody touched the chest. `closed(...)` writes at most
+one row, and only when the diff is non-empty (a visit that changed nothing is never logged — hardcoded,
+there is no `log-unchanged` setting). `capture(...)` returns a `Capture` (encoded bytes + per-material
+totals) so a force-close/shutdown can snapshot one shared inventory once and diff it against each
+viewer's baseline. `isRecording()` gates the hot path — keep it in front of any new capture site. The
+encode to bytes stays on the Bukkit thread (the codebase invariant); the writer thread only inserts and
+prunes, and the `/ee log` reads decode on the `DbExecutor`.
 
 `LogViewer` is the one `service/` class of the feature: it opens the viewer and the snapshot preview. A
 snapshot preview is a throwaway inventory (`LogSnapshotHolder`) that never funnels through the session

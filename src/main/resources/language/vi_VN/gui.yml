@@ -90,18 +90,15 @@ dialog:
 log:
   # Tiêu đề cửa sổ. {player} = chủ rương.
   title: 'Nhật ký rương của {player}'
-  # Tên ô sự kiện. {time} = thời điểm xảy ra.
-  pane-open: '<green>● Đã mở <dark_gray>· <gray>{time}'
-  pane-close: '<red>● Đã đóng <dark_gray>· <gray>{time}'
-  # Mô tả ô.
-  lore-actor: '<gray>Bởi: <white>{actor}'
+  # Mỗi ô là một lượt. {actor} = người đã mở, {time} = thời điểm đóng.
+  pane: '<gold>{actor} <dark_gray>· <gray>{time}'
+  # Mô tả ô. {opened}/{closed} là giờ, {index}/{size} là số rương và số ô.
+  lore-time: '<gray>Mở {opened} <dark_gray>→ <gray>{closed}'
   lore-chest: '<gray>Rương #{index} <dark_gray>· <gray>{size} ô'
-  lore-no-change: '<dark_gray>Không có thay đổi'
   lore-click: '<yellow>Nhấn để xem nội dung'
   # Nút điều hướng và sách thông tin. {page}/{pages} tính từ 1.
   nav-newer: '<green>« Mới hơn'
   nav-older: '<green>Cũ hơn »'
   info: '<gold>{player} <gray>· Trang {page}/{pages}'
-  # Tiêu đề cửa sổ ảnh chụp. {index} = số rương, {time} = thời điểm chụp.
-  snapshot-title-open: 'Rương {player} #{index} · Mở {time}'
-  snapshot-title-close: 'Rương {player} #{index} · Đóng {time}'
+  # Tiêu đề cửa sổ ảnh chụp. {index} = số rương, {time} = thời điểm đóng.
+  snapshot-title: 'Rương {player} #{index} · {time}'

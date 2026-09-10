@@ -191,7 +191,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
             telemetry.error(e, "log.init");
         }
         activityLogger = new ChestLogService(codec, getSLF4JLogger(), telemetry, chestLogStore,
-                logStoreReady, pluginConfig.isActivityLogEnabled(), pluginConfig.isActivityLogUnchanged(),
+                logStoreReady, pluginConfig.isActivityLogEnabled(),
                 pluginConfig.getActivityLogQueueCapacity(), pluginConfig.getActivityLogRetentionDays(),
                 pluginConfig.getActivityLogMaxEntriesPerPlayer(),
                 pluginConfig.getActivityLogPruneIntervalMillis());
@@ -375,7 +375,6 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 pluginConfig.getBackupKeep());
         autosaveService.reschedule(pluginConfig.getAutosaveIntervalMillis());
         activityLogger.setEnabled(pluginConfig.isActivityLogEnabled());
-        activityLogger.setLogUnchanged(pluginConfig.isActivityLogUnchanged());
         activityLogger.setRetention(pluginConfig.getActivityLogRetentionDays(),
                 pluginConfig.getActivityLogMaxEntriesPerPlayer(),
                 pluginConfig.getActivityLogPruneIntervalMillis());

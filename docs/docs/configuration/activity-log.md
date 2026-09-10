@@ -12,16 +12,15 @@ The log is kept in its own file, `plugins/EnhancedEchest/log.db`, separate from 
 
 Run `/ee log <player>` to open the viewer for that player's ender chests. It needs the `enhancedechest.admin.log` permission.
 
-Each open and close is one pane, newest first:
+Each visit is one pane, an ender chest, newest first:
 
-- A **green** pane is an open. A **red** pane is a close.
-- The pane name is the action and the time it happened.
-- The lore names who did it and the chest number, and on a close it lists what changed: a green `+` line for each item added to the chest, a red `-` line for each item taken out.
-- The bottom row pages through older and newer entries.
+- The pane name is who opened the chest and when they closed it.
+- The lore shows how long it was open, the chest number, and what changed while it was open: a `+` line for each item added to the chest, a `-` line for each item taken out, together on the one tooltip.
+- The bottom row pages through older and newer visits.
 
 ## Viewing a Chest at a Moment in Time
 
-Click any pane to see the exact contents the chest held at that moment. Items can be picked up and moved around inside this preview to inspect them, but nothing can be taken out of it, and closing it changes nothing. The stored record is never altered.
+Click any pane to see the exact contents the chest held when that visit ended. Items can be picked up and moved around inside this preview to inspect them, but nothing can be taken out of it, and closing it changes nothing. The stored record is never altered. Pressing Esc or E returns to the same page of the log.
 
 ## Someone Opening Another Player's Chest
 
@@ -29,9 +28,7 @@ When an admin opens a chest that is not theirs, the entry records the admin as t
 
 ## Visits That Changed Nothing
 
-Most people open their chest, look at it, and close it again. For those visits only the open is kept, so the log stays short enough to read. A chest whose items were only moved around counts as unchanged too: nothing was gained or lost.
-
-To also keep a close entry for visits that changed nothing, set `log-unchanged` to `true` under `activity-log` in `config.yml`.
+Most people open their chest, look at it, and close it again. Visits that took or added nothing are not recorded at all, so the log only ever holds visits where something moved. A chest whose items were only rearranged counts as unchanged too: nothing was gained or lost.
 
 ## How Much Is Kept
 
@@ -42,5 +39,5 @@ Old entries are cleaned up automatically so the log cannot grow forever:
 - `prune-interval` sets how often this cleanup runs.
 
 ::: tip Changing settings
-`enabled`, `log-unchanged`, `retention-days`, `max-entries-per-player` and `prune-interval` apply on `/ee reload`. `queue-capacity` is read once when the server starts, so changing it needs a full restart.
+`enabled`, `retention-days`, `max-entries-per-player` and `prune-interval` apply on `/ee reload`. `queue-capacity` is read once when the server starts, so changing it needs a full restart.
 :::

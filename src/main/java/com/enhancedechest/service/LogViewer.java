@@ -4,7 +4,6 @@ import com.enhancedechest.gui.LogMenu;
 import com.enhancedechest.gui.LogSnapshotHolder;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.log.ChestLogStore;
-import com.enhancedechest.log.LogAction;
 import com.enhancedechest.log.LogEntry;
 import com.enhancedechest.scheduler.Scheduler;
 import com.enhancedechest.serialization.ContainerCodec;
@@ -96,11 +95,12 @@ public final class LogViewer {
     }
 
     /**
-     * Opens a read-only-safe sandbox showing exactly what the chest held at {@code entry}. The inventory
-     * uses {@link LogSnapshotHolder}, so it never funnels through the session manager and is discarded on
-     * close — the real chest is never affected.
+     * Opens a read-only-safe sandbox showing exactly what the chest held when {@code entry} was closed.
+     * The inventory uses {@link LogSnapshotHolder}, so it never funnels through the session manager and is
+     * discarded on close — the real chest is never affected. {@code page} is remembered on the holder so
+     * closing the preview returns to the same log page.
      */
-    public void openSnapshot(Player admin, UUID owner, String ownerName, LogEntry entry) {
+    public void openSnapshot(Player admin, UUID owner, String ownerName, LogEntry entry, int page) {
         db.supply(() -> {
             try {
                 ChestLogStore.SnapshotBlob blob = store.loadSnapshot(entry.id());
@@ -120,15 +120,12 @@ public final class LogViewer {
                     admin.sendMessage(lang.get("admin.log-snapshot-failed"));
                     return;
                 }
-                String time = TIME.format(Instant.ofEpochMilli(entry.ts()));
-                String titleKey = entry.action() == LogAction.OPEN
-                        ? "log.snapshot-title-open" : "log.snapshot-title-close";
-                Component title = lang.getGui(admin.locale(), titleKey,
+                Component title = lang.getGui(admin.locale(), "log.snapshot-title",
                         "player", ownerName,
                         "index", Integer.toString(entry.index()),
-                        "time", time);
+                        "time", TIME.format(Instant.ofEpochMilli(entry.closedAt())));
                 Inventory inv = Bukkit.createInventory(
-                        new LogSnapshotHolder(owner, entry.index()), contents.length, title);
+                        new LogSnapshotHolder(owner, ownerName, entry.index(), page), contents.length, title);
                 inv.setContents(contents);
                 admin.openInventory(inv);
             });

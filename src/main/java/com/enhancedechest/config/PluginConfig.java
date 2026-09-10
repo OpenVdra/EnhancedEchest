@@ -59,10 +59,9 @@ public final class PluginConfig {
      */
     private volatile boolean renameColorsEnabled;
 
-    // Chest activity log: OPEN/CLOSE snapshots kept in a separate SQLite database, viewed with /ee log.
+    // Chest activity log: one snapshot + diff per visit, kept in a separate SQLite database, viewed with
+    // /ee log. Visits that changed nothing are never recorded (not configurable, to keep the log small).
     private volatile boolean activityLogEnabled;
-    /** When on, a CLOSE that changed nothing is still recorded; off (default) leaves just the OPEN pane. */
-    private volatile boolean activityLogUnchanged;
     /** Delete log entries older than this many days. Read live by the writer, so volatile. */
     private volatile int activityLogRetentionDays;
     /** Keep at most this many entries per player, trimming the oldest. Read live by the writer. */
@@ -176,7 +175,6 @@ public final class PluginConfig {
                 .toList();
         renameColorsEnabled = config.getBoolean("enderchest.features.rename-colors", true);
         activityLogEnabled = config.getBoolean("activity-log.enabled", false);
-        activityLogUnchanged = config.getBoolean("activity-log.log-unchanged", false);
         activityLogRetentionDays = Math.max(1,
                 Math.min(3650, config.getInt("activity-log.retention-days", 30)));
         activityLogMaxEntriesPerPlayer = Math.max(10,
