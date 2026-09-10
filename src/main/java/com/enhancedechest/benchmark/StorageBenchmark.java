@@ -1,10 +1,15 @@
 package com.enhancedechest.benchmark;
 
+import com.enhancedechest.log.ChestLogService;
+import com.enhancedechest.log.ChestLogStore;
 import com.enhancedechest.model.ChestSummary;
 import com.enhancedechest.model.EnderChestData;
+import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.storage.CachedStorage;
 import com.enhancedechest.storage.sql.SqliteStorage;
 import com.enhancedechest.telemetry.Telemetry;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -187,6 +192,7 @@ public final class StorageBenchmark {
             benchmarkFlushThroughput(storage, sender, report);
             benchmarkResidencyFootprint(storage, sender, report);
             benchmarkConcurrentLoad(storage, sender, report);
+            benchmarkActivityLog(sender, report, benchDir);
             leakCheck(storage, sender, report, baseline);
 
             log(sender, report, "");
@@ -673,6 +679,124 @@ public final class StorageBenchmark {
 
         s.flush();
         for (int i = 0; i < 3; i++) s.evictIdle();
+    }
+
+    // ---- BENCHMARK 8: activity log capture cost (the /ee log write path) ------------------------
+    private static void benchmarkActivityLog(CommandSender sender, List<String> report, Path benchDir) {
+        log(sender, report, "");
+        log(sender, report, "### BENCHMARK 8: Activity log capture — the per-visit cost on the Bukkit thread");
+        log(sender, report, "opened()+closed() on ChestLogService over a throwaway log DB (log enabled). The gzip +");
+        log(sender, report, "SQLite insert run on the log's own worker thread; only the main-thread cost is timed.");
+        log(sender, report, String.format("%-30s | %-10s | %-10s | %-10s | %-16s | %-11s",
+                "Scenario", "Avg (us)", "P95 (us)", "P99 (us)", "Throughput (op/s)", "Alloc/op"));
+        log(sender, report, "--------------------------------------------------------------------------------------------------");
+
+        int iterations = 20_000;
+        String logDbName = "benchmark-log-" + Long.toHexString(System.nanoTime()) + ".db";
+        Path logDb = benchDir.resolve(logDbName);
+        Logger quiet = org.slf4j.LoggerFactory.getLogger("echest-benchmark-log");
+        ChestLogStore store = new ChestLogStore(benchDir, logDbName, quiet, Telemetry.NOOP);
+        ChestLogService logSvc;
+        try {
+            store.init();
+            // Queue sized above the run so nothing is dropped — we want the pure main-thread cost, and a
+            // prune interval longer than the run so retention never fires mid-measurement.
+            logSvc = new ChestLogService(new ContainerCodec(), quiet, Telemetry.NOOP, store, true, true,
+                    iterations + 4096, 15, 2_000_000, TimeUnit.HOURS.toMillis(1));
+        } catch (Exception e) {
+            log(sender, report, "  SKIPPED — could not open the throwaway log database: " + e);
+            deleteQuietly(benchDir, logDb);
+            return;
+        }
+
+        UUID actor = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        try {
+            // Peek: opened() then abandon() — the untouched-visit path a session takes when nothing moved.
+            ItemStack[] full = sampleContents(54, 54);
+            reportOp6(sender, report, "Peek, untouched (54 slots)", timeVisit(iterations, () -> {
+                logSvc.opened("Bench", actor, owner, 1, full);
+                logSvc.abandon(actor, owner, 1);
+            }));
+
+            // Changed visit: opened() then closed() with one item removed, so a row is actually written.
+            ItemStack[] small = sampleContents(9, 6);
+            ItemStack[] smallChanged = removeOne(small);
+            reportOp6(sender, report, "Changed visit (9 slots)", timeVisit(iterations, () -> {
+                logSvc.opened("Bench", actor, owner, 1, small);
+                logSvc.closed("Bench", actor, owner, 1, smallChanged);
+            }));
+
+            ItemStack[] fullChanged = removeOne(full);
+            reportOp6(sender, report, "Changed visit (54 slots)", timeVisit(iterations, () -> {
+                logSvc.opened("Bench", actor, owner, 1, full);
+                logSvc.closed("Bench", actor, owner, 1, fullChanged);
+            }));
+        } finally {
+            logSvc.shutdown();   // drains the queue and joins the writer
+            int written = tryCount(store, owner);
+            store.close();
+            deleteQuietly(benchDir, logDb);
+            if (written >= 0) {
+                log(sender, report, "  rows written to the log DB for the changed-visit runs: " + INT_F.format(written)
+                        + " (peeks write nothing).");
+            }
+        }
+    }
+
+    /** Times a visit action over {@code iterations}, with a short warmup, returning its latency/alloc stats. */
+    private static Stats timeVisit(int iterations, Runnable visit) {
+        for (int w = 0; w < 500; w++) visit.run();
+        long[] lat = new long[iterations];
+        long alloc0 = allocatedBytes();
+        long start = System.nanoTime();
+        for (int it = 0; it < iterations; it++) {
+            long t0 = System.nanoTime();
+            visit.run();
+            lat[it] = System.nanoTime() - t0;
+        }
+        return Stats.of(System.nanoTime() - start, lat, allocatedBytes() - alloc0);
+    }
+
+    private static void reportOp6(CommandSender sender, List<String> report, String label, Stats st) {
+        log(sender, report, String.format("%-30s | %-10s | %-10s | %-10s | %-16s | %-11s",
+                label, DF.format(st.avgUs()), DF.format(st.percentileUs(0.95)),
+                DF.format(st.percentileUs(0.99)), INT_F.format(st.throughput()),
+                formatBytes(st.allocPerOp())));
+    }
+
+    /** A chest array of {@code size} slots with {@code filled} leading vanilla stacks (plain, no NBT). */
+    private static ItemStack[] sampleContents(int size, int filled) {
+        Material[] palette = {
+                Material.DIAMOND, Material.IRON_INGOT, Material.GOLD_INGOT, Material.REDSTONE,
+                Material.OAK_LOG, Material.COBBLESTONE, Material.EMERALD, Material.COAL,
+                Material.ARROW, Material.BONE, Material.STRING, Material.GUNPOWDER
+        };
+        ItemStack[] c = new ItemStack[size];
+        for (int i = 0; i < Math.min(filled, size); i++) {
+            c[i] = new ItemStack(palette[i % palette.length], 1 + (i % 64));
+        }
+        return c;
+    }
+
+    /** A copy with its first occupied slot cleared, so the close diff is non-empty and a row is written. */
+    private static ItemStack[] removeOne(ItemStack[] src) {
+        ItemStack[] copy = src.clone();
+        for (int i = 0; i < copy.length; i++) {
+            if (copy[i] != null) {
+                copy[i] = null;
+                break;
+            }
+        }
+        return copy;
+    }
+
+    private static int tryCount(ChestLogStore store, UUID owner) {
+        try {
+            return store.countForOwner(owner);
+        } catch (Exception e) {
+            return -1;
+        }
     }
 
     // ---- leak check: after quiesce, every residency structure must be empty ---------------------
