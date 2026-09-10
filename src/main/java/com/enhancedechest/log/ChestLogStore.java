@@ -78,6 +78,12 @@ public final class ChestLogStore {
 
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
+            // A table left by an incompatible build (the pre-release schema stored one row per OPEN/CLOSE
+            // event, not per visit) can't be migrated in place, and CREATE TABLE IF NOT EXISTS would keep
+            // it — so drop it when it lacks a current column. Audit data only, so nothing precious is lost.
+            if (!hasColumn(conn, "closed_at")) {
+                stmt.execute("DROP TABLE IF EXISTS " + TABLE);
+            }
             stmt.execute("""
                     CREATE TABLE IF NOT EXISTS %s (
                         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,6 +102,17 @@ public final class ChestLogStore {
             stmt.execute("CREATE INDEX IF NOT EXISTS " + TABLE + "_owner_id ON " + TABLE + " (owner, id DESC)");
             stmt.execute("CREATE INDEX IF NOT EXISTS " + TABLE + "_closed ON " + TABLE + " (closed_at)");
         }
+    }
+
+    /** Whether {@code echest_log} exists and has {@code column} (false when the table is absent). */
+    private boolean hasColumn(Connection conn, String column) throws SQLException {
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + TABLE + ")")) {
+            while (rs.next()) {
+                if (column.equalsIgnoreCase(rs.getString("name"))) return true;
+            }
+        }
+        return false;
     }
 
     /** Inserts a batch of events in one transaction. Called only from the log writer thread. */

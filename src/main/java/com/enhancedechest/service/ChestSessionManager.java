@@ -381,9 +381,19 @@ public final class ChestSessionManager {
 
             boolean wasViewer = s.viewers.remove(uuid);
             Location block = s.viewerBlocks.remove(uuid);
+            // When the log captures the closing contents it encodes them to bytes — the exact bytes the
+            // save below would otherwise re-encode. Reuse them for a last-viewer save so a changed close
+            // pays for one encode, not two (both already run here on the global thread).
+            byte[] reuse = null;
             if (wasViewer && s.inv != null) {
                 if (activityLog.needsCapture(s.touched)) {
-                    activityLog.closed(player.getName(), uuid, s.owner, s.index, s.inv.getContents());
+                    ChestLogService.Capture cap = activityLog.capture(s.inv.getContents());
+                    if (cap != null) {
+                        activityLog.closed(player.getName(), uuid, s.owner, s.index, cap);
+                        reuse = cap.blob();
+                    } else {
+                        activityLog.abandon(uuid, s.owner, s.index);
+                    }
                 } else {
                     activityLog.abandon(uuid, s.owner, s.index);
                 }
@@ -396,7 +406,7 @@ public final class ChestSessionManager {
             if (s.closing) return;                         // force-close path owns persistence
             if (s.viewers.isEmpty() && s.waiting.isEmpty()) {
                 sessions.remove(key, s);
-                persist(s);
+                persist(s, reuse);
             }
         });
     }
@@ -408,6 +418,16 @@ public final class ChestSessionManager {
      * An emptied TEMP chest removes itself instead of persisting an empty row.
      */
     private void persist(Session s) {
+        persist(s, null);
+    }
+
+    /**
+     * As {@link #persist(Session)} but accepting bytes already encoded from the same contents on this
+     * thread (the log's closing capture). When non-null they are used verbatim instead of re-encoding —
+     * identical output, one fewer full-chest serialization on a changed close. Null falls back to
+     * encoding here.
+     */
+    private void persist(Session s, byte @Nullable [] preEncoded) {
         Inventory inv = s.inv;
         if (inv == null) return;                           // never became ready; nothing to save
         UUID owner = s.owner;
@@ -423,16 +443,19 @@ public final class ChestSessionManager {
             return;
         }
 
-        byte[] encoded;
-        try {
-            encoded = codec.encode(inv.getContents());
-        } catch (Exception e) {
-            logger.error("Codec encode failure for {} chest {} — data NOT saved to prevent corruption",
-                    owner, index, e);
-            telemetry.error(e, "chest.save-encode");
-            return;
+        byte[] bytes = preEncoded;
+        if (bytes == null) {
+            try {
+                bytes = codec.encode(inv.getContents());
+            } catch (Exception e) {
+                logger.error("Codec encode failure for {} chest {} — data NOT saved to prevent corruption",
+                        owner, index, e);
+                telemetry.error(e, "chest.save-encode");
+                return;
+            }
         }
 
+        final byte[] encoded = bytes;   // effectively final for the async save lambda
         SaveKey key = new SaveKey(owner, index);
         CompletableFuture<Void> future = db.run(() -> {
             try {
@@ -572,8 +595,8 @@ public final class ChestSessionManager {
                         // Normally InventoryCloseEvent already removed/logged every viewer. This loop
                         // covers an offline viewer or a platform where the forced close callback arrives
                         // later; closed() is idempotent because it consumes the matching OPEN cycle.
-                        logRemainingViewersClosed(s);
-                        persist(s);                        // authoritative state; all viewers now closed
+                        byte[] reuse = logRemainingViewersClosed(s);
+                        persist(s, reuse);                 // authoritative state; all viewers now closed
                         sessions.remove(key, s);
                         done.complete(null);
                     }));
@@ -602,14 +625,17 @@ public final class ChestSessionManager {
      * without individual close events (force-close, shutdown). The shared inventory is captured
      * <i>once</i> and reused for all of them — they are all looking at the same contents, and the
      * capture is the expensive half — so the cost stays O(chest size), not O(viewers).
+     *
+     * @return the encoded closing bytes so the following {@code persist} can reuse them instead of
+     *         re-encoding the same contents, or {@code null} when nothing was captured
      */
-    private void logRemainingViewersClosed(Session s) {
-        if (s.inv == null || s.viewers.isEmpty() || !activityLog.isRecording()) return;
+    private byte @Nullable [] logRemainingViewersClosed(Session s) {
+        if (s.inv == null || s.viewers.isEmpty() || !activityLog.isRecording()) return null;
         if (!activityLog.needsCapture(s.touched)) {
             for (UUID viewer : new ArrayList<>(s.viewers)) {
                 activityLog.abandon(viewer, s.owner, s.index);
             }
-            return;
+            return null;
         }
         ChestLogService.Capture snapshot = activityLog.capture(s.inv.getContents());
         if (snapshot == null) {
@@ -617,13 +643,14 @@ public final class ChestSessionManager {
             for (UUID viewer : new ArrayList<>(s.viewers)) {
                 activityLog.abandon(viewer, s.owner, s.index);
             }
-            return;
+            return null;
         }
         for (UUID viewer : new ArrayList<>(s.viewers)) {
             Player player = Bukkit.getPlayer(viewer);
             activityLog.closed(player != null ? player.getName() : null,
                     viewer, s.owner, s.index, snapshot);
         }
+        return snapshot.blob();
     }
 
     private boolean isInventoryEmpty(Inventory inventory) {
@@ -643,8 +670,8 @@ public final class ChestSessionManager {
      */
     private void persistOpenSessions() {
         for (Session s : sessions.values()) {
-            if (s.ready) logRemainingViewersClosed(s);
-            if (s.ready && !s.closing) persist(s);
+            byte[] reuse = s.ready ? logRemainingViewersClosed(s) : null;
+            if (s.ready && !s.closing) persist(s, reuse);
         }
         sessions.clear();
     }
