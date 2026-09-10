@@ -35,18 +35,21 @@ public final class AutosaveService {
     private final Scheduler scheduler;
     private final Logger logger;
     private final Telemetry telemetry;
+    /** Gates the per-tick "auto-saved N rows" info line to dev builds only (see {@code BuildInfo}). */
+    private final boolean devBuild;
 
     // Touched only on the main thread (start/stop/reschedule).
     private long intervalMillis;
     private ScheduledTask task;
 
     public AutosaveService(CachedStorage storage, Scheduler scheduler, Logger logger,
-                           Telemetry telemetry, long intervalMillis) {
+                           Telemetry telemetry, long intervalMillis, boolean devBuild) {
         this.storage        = storage;
         this.scheduler      = scheduler;
         this.logger         = logger;
         this.telemetry      = telemetry;
         this.intervalMillis = intervalMillis;
+        this.devBuild       = devBuild;
     }
 
     /** Starts the repeating async autosave. */
@@ -98,7 +101,7 @@ public final class AutosaveService {
             long start = System.currentTimeMillis();
             int rows = storage.flush();
             int evicted = storage.evictIdle();
-            if (rows > 0 || evicted > 0) {
+            if (devBuild && (rows > 0 || evicted > 0)) {
                 logger.info("Auto-saved {} changed row(s) and released {} offline player(s) "
                         + "from memory in {} ms", rows, evicted, System.currentTimeMillis() - start);
             }

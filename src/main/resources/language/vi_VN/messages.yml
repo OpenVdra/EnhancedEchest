@@ -1,7 +1,7 @@
 # Tin nhắn chat. {prefix} và các token {placeholder} do plugin điền vào.
 # Dùng thẻ MiniMessage (<red>, <#RRGGBB>) hoặc mã màu '&' cũ đều được.
 
-prefix: '<#2C3F45>EnhancedEchest <dark_gray>⏩ <reset>'
+prefix: '<gradient:#33474A:#A9CE86>EnhancedEchest</gradient> <dark_gray>⏩ <reset>'
 
 command:
   not-player: '{prefix}Chỉ người chơi mới có thể dùng rương ender.'

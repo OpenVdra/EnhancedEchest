@@ -240,7 +240,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         // Periodic write-back of dirty in-memory rows to the database + eviction of flushed offline
         // players (the final full save happens in CachedStorage.close() at shutdown).
         autosaveService = new AutosaveService(storage, scheduler, getSLF4JLogger(), telemetry,
-                pluginConfig.getAutosaveIntervalMillis());
+                pluginConfig.getAutosaveIntervalMillis(), BuildInfo.isDevBuild(this));
         autosaveService.start();
 
         var pm = getServer().getPluginManager();

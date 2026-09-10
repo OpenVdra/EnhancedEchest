@@ -12,7 +12,7 @@ configurations {
 }
 
 group = "com.enhancedechest"
-version = "1.2.0"
+version = "1.2.1"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -140,6 +140,14 @@ tasks.build {
     dependsOn(tasks.shadowJar)
 }
 
+// A build is a "dev" build when its task graph includes run-paper's `runServer` (i.e. the developer
+// is launching a local test server). A plain `build`/`shadowJar` — what produces the jar shipped to
+// users — leaves this false. Baked into build-info.properties below so the plugin can gate
+// developer-only logging out of release jars.
+val devBuild = gradle.startParameter.taskNames.any {
+    it.substringAfterLast(':').equals("runServer", ignoreCase = true)
+}
+
 tasks.processResources {
     val props = mapOf("version" to version)
     inputs.properties(props)
@@ -151,6 +159,11 @@ tasks.processResources {
     inputs.property("faststatsToken", faststatsToken)
     filesMatching("faststats.properties") {
         expand("faststatsToken" to faststatsToken)
+    }
+    // Bake the dev/release flag into build-info.properties (see devBuild above).
+    inputs.property("devBuild", devBuild)
+    filesMatching("build-info.properties") {
+        expand("devBuild" to devBuild)
     }
 }
 

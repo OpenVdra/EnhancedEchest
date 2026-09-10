@@ -2,6 +2,12 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.2.1 - 2026-09-10
+
+### Changed
+
+- The periodic "Auto-saved ... rows" line no longer appears in the server console. Saving still runs on schedule, only the routine message is gone.
+
 ## 1.2.0 - 2026-08-03
 
 ### Fixed
