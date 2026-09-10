@@ -266,7 +266,7 @@ Records every open and close of an ender chest, with a snapshot of what it held 
 Turn the activity log on or off. Off by default. Takes effect on <code>/ee reload</code>. A visit that changed nothing is never recorded, so the log stays small.
 </ConfigProperty>
 
-<ConfigProperty name="retention-days" value="30" type="number">
+<ConfigProperty name="retention-days" value="15" type="number">
 Delete log entries older than this many days. Takes effect on <code>/ee reload</code>.
 </ConfigProperty>
 

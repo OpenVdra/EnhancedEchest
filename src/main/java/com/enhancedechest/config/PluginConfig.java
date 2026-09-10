@@ -176,7 +176,7 @@ public final class PluginConfig {
         renameColorsEnabled = config.getBoolean("enderchest.features.rename-colors", true);
         activityLogEnabled = config.getBoolean("activity-log.enabled", false);
         activityLogRetentionDays = Math.max(1,
-                Math.min(3650, config.getInt("activity-log.retention-days", 30)));
+                Math.min(3650, config.getInt("activity-log.retention-days", 15)));
         activityLogMaxEntriesPerPlayer = Math.max(10,
                 Math.min(1_000_000, config.getInt("activity-log.max-entries-per-player", 2000)));
         activityLogPruneIntervalMillis = parseDuration(

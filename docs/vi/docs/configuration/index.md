@@ -266,7 +266,7 @@ Ghi lại mỗi lần mở và đóng một rương ender, kèm ảnh chụp n�
 Bật hoặc tắt nhật ký hoạt động. Mặc định tắt. Có hiệu lực khi chạy <code>/ee reload</code>. Lượt không thay đổi gì sẽ không được ghi, nên nhật ký luôn gọn.
 </ConfigProperty>
 
-<ConfigProperty name="retention-days" value="30" type="number">
+<ConfigProperty name="retention-days" value="15" type="number">
 Xóa các mục nhật ký cũ hơn bấy nhiêu ngày. Có hiệu lực khi chạy <code>/ee reload</code>.
 </ConfigProperty>
 

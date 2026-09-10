@@ -129,7 +129,7 @@ activity-log:
   # use 'backup' for that.
   enabled: false
   # Delete log entries older than this many days.
-  retention-days: 30
+  retention-days: 15
   # Also keep at most this many entries per player, deleting the oldest beyond that. Stops one very
   # active player (or a bot) from filling the log.
   max-entries-per-player: 2000
