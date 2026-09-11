@@ -27,15 +27,19 @@ public final class LogMenuHolder implements InventoryHolder {
     private final int page;
     /** Total number of pages, so the listener knows whether an older/newer page exists. */
     private final int pageCount;
+    /** Active item-search filter, or {@code null} when the full log is shown. */
+    @Nullable
+    private final String query;
     /** Menu slot &rarr; the event whose pane sits there. */
     private final Map<Integer, LogEntry> slotEntries;
 
     public LogMenuHolder(UUID owner, String ownerName, int page, int pageCount,
-                         Map<Integer, LogEntry> slotEntries) {
+                         @Nullable String query, Map<Integer, LogEntry> slotEntries) {
         this.owner = owner;
         this.ownerName = ownerName;
         this.page = page;
         this.pageCount = pageCount;
+        this.query = query;
         this.slotEntries = slotEntries;
     }
 

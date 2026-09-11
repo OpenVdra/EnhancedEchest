@@ -793,7 +793,7 @@ public final class StorageBenchmark {
 
     private static int tryCount(ChestLogStore store, UUID owner) {
         try {
-            return store.countForOwner(owner);
+            return store.countForOwner(owner, null);
         } catch (Exception e) {
             return -1;
         }

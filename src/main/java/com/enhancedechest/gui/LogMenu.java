@@ -38,9 +38,11 @@ public final class LogMenu {
 
     private static final int SIZE = 54;
     private static final int CONTROL_ROW = 45;
-    /** Bottom-row control slots the listener recognises: newer page, info, older page. */
+    /** Bottom-row control slots the listener recognises. */
     public static final int SLOT_PREV = 45;
+    public static final int SLOT_SEARCH = 47;
     private static final int SLOT_INFO = 49;
+    public static final int SLOT_CLEAR = 51;
     public static final int SLOT_NEXT = 53;
 
     /** Cap on diff lines shown in a pane's lore, so a bulk deposit can't produce an enormous tooltip. */
@@ -65,9 +67,9 @@ public final class LogMenu {
      * @param pageCount total pages
      */
     public Inventory build(Locale locale, UUID owner, String ownerName, List<LogEntry> entries,
-                           int page, int pageCount) {
+                           int page, int pageCount, String query) {
         Map<Integer, LogEntry> slotEntries = new HashMap<>();
-        LogMenuHolder holder = new LogMenuHolder(owner, ownerName, page, pageCount, slotEntries);
+        LogMenuHolder holder = new LogMenuHolder(owner, ownerName, page, pageCount, query, slotEntries);
         Component title = lang.getGui(locale, "log.title", "player", ownerName);
         Inventory inv = Bukkit.createInventory(holder, SIZE, title);
 
@@ -78,8 +80,9 @@ public final class LogMenu {
             slotEntries.put(i, entry);
         }
 
-        // Controls: newer/older arrows only when such a page exists; an info book in the middle; the rest
-        // of the bottom row is inert filler so the player can't drop items into empty control cells.
+        // Controls: newer/older arrows only when such a page exists; a search button; a clear button only
+        // while a search is active; an info book in the middle; the rest of the bottom row is inert filler
+        // so the player can't drop items into empty control cells.
         ItemStack filler = filler();
         for (int slot = CONTROL_ROW; slot < SIZE; slot++) inv.setItem(slot, filler);
         if (page > 0) {
@@ -88,7 +91,11 @@ public final class LogMenu {
         if (page < pageCount - 1) {
             inv.setItem(SLOT_NEXT, nav(locale, Material.ARROW, "log.nav-older"));
         }
-        inv.setItem(SLOT_INFO, info(locale, ownerName, page, pageCount));
+        inv.setItem(SLOT_SEARCH, nav(locale, Material.SPYGLASS, "log.nav-search"));
+        if (query != null) {
+            inv.setItem(SLOT_CLEAR, nav(locale, Material.BARRIER, "log.nav-clear"));
+        }
+        inv.setItem(SLOT_INFO, info(locale, ownerName, page, pageCount, query));
         return inv;
     }
 
@@ -151,13 +158,20 @@ public final class LogMenu {
         return item;
     }
 
-    private ItemStack info(Locale locale, String ownerName, int page, int pageCount) {
+    private ItemStack info(Locale locale, String ownerName, int page, int pageCount, String query) {
         ItemStack item = new ItemStack(Material.BOOK);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(noItalic(lang.getGui(locale, "log.info",
-                "player", ownerName,
-                "page", Integer.toString(page + 1),
-                "pages", Integer.toString(Math.max(1, pageCount)))));
+        Component name = query == null
+                ? lang.getGui(locale, "log.info",
+                        "player", ownerName,
+                        "page", Integer.toString(page + 1),
+                        "pages", Integer.toString(Math.max(1, pageCount)))
+                : lang.getGui(locale, "log.info-search",
+                        "player", ownerName,
+                        "query", query,
+                        "page", Integer.toString(page + 1),
+                        "pages", Integer.toString(Math.max(1, pageCount)));
+        meta.displayName(noItalic(name));
         item.setItemMeta(meta);
         return item;
     }

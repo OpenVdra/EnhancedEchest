@@ -61,13 +61,31 @@ public final class LogMenuListener implements Listener {
     private void handleMenuClick(Player player, LogMenuHolder holder, int slot) {
         LogEntry entry = holder.entryAt(slot);
         if (entry != null) {
-            viewer.openSnapshot(player, holder.getOwner(), holder.getOwnerName(), entry, holder.getPage());
+            viewer.openSnapshot(player, holder.getOwner(), holder.getOwnerName(), entry,
+                    holder.getPage(), holder.getQuery());
             return;
         }
-        if (slot == LogMenu.SLOT_PREV && holder.getPage() > 0) {
-            viewer.openLog(player, holder.getOwner(), holder.getOwnerName(), holder.getPage() - 1);
-        } else if (slot == LogMenu.SLOT_NEXT && holder.getPage() < holder.getPageCount() - 1) {
-            viewer.openLog(player, holder.getOwner(), holder.getOwnerName(), holder.getPage() + 1);
+        switch (slot) {
+            case LogMenu.SLOT_PREV -> {
+                if (holder.getPage() > 0) {
+                    viewer.openLog(player, holder.getOwner(), holder.getOwnerName(),
+                            holder.getPage() - 1, holder.getQuery());
+                }
+            }
+            case LogMenu.SLOT_NEXT -> {
+                if (holder.getPage() < holder.getPageCount() - 1) {
+                    viewer.openLog(player, holder.getOwner(), holder.getOwnerName(),
+                            holder.getPage() + 1, holder.getQuery());
+                }
+            }
+            case LogMenu.SLOT_SEARCH ->
+                    viewer.openSearchDialog(player, holder.getOwner(), holder.getOwnerName(), holder.getQuery());
+            case LogMenu.SLOT_CLEAR -> {
+                if (holder.getQuery() != null) {
+                    viewer.openLog(player, holder.getOwner(), holder.getOwnerName(), 0, null);
+                }
+            }
+            default -> { /* filler / info — nothing to do */ }
         }
     }
 
@@ -114,6 +132,6 @@ public final class LogMenuListener implements Listener {
         if (!player.getItemOnCursor().isEmpty()) {
             player.setItemOnCursor(null);
         }
-        viewer.openLog(player, holder.getOwner(), holder.getOwnerName(), holder.getPage());
+        viewer.openLog(player, holder.getOwner(), holder.getOwnerName(), holder.getPage(), holder.getQuery());
     }
 }

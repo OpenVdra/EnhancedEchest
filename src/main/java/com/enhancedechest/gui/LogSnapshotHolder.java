@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -27,12 +28,16 @@ public final class LogSnapshotHolder implements InventoryHolder {
     private final int index;
     /** Log viewer page to return to when this preview is closed. */
     private final int page;
+    /** Active search filter to restore on return, or {@code null} for the full log. */
+    @Nullable
+    private final String query;
 
-    public LogSnapshotHolder(UUID owner, String ownerName, int index, int page) {
+    public LogSnapshotHolder(UUID owner, String ownerName, int index, int page, @Nullable String query) {
         this.owner = owner;
         this.ownerName = ownerName;
         this.index = index;
         this.page = page;
+        this.query = query;
     }
 
     @Override

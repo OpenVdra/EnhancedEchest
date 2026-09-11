@@ -88,17 +88,27 @@ dialog:
 
 # ===== Chest activity log viewer (/ee log <player>) =====
 log:
-  # Window title. {player} = the chest owner.
-  title: '{player}''s Chest Log'
+  # Window title. Kept short so long names don't overflow the inventory bar. {player} = the owner.
+  title: 'Log: {player}'
   # One pane per visit. {actor} = who opened it, {time} = when it was closed.
   pane: '<gold>{actor} <dark_gray>· <gray>{time}'
   # Pane lore. {opened}/{closed} are clock times, {index}/{size} the chest number and slots.
   lore-time: '<gray>Open {opened} <dark_gray>→ <gray>{closed}'
   lore-chest: '<gray>Chest #{index} <dark_gray>· <gray>{size} slots'
   lore-click: '<yellow>Click to view contents'
-  # Navigation controls and the info book. {page}/{pages} are 1-based.
+  # Navigation and control buttons. {page}/{pages} are 1-based.
   nav-newer: '<green>« Newer'
   nav-older: '<green>Older »'
+  nav-search: '<yellow>Search items'
+  nav-clear: '<red>Clear search'
   info: '<gold>{player} <gray>· Page {page}/{pages}'
+  # Info book while a search is active. {query} = the searched text.
+  info-search: '<gold>{player} <gray>· "{query}" · Page {page}/{pages}'
   # Snapshot preview window title. {index} = chest number, {time} = when it was closed.
-  snapshot-title: '{player} #{index} · {time}'
+  snapshot-title: '#{index} · {time}'
+  # Search dialog: find visits whose change list mentions an item.
+  search-title: 'Search chest log'
+  search-body: 'Type an item name to find visits that added or took it.'
+  search-label: 'Item'
+  search-run: 'Search'
+  search-back: 'Back'

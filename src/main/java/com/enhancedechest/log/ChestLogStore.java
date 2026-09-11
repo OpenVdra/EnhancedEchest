@@ -147,12 +147,17 @@ public final class ChestLogStore {
         }
     }
 
-    /** Number of log rows for an owner, for pagination. */
-    public int countForOwner(UUID owner) throws SQLException {
+    /**
+     * Number of log rows for an owner, for pagination. When {@code query} is non-null the count is
+     * limited to visits whose change list mentions it (case-insensitive substring of the diff).
+     */
+    public int countForOwner(UUID owner, @Nullable String query) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + TABLE + " WHERE owner = ?"
+                + (query == null ? "" : " AND LOWER(diff) LIKE ? ESCAPE '\\'");
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT COUNT(*) FROM " + TABLE + " WHERE owner = ?")) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, owner.toString());
+            if (query != null) ps.setString(2, likePattern(query));
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }
@@ -161,17 +166,21 @@ public final class ChestLogStore {
 
     /**
      * One page of an owner's log, newest first. Deliberately omits the snapshot blob — the list only
-     * needs the headline and diff; the blob is fetched by {@link #loadSnapshot} on click.
+     * needs the headline and diff; the blob is fetched by {@link #loadSnapshot} on click. When
+     * {@code query} is non-null, only visits whose diff mentions it are returned.
      */
-    public List<LogEntry> page(UUID owner, int offset, int limit) throws SQLException {
+    public List<LogEntry> page(UUID owner, @Nullable String query, int offset, int limit) throws SQLException {
         String sql = "SELECT id, opened_at, closed_at, actor_name, chest_index, size, diff FROM " + TABLE
-                + " WHERE owner = ? ORDER BY id DESC LIMIT ? OFFSET ?";
+                + " WHERE owner = ?" + (query == null ? "" : " AND LOWER(diff) LIKE ? ESCAPE '\\'")
+                + " ORDER BY id DESC LIMIT ? OFFSET ?";
         List<LogEntry> out = new ArrayList<>(Math.min(limit, 64));
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, owner.toString());
-            ps.setInt(2, limit);
-            ps.setInt(3, offset);
+            int p = 1;
+            ps.setString(p++, owner.toString());
+            if (query != null) ps.setString(p++, likePattern(query));
+            ps.setInt(p++, limit);
+            ps.setInt(p, offset);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     out.add(new LogEntry(
@@ -237,6 +246,13 @@ public final class ChestLogStore {
     }
 
     // ---- helpers ----
+
+    /** Builds a case-insensitive {@code LIKE} pattern that matches the query as a literal substring. */
+    private static String likePattern(String query) {
+        String escaped = query.toLowerCase(java.util.Locale.ROOT)
+                .replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        return "%" + escaped + "%";
+    }
 
     private static List<DiffLine> decodeDiff(@Nullable String diff) {
         if (diff == null || diff.isEmpty()) return List.of();

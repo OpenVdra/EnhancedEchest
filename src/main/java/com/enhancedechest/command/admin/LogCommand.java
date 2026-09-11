@@ -37,7 +37,7 @@ public final class LogCommand {
                         admin.sendMessage(lang.get("admin.player-not-found", "player", playerName));
                         return;
                     }
-                    plugin.getLogViewer().openLog(admin, uuid, playerName, 0);
+                    plugin.getLogViewer().openLog(admin, uuid, playerName, 0, null);
                 });
         return 1;
     }
