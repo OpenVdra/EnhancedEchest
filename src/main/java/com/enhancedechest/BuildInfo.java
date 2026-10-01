@@ -10,7 +10,7 @@ import java.util.Properties;
  * Gradle's {@code processResources} (see {@code build.gradle.kts}).
  *
  * <p>{@link #isDevBuild(JavaPlugin)} is {@code true} only for local developer runs
- * ({@code ./gradlew runServer}) and {@code false} in the jar shipped to users, so developer-only
+ * ({@code ./gradlew runServer} or {@code runDev}) and {@code false} in the jar shipped to users, so developer-only
  * logging can be gated out of release builds.
  */
 public final class BuildInfo {

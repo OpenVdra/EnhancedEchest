@@ -65,7 +65,7 @@ sender and written to `benchmark/storage-benchmark-report.txt`.
 
 - **Gated to dev builds by construction.** The command node is added to the `/ee` tree only when
   `EnhancedEchestBootstrap.DEV_BUILD` is true — read from the same baked-in `build-info.properties`
-  `dev` flag as [BuildInfo](../BuildInfo.java), which is only true for `./gradlew runServer`. It is
+  `dev` flag as [BuildInfo](../BuildInfo.java), which is only true for `./gradlew runServer` / `runDev`. It is
   **not registered at all** in a release jar, so it cannot be run on a production server.
 - **Off the main thread.** The run is heavy (real disk I/O, `System.gc()` settling, an ~8s
   concurrency phase), so `BenchmarkCommand` dispatches it to a dedicated daemon thread and streams
