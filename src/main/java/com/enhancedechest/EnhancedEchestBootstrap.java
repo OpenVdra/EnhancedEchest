@@ -55,7 +55,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     private static final String ADMIN_BENCHMARK_PERMISSION = "enhancedechest.admin.benchmark";
 
     /**
-     * True only for a local developer run ({@code ./gradlew runServer}), read from the
+     * True only for a local developer run ({@code ./gradlew runServer} or {@code runDev}), read from the
      * {@code build-info.properties} baked in at build time — the same flag {@link BuildInfo} reads at
      * runtime, but resolved here from the bootstrap's own classloader since the plugin instance does
      * not exist yet. Any failure to read the resource is treated as a release build (the safe default),

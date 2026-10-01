@@ -3,7 +3,7 @@ import java.util.Properties
 plugins {
     java
     alias(libs.plugins.shadow)
-    alias(libs.plugins.run.paper)
+    alias(libs.plugins.mc.run)
 }
 
 val shade: Configuration = configurations.create("shade")
@@ -106,12 +106,13 @@ tasks.build {
     dependsOn(tasks.shadowJar)
 }
 
-// A build is a "dev" build when its task graph includes run-paper's `runServer` (i.e. the developer
-// is launching a local test server). A plain `build`/`shadowJar` — what produces the jar shipped to
-// users — leaves this false. Baked into build-info.properties below so the plugin can gate
-// developer-only logging out of release jars.
+// A build is a "dev" build when the requested tasks include mc-run's `runServer` (or a `runServer*`
+// variant) or `runDev`, i.e. the developer is launching a local test server. A plain
+// `build`/`shadowJar` (what produces the jar shipped to users) leaves this false. Baked into
+// build-info.properties below so the plugin can gate developer-only logging out of release jars.
 val devBuild = gradle.startParameter.taskNames.any {
-    it.substringAfterLast(':').equals("runServer", ignoreCase = true)
+    val name = it.substringAfterLast(':')
+    name.startsWith("runServer", ignoreCase = true) || name.equals("runDev", ignoreCase = true)
 }
 
 tasks.processResources {
@@ -133,9 +134,20 @@ tasks.processResources {
     }
 }
 
-tasks.runServer {
-    downloadPlugins {
-        modrinth("viaversion", "5.10.0")
+// Local dev server and client (mc-run): ./gradlew runServer | runClient | runDev
+mcRun {
+    minecraftVersion = "1.21.11"
+    server {
+        type = PAPER
+        acceptEula = true
+        // Keep the existing run/ directory (world, configs) from the run-paper days.
+        runDirectory = layout.projectDirectory.dir("run")
+        downloadPlugins {
+            modrinth("viaversion", "5.10.0")
+        }
     }
-    minecraftVersion("1.21.11")
+    client {
+        username = "Dev"
+        gameDirectory = layout.projectDirectory.dir("run/client")
+    }
 }

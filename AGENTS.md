@@ -15,6 +15,19 @@ Produces `EnhancedEchest-<version>.jar` via `shadowJar` (the plain `jar` is not 
 `build.gradle.kts` also copies the jar into a local `TestServer/plugins` directory
 (`shadowJar.destinationDirectory`) — adjust that path if your test server lives elsewhere.
 
+Local server and client come from the [mc-run](https://github.com/n1ght3r/mc-run) Gradle plugin
+(`mcRun { }` block in `build.gradle.kts`, Paper 1.21.11 + ViaVersion):
+
+```bash
+./gradlew runServer   # Paper dev server in run/, console attached
+./gradlew runClient   # vanilla client (offline account "Dev") in run/client, joins localhost
+./gradlew runDev      # server, then the client once the server is ready; closing the client stops both
+```
+
+`runServer` and `runDev` mark the build as a dev build (`devBuild` in `build.gradle.kts`), which
+enables `/ee benchmark` and dev-only logging. The server runs with `online-mode=false` so the
+offline client can join.
+
 ```bash
 ./gradlew test        # unit tests; excludes **/*Simulation*
 ./gradlew stressTest  # 300–500 player concurrency/perf/leak simulation, no server needed
