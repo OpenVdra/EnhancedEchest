@@ -2,7 +2,7 @@
 
 EnhancedEchest thay rương Ender vanilla 27 ô bằng một kho đồ có thể cấu hình lên tới **54 ô**.
 
-<img class="feature-shot" alt="An enhanced ender chest with 54 slots" src="https://github.com/user-attachments/assets/a1f8a60e-5f31-4a30-b91b-07c5ba9243bf" />
+<img class="feature-shot" alt="An enhanced ender chest with 54 slots" src="/screenshots/chest-54.webp" />
 
 ## Cùng Khối, Nhiều Không Gian Hơn
 
@@ -20,3 +20,30 @@ Kích thước mặc định cho rương đầu tiên của người chơi đư�
 - Giá trị không hợp lệ được làm tròn về kích thước gần nhất
 - Mặc định là `54` (rương đôi đầy đủ)
 - Ghi đè theo từng người chơi bằng quyền, xem trang [Rương Theo Quyền](/vi/docs/access/permission-chests#default-size-permission)
+
+<div class="size-gallery">
+  <figure>
+    <img alt="An ender chest with 9 slots" src="/screenshots/chest-9.webp" />
+    <figcaption>9 ô</figcaption>
+  </figure>
+  <figure>
+    <img alt="An ender chest with 18 slots" src="/screenshots/chest-18.webp" />
+    <figcaption>18 ô</figcaption>
+  </figure>
+  <figure>
+    <img alt="An ender chest with 27 slots" src="/screenshots/chest-27.webp" />
+    <figcaption>27 ô</figcaption>
+  </figure>
+  <figure>
+    <img alt="An ender chest with 36 slots" src="/screenshots/chest-36.webp" />
+    <figcaption>36 ô</figcaption>
+  </figure>
+  <figure>
+    <img alt="An ender chest with 45 slots" src="/screenshots/chest-45.webp" />
+    <figcaption>45 ô</figcaption>
+  </figure>
+  <figure>
+    <img alt="An ender chest with 54 slots" src="/screenshots/chest-54.webp" />
+    <figcaption>54 ô</figcaption>
+  </figure>
+</div>

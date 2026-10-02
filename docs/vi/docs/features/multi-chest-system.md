@@ -3,7 +3,7 @@
 Người chơi không còn bị giới hạn ở một rương Ender. Mỗi người chơi có thể sở hữu nhiều rương, quản lý qua menu trong game.
 
 <figure class="feature-figure">
-  <img alt="The chest list menu showing several owned ender chests" src="https://github.com/user-attachments/assets/f693c05c-7427-489b-aa41-b68f3341cda1" />
+  <img alt="The chest list menu showing several owned ender chests" src="/screenshots/eclist.webp" />
   <figcaption>Với hai rương trở lên, mở rương Ender sẽ bật lên menu liệt kê mọi rương bạn sở hữu, kèm số ô của từng rương.</figcaption>
 </figure>
 
@@ -29,17 +29,17 @@ Có thể tắt từng mục cho toàn máy chủ trong phần `features` thuộ
 
 <div class="placeholder-row">
   <figure>
-    <img width="1162" height="1067" alt="A chest's management menu with rename, icon, and set-as-main options" src="https://github.com/user-attachments/assets/76bc97fa-1dcb-4e39-8bde-9504ebc4d768" />
+    <img alt="A chest's management menu with rename, icon, and set-as-main options" src="/screenshots/chest-detail.webp" />
     <figcaption>Màn hình quản lý của một rương: đổi tên, chọn biểu tượng, hoặc đặt làm rương chính.</figcaption>
   </figure>
   <figure>
-    <img width="1013" height="1067" alt="The rename prompt for an ender chest" src="https://github.com/user-attachments/assets/573814dd-6f58-4e9c-b65a-58842e3ba2a2" />
+    <img alt="The rename prompt for an ender chest" src="/screenshots/rename.webp" />
     <figcaption>Đổi tên một rương; tên bạn nhập sẽ trở thành tiêu đề kho đồ của nó.</figcaption>
   </figure>
 </div>
 
 <figure class="feature-figure">
-  <img width="1802" height="1068" alt="The searchable item picker for choosing a chest icon" src="https://github.com/user-attachments/assets/ce6b235b-980c-4403-86d3-503c25f32d77" />
+  <img alt="The searchable item picker for choosing a chest icon" src="/screenshots/icon-picker.webp" />
   <figcaption>Chọn bất kỳ vật phẩm nào làm biểu tượng cho rương với bộ chọn vật phẩm có tìm kiếm.</figcaption>
 </figure>
 
@@ -54,3 +54,8 @@ Phát rương theo rank thay vì bằng lệnh. Quyền `enhancedechest.addition
 ## Xem Rương Của Người Chơi Khác
 
 Với `/ee view <player>` quản trị viên mở rương của một người chơi, dù trực tuyến hay ngoại tuyến, ngay trong menu quản lý mà chủ rương thấy. Một rương mở thẳng menu của nó; với nhiều rương, menu lựa chọn sẽ hiện ra. Cấp `admin.view` để xem chỉ-đọc, thêm `admin.edit` để lấy/thêm vật phẩm và để đổi tên, đổi biểu tượng, hoặc sắp xếp rương, và thêm `admin.clear` để có nút **Dọn rương** (kèm xác nhận) làm trống rương.
+
+<figure class="feature-figure">
+  <img alt="An admin viewing another player's chest, with the Clear chest button" src="/screenshots/admin-view-detail.webp" />
+  <figcaption>Quản trị viên xem rương của người chơi khác, có thêm nút Dọn rương chỉ dành cho quản trị viên.</figcaption>
+</figure>

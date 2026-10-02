@@ -250,6 +250,36 @@
     color: var(--vp-c-text-3);
 }
 
+/* Grid of chest screenshots of different heights (one per size). Unlike
+   .placeholder-row it never crops, since the chest panel fills most of the shot. */
+.size-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: end;
+    margin: 24px 0;
+}
+
+.size-gallery figure {
+    margin: 0;
+    text-align: center;
+}
+
+.size-gallery img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--vp-c-border);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+
+.size-gallery figcaption {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--vp-c-text-3);
+}
+
 /* Centered, framed screenshot. Clears the CardGrid above it and scales down
    gracefully on narrow viewports instead of using fixed width/height. */
 .feature-shot {

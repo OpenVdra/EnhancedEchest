@@ -18,9 +18,19 @@ Mỗi lượt là một ô, một rương ender, mới nhất trước:
 - Phần mô tả cho biết rương mở trong bao lâu, số thứ tự rương, và những gì đã thay đổi khi mở: dòng `+` cho mỗi vật phẩm được bỏ vào rương, dòng `-` cho mỗi vật phẩm được lấy ra, cùng trên một mô tả.
 - Hàng dưới cùng dùng để lật sang các lượt cũ hơn và mới hơn.
 
+<figure class="feature-figure">
+  <img alt="The chest log viewer with one visit showing the items added" src="/screenshots/log-tooltip.webp" />
+  <figcaption>Mỗi lượt liệt kê những gì đã được bỏ vào hoặc lấy ra khi rương đang mở.</figcaption>
+</figure>
+
 ## Xem rương tại một thời điểm
 
 Nhấn vào một ô bất kỳ để xem chính xác nội dung rương khi lượt đó kết thúc. Có thể nhặt và di chuyển vật phẩm trong bản xem này để kiểm tra, nhưng không thể lấy ra khỏi nó, và đóng lại không thay đổi gì. Bản ghi đã lưu không bao giờ bị sửa đổi. Bấm Esc hoặc E sẽ quay về đúng trang nhật ký lúc nãy.
+
+<figure class="feature-figure">
+  <img alt="The contents a chest held at the end of one logged visit" src="/screenshots/log-snapshot.webp" />
+  <figcaption>Rương đúng như lúc lượt đó kết thúc.</figcaption>
+</figure>
 
 ## Khi ai đó mở rương của người khác
 

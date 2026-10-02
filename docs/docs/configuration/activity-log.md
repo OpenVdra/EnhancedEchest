@@ -18,9 +18,19 @@ Each visit is one pane, an ender chest, newest first:
 - The lore shows how long it was open, the chest number, and what changed while it was open: a `+` line for each item added to the chest, a `-` line for each item taken out, together on the one tooltip.
 - The bottom row pages through older and newer visits.
 
+<figure class="feature-figure">
+  <img alt="The chest log viewer with one visit showing the items added" src="/screenshots/log-tooltip.webp" />
+  <figcaption>Each visit lists what was added or taken while the chest was open.</figcaption>
+</figure>
+
 ## Viewing a Chest at a Moment in Time
 
 Click any pane to see the exact contents the chest held when that visit ended. Items can be picked up and moved around inside this preview to inspect them, but nothing can be taken out of it, and closing it changes nothing. The stored record is never altered. Pressing Esc or E returns to the same page of the log.
+
+<figure class="feature-figure">
+  <img alt="The contents a chest held at the end of one logged visit" src="/screenshots/log-snapshot.webp" />
+  <figcaption>The chest exactly as it was when that visit ended.</figcaption>
+</figure>
 
 ## Someone Opening Another Player's Chest
 

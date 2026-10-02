@@ -3,7 +3,7 @@
 Players are no longer limited to one ender chest. Each player can own several, managed through an in-game menu.
 
 <figure class="feature-figure">
-  <img alt="The chest list menu showing several owned ender chests" src="https://github.com/user-attachments/assets/f693c05c-7427-489b-aa41-b68f3341cda1" />
+  <img alt="The chest list menu showing several owned ender chests" src="/screenshots/eclist.webp" />
   <figcaption>With two or more chests, opening your ender chest brings up this menu of every chest you own, each with its slot count.</figcaption>
 </figure>
 
@@ -29,17 +29,17 @@ Each one can be switched off server-wide in the `features` section under `enderc
 
 <div class="placeholder-row">
   <figure>
-    <img width="1162" height="1067" alt="A chest's management menu with rename, icon, and set-as-main options" src="https://github.com/user-attachments/assets/76bc97fa-1dcb-4e39-8bde-9504ebc4d768" />
+    <img alt="A chest's management menu with rename, icon, and set-as-main options" src="/screenshots/chest-detail.webp" />
     <figcaption>A chest's management screen: rename it, choose an icon, or set it as your main.</figcaption>
   </figure>
   <figure>
-    <img width="1013" height="1067" alt="The rename prompt for an ender chest" src="https://github.com/user-attachments/assets/573814dd-6f58-4e9c-b65a-58842e3ba2a2" />
+    <img alt="The rename prompt for an ender chest" src="/screenshots/rename.webp" />
     <figcaption>Renaming a chest; the name you enter becomes its inventory title.</figcaption>
   </figure>
 </div>
 
 <figure class="feature-figure">
-  <img width="1802" height="1068" alt="The searchable item picker for choosing a chest icon" src="https://github.com/user-attachments/assets/ce6b235b-980c-4403-86d3-503c25f32d77" />
+  <img alt="The searchable item picker for choosing a chest icon" src="/screenshots/icon-picker.webp" />
   <figcaption>Pick any item as the chest's icon with the searchable item picker.</figcaption>
 </figure>
 
@@ -54,3 +54,8 @@ Hand out chests by rank instead of by command. The permission `enhancedechest.ad
 ## View Other Players' Chests
 
 With `/ee view <player>` an admin opens a player's chest, online or offline, in the same management menu the owner sees. One chest opens its menu directly; with several, a picker lets you choose. Grant `admin.view` for a read-only look, add `admin.edit` to take/add items and to rename, re-icon, or sort the chest, and add `admin.clear` for a **Clear chest** button (with a confirmation) that empties it.
+
+<figure class="feature-figure">
+  <img alt="An admin viewing another player's chest, with the Clear chest button" src="/screenshots/admin-view-detail.webp" />
+  <figcaption>An admin's view of another player's chest, with the admin-only Clear chest button.</figcaption>
+</figure>

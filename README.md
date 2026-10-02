@@ -1,44 +1,92 @@
 <div align="center">
 
-<p align="center">
-  <img src="https://openvdra.github.io/EnhancedEchest/logo.png" alt="Logo" width="160"> <h1>EnhancedEchest</h1>
-</p>
+<img src="docs/public/logo.png" alt="EnhancedEchest logo" width="160">
 
-[![Modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/modrinth_vector.svg)](https://modrinth.com/plugin/enhancedechest)
-[![Spigot](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/spigot_vector.svg)](https://www.spigotmc.org/resources/enhancedechest-double-echest-plugin-%E2%9C%A8-26-1-2-26-2-%EF%B8%8F.136442/)
-[![Hangar](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/hangar_vector.svg)](https://hangar.papermc.io/Nighter/EnhancedEchest)
-[![Documentation](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/documentation/ghpages_vector.svg)](https://openvdra.github.io/EnhancedEchest/)
-[![Discord](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/social/discord-plural_46h.png)](http://discord.com/invite/FJN7hJKPyb)
+# EnhancedEchest
 
+[![modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_64h.png)](https://modrinth.com/plugin/enhancedechest)
+[![hangar](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/hangar_64h.png)](https://hangar.papermc.io/Nighter/EnhancedEchest)
+[![ghpages](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/ghpages_64h.png)](https://openvdra.github.io/EnhancedEchest/)
+
+Bigger ender chests, and several of them per player, for **Paper**, **Purpur** and **Folia**.
+
+</div>
+
+## Overview
+* **Larger Chests:** Up to 54 slots instead of 27, sized per rank by permission.
+* **Multiple Chests:** Each player owns several, with their own names and icons, managed from an in-game menu.
+* **Admin Tools:** Add, resize, view and transfer any player's chests, online or offline, with temporary chests that expire.
+* **Activity Log:** See who added or took what, and the chest exactly as it was after each visit.
+* **Storage:** SQLite, MySQL, MariaDB or PostgreSQL, shared between servers through Redis.
+
+Every feature is explained on the [documentation site](https://openvdra.github.io/EnhancedEchest/).
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><img src="docs/public/screenshots/eclist.webp" alt="The chest list showing seven named chests with icons" width="372"></td>
+    <td align="center"><img src="docs/public/screenshots/chest-54.webp" alt="A 54-slot ender chest named Treasure Vault" width="320"></td>
+  </tr>
+</table>
 </div>
 
 ## Requirements
 
-- Paper 1.21.11 - 26.2 (or a compatible fork such as Purpur / Folia)
-- Java 21
+| Minecraft | Server | Java |
+| :--- | :--- | :---: |
+| 1.21.11 – 26.2 | Paper, Purpur or Folia | 21 |
+
+Spigot and CraftBukkit are not supported. Bedrock players joining through Geyser get the menus as Bedrock forms.
 
 ## Installation
+1. Download the latest `.jar` from [Modrinth](https://modrinth.com/plugin/enhancedechest), [Hangar](https://hangar.papermc.io/Nighter/EnhancedEchest) or [Releases](https://github.com/OpenVdra/EnhancedEchest/releases).
+2. Place it in the server's `plugins/` folder.
+3. Restart the server. SQLite works with no setup.
 
-1. Download the latest `.jar` from [Releases](https://github.com/OpenVdra/EnhancedEchest/releases) or [Modrinth](https://modrinth.com/plugin/enhancedechest).
-2. Place it in your server's `plugins/` directory.
-3. Restart the server. SQLite is used by default and requires no additional setup.
+## Configuration
+* **Files:** `plugins/EnhancedEchest/config.yml`, plus `messages.yml` and `gui.yml` for each language under `language/`.
+* **Reload:** Most settings apply with `/ee reload`. The few that need a restart are marked in the file.
+* **Reference:** Every key is documented on the [configuration page](https://openvdra.github.io/EnhancedEchest/docs/configuration/).
 
-## Building from source
+## Commands
+
+| Command | Description |
+| :--- | :--- |
+| `/ec [name\|#index]` | Open the main chest, or one chest directly |
+| `/eclist` | Open the chest list |
+| `/ee add\|resize\|delete` | Give, resize or delete a player's chests |
+| `/ee view <player>` | View or edit a player's chest |
+| `/ee log <player>` | Open a player's activity log |
+| `/ee transfer`, `/ee import`, `/ee migrate` | Move chests between accounts, databases and other plugins |
+| `/ee reload` | Reload config and language files |
+
+Permissions are on the [permissions page](https://openvdra.github.io/EnhancedEchest/docs/access/permissions).
+
+## Building
+A single Gradle module on Java 21.
 
 ```bash
+git clone https://github.com/OpenVdra/EnhancedEchest.git
+cd EnhancedEchest
 ./gradlew build
 ```
 
-The shaded plugin jar is placed in `build/libs/`.
+The plugin jar lands in `build/libs/`.
+
+| Task | Command |
+| :--- | :--- |
+| Dev server (Paper, with the plugin) | `./gradlew runServer` |
+| Dev client that joins it | `./gradlew runClient` |
+| Both at once | `./gradlew runDev` |
+
+Contributions are welcome. English and Vietnamese are included; translation PRs are welcome too.
 
 ## Statistics
-
-EnhancedEchest reports anonymous usage data to [bStats](https://bstats.org/plugin/bukkit/EnhancedEchest/32142). Collection is anonymous and can be turned off globally in `plugins/bStats/config.yml`.
+Anonymous usage statistics are sent to [bStats](https://bstats.org/plugin/bukkit/EnhancedEchest/32142). Turn them off in `plugins/bStats/config.yml`.
 
 <a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142">
   <img src="https://bstats.org/signatures/bukkit/EnhancedEchest.svg" alt="EnhancedEchest bStats charts" width="100%" />
 </a>
 
 ## License
-
-Licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
+Licensed under the [GPL-3.0](LICENSE).
