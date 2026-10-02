@@ -10,10 +10,6 @@ on:
       - "docs/**"
       - ".github/workflows/deploy-docs.yml"
   workflow_dispatch:
-  # The home page's server and player counts are read from FastStats at build time
-  # (docs/.vitepress/components/home/faststats.data.ts), so rebuild daily to keep them current.
-  schedule:
-    - cron: "0 3 * * *"
 
 permissions:
   contents: read

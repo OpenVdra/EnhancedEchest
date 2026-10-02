@@ -135,10 +135,9 @@ Need help or want to suggest something? Join the [Discord](http://discord.com/in
 ## Credits
 
 * Free and open source on [GitHub](https://github.com/OpenVdra/EnhancedEchest), under the [GPL-3.0](https://github.com/OpenVdra/EnhancedEchest/blob/main/LICENSE).
-* Anonymous usage statistics through [FastStats](https://faststats.dev/project/enhancedechest/minecraft-plugin), which can be turned off with `enabled=false` in `plugins/faststats/config.properties`.
 
 <p align="center">
-
-[![Servers & Players](https://wsrv.nl/?url=https%3A%2F%2Ffaststats.dev%2Fembed%2Fdefault%3A87333e13-217e-44a2-ad46-91def03a3a79%3Aservers-and-players.svg%3Fw%3D960%26h%3D340%26theme%3Ddark&output=png&w=1920&maxage=1d)](https://faststats.dev/project/enhancedechest/minecraft-plugin)
-
+  <a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142">
+    <img src="https://bstats.org/signatures/bukkit/EnhancedEchest.svg" alt="EnhancedEchest bStats charts" width="100%" />
+  </a>
 </p>

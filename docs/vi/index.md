@@ -15,9 +15,6 @@ hero:
     - theme: alt
       text: Tải về
       link: /vi/docs/getting-started#download
-    - theme: alt
-      text: Mã nguồn
-      link: https://github.com/OpenVdra/EnhancedEchest
 
 features:
   - title: Tối đa 54 Ô

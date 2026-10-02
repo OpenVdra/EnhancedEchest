@@ -15,9 +15,6 @@ hero:
     - theme: alt
       text: Download
       link: /docs/getting-started#download
-    - theme: alt
-      text: Source Code
-      link: https://github.com/OpenVdra/EnhancedEchest
 
 features:
   - title: Up to 54 Slots
