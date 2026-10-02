@@ -1,7 +1,5 @@
 # Getting Started
 
-<img class="page-banner" src="/banner.png" alt="EnhancedEchest banner" />
-
 Meet **EnhancedEchest** and explore everything it brings to your Minecraft server.
 
 <CardGrid>

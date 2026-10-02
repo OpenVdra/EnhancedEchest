@@ -263,20 +263,6 @@
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
 }
 
-/* Wide promo banner shown at the top of a landing page (e.g. the Welcome
-   page), above the CardGrid. Wider than .feature-shot to fit the 2.5:1
-   banner artwork without letterboxing. */
-.page-banner {
-    display: block;
-    width: 100%;
-    max-width: 960px;
-    height: auto;
-    margin: 8px auto 32px;
-    border-radius: 12px;
-    border: 1px solid var(--vp-c-border);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
-}
-
 /* Framed screenshot with an optional caption. Larger than .feature-shot so
    dialog/menu screenshots stay readable; clears the CardGrid and scales down
    on narrow viewports. */
@@ -389,7 +375,6 @@
     .card-grid > .feature-card,
     .command-section,
     .base-table,
-    .page-banner,
     .feature-shot,
     .feature-figure,
     .showcase-shot {

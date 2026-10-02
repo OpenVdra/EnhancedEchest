@@ -1,7 +1,5 @@
 # Bắt Đầu
 
-<img class="page-banner" src="/banner.png" alt="Banner EnhancedEchest" />
-
 Khám phá **EnhancedEchest** và mọi tính năng plugin mang đến cho máy chủ Minecraft của bạn.
 
 <CardGrid>

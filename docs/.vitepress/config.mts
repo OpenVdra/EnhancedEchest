@@ -164,9 +164,9 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/png', href: '/EnhancedEchest/logo.png' }],
     ['link', { rel: 'apple-touch-icon', href: '/EnhancedEchest/logo.png' }],
     // Social share preview (Discord, Twitter, etc.) when a docs link is pasted.
-    ['meta', { property: 'og:image', content: 'https://openvdra.github.io/EnhancedEchest/banner.png' }],
-    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:image', content: 'https://openvdra.github.io/EnhancedEchest/banner.png' }],
+    ['meta', { property: 'og:image', content: 'https://openvdra.github.io/EnhancedEchest/logo.png' }],
+    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ['meta', { name: 'twitter:image', content: 'https://openvdra.github.io/EnhancedEchest/logo.png' }],
   ],
   themeConfig: {
     // Shared across every locale; per-locale nav / sidebar / editLink live under
