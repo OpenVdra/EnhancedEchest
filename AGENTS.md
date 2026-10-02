@@ -28,15 +28,13 @@ Local server and client come from the [mc-run](https://github.com/n1ght3r/mc-run
 enables `/ee benchmark` and dev-only logging. The server runs with `online-mode=false` so the
 offline client can join.
 
-```bash
-./gradlew test        # unit tests; excludes **/*Simulation*
-./gradlew stressTest  # 300–500 player concurrency/perf/leak simulation, no server needed
-```
-
-`src/test` covers a deliberately thin slice: chest index allocation, temp
-reclaim, the activity-log pipeline, and the load simulations. Everything else — every GUI, dialog,
-command and storage path — is **verified by running on a Paper/Folia server**. Assume nothing is
-covered automatically: check a change by running it.
+There is no test source set: `src/test`, the `test` / `stressTest` tasks and the JUnit + MockBukkit
+dependencies were removed. Storage performance and memory are measured in game with `/ee benchmark`
+on a dev build ([StorageBenchmark](src/main/java/com/enhancedechest/benchmark/StorageBenchmark.java),
+details in [command/AGENTS.md](src/main/java/com/enhancedechest/command/AGENTS.md)), which runs the
+real `CachedStorage` engine over a throwaway SQLite database. Everything — every GUI, dialog, command
+and storage path — is **verified by running on a Paper/Folia server**. Assume nothing is covered
+automatically: check a change by running it.
 
 ## Stack and constraints
 

@@ -82,11 +82,19 @@ The plugin jar lands in `build/libs/`.
 Contributions are welcome. English and Vietnamese are included; translation PRs are welcome too.
 
 ## Statistics
-Anonymous usage statistics are sent to [bStats](https://bstats.org/plugin/bukkit/EnhancedEchest/32142). Turn them off in `plugins/bStats/config.yml`.
+Anonymous usage statistics are sent to [FastStats](https://faststats.dev/project/enhancedechest/minecraft-plugin). Turn them off with `enabled=false` in `plugins/faststats/config.properties`.
 
-<a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142">
-  <img src="https://bstats.org/signatures/bukkit/EnhancedEchest.svg" alt="EnhancedEchest bStats charts" width="100%" />
-</a>
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><a href="https://faststats.dev/project/enhancedechest/minecraft-plugin"><img src="https://faststats.dev/embed/default:87333e13-217e-44a2-ad46-91def03a3a79:online-servers.svg?w=480&h=180&theme=dark" alt="Online servers" width="420"></a></td>
+    <td align="center"><a href="https://faststats.dev/project/enhancedechest/minecraft-plugin"><img src="https://faststats.dev/embed/default:87333e13-217e-44a2-ad46-91def03a3a79:online-players.svg?w=480&h=180&theme=dark" alt="Online players" width="420"></a></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><a href="https://faststats.dev/project/enhancedechest/minecraft-plugin"><img src="https://faststats.dev/embed/default:87333e13-217e-44a2-ad46-91def03a3a79:servers-and-players.svg?w=960&h=340&theme=dark" alt="Servers and players over the last week" width="852"></a></td>
+  </tr>
+</table>
+</div>
 
 ## License
 Licensed under the [GPL-3.0](LICENSE).
