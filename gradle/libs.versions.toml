@@ -15,7 +15,7 @@ lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 # Shaded into the plugin jar and relocated under com.enhancedechest.libs.
 hikaricp = { module = "com.zaxxer:HikariCP", version = "7.1.0" }
 mariadb = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.5.10" }
-postgresql = { module = "org.postgresql:postgresql", version = "42.7.13" }
+postgresql = { module = "org.postgresql:postgresql", version = "42.7.14" }
 bstats = { module = "org.bstats:bstats-bukkit", version = "3.2.1" }
 faststats = { module = "dev.faststats.metrics:bukkit", version = "0.30.1" }
 jedis = { module = "redis.clients:jedis", version = "8.0.1" }
