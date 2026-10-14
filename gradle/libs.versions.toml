@@ -18,7 +18,7 @@ mariadb = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.5.10" 
 postgresql = { module = "org.postgresql:postgresql", version = "42.7.13" }
 bstats = { module = "org.bstats:bstats-bukkit", version = "3.2.1" }
 faststats = { module = "dev.faststats.metrics:bukkit", version = "0.30.1" }
-jedis = { module = "redis.clients:jedis", version = "8.0.1" }
+jedis = { module = "redis.clients:jedis", version = "8.0.2" }
 
 # Server classpath, never shaded or relocated (relocation would break sqlite native extraction
 # and rewrite gson references to a package that isn't in the jar).
