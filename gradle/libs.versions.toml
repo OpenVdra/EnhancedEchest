@@ -1,6 +1,6 @@
 [versions]
 # Only versions shared by more than one coordinate. Single-use versions stay inline below.
-paper = "1.21.11-R0.1-SNAPSHOT"
+paper = "26.3.build.206-stable"
 lombok = "1.18.48"
 sqlite = "3.53.4.0"
 
