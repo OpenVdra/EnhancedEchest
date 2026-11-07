@@ -15,7 +15,7 @@ Produces `EnhancedEchest-<version>.jar` via `shadowJar` (the plain `jar` is not 
 `build.gradle.kts` also copies the jar into a local `TestServer/plugins` directory
 (`shadowJar.destinationDirectory`) — adjust that path if your test server lives elsewhere.
 
-Local server and client come from the [mc-run](https://github.com/n1ght3r/mc-run) Gradle plugin
+Local server and client come from the [mc-run](https://github.com/whoisnighter/mc-run) Gradle plugin
 (`mcRun { }` block in `build.gradle.kts`, Paper 1.21.11 + ViaVersion):
 
 ```bash

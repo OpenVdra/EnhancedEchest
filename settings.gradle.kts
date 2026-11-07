@@ -4,11 +4,12 @@ pluginManagement {
         maven("https://jitpack.io")
     }
     // mc-run is served by JitPack, which rewrites the groupId, so the plugin marker does not
-    // resolve. Map the plugin id to the JitPack module by hand.
+    // resolve. Map the plugin id to the JitPack module by hand. The id keeps the old "n1ght3r"
+    // namespace on purpose: it is what mc-run itself declares, only the GitHub owner was renamed.
     resolutionStrategy {
         eachPlugin {
             if (requested.id.id == "io.github.n1ght3r.mc-run") {
-                useModule("com.github.n1ght3r:mc-run:${requested.version}")
+                useModule("com.github.whoisnighter:mc-run:${requested.version}")
             }
         }
     }
