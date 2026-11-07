@@ -11,6 +11,23 @@ Players are no longer limited to one ender chest. Each player can own several, m
 
 Run `/eclist`, or hold shift while right-clicking an ender chest, to open a menu listing every chest the player owns, each showing its slot count. An **Edit mode** checkbox switches what clicking a chest does: off by default, a chest opens straight away; tick it and clicking a chest opens its management screen where players can rename it, give it a custom icon, or set it as their main. The checkbox toggles in place without reopening the menu.
 
+## Inventory Chest List
+
+Set `chest-list-menu` to `inventory` in `config.yml` to show the list as a plain chest menu instead. Clicking a chest opens it straight away. This menu has no rename, set main, icon or sort buttons, those exist only in the dialog menu. It shows up to 28 chests per page, with arrows at the bottom to flip pages when a player owns more.
+
+Players on Minecraft older than 1.21.6, joining through ViaBackwards, always get this menu, because their game can't show the dialog menu.
+
+<div class="placeholder-row">
+  <figure>
+    <img alt="The inventory chest list, page 1 of 2, showing 28 chests and the page indicator" src="/screenshots/eclist-inventory-page1.webp" />
+    <figcaption>Page 1 of 2. The book shows the page and the total number of chests.</figcaption>
+  </figure>
+  <figure>
+    <img alt="The inventory chest list, page 2 of 2, with the Previous page arrow" src="/screenshots/eclist-inventory-page2.webp" />
+    <figcaption>The last page, with the arrow back to the previous page.</figcaption>
+  </figure>
+</div>
+
 ## Main Chest
 
 With several chests, a player can pick one as their **main**, the one opened directly by `/ec` and by right-clicking an ender chest. Until a main is chosen, those open the management menu instead. A new chest is never made main automatically; players set it from the menu (and can always reach the menu with `/eclist`).

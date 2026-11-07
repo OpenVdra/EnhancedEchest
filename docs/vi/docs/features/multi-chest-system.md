@@ -11,6 +11,23 @@ Người chơi không còn bị giới hạn ở một rương Ender. Mỗi ngư
 
 Chạy `/eclist`, hoặc giữ shift khi chuột phải vào rương Ender, để mở menu liệt kê mọi rương người chơi sở hữu, kèm số ô của từng rương. Ô tích **Chế độ chỉnh sửa** thay đổi điều xảy ra khi bấm vào rương: khi tắt (mặc định) rương mở ngay; khi bật, bấm vào rương sẽ mở màn hình quản lý để đổi tên, gán biểu tượng, hoặc đặt làm rương chính. Ô tích chuyển trạng thái tại chỗ, không mở lại menu.
 
+## Danh Sách Rương Dạng Kho Đồ
+
+Đặt `chest-list-menu` thành `inventory` trong `config.yml` để hiện danh sách dưới dạng menu rương đơn giản. Bấm vào một rương sẽ mở rương đó ngay. Menu này không có nút đổi tên, đặt rương chính, biểu tượng hay sắp xếp, các nút đó chỉ có ở menu hộp thoại. Mỗi trang hiện tối đa 28 rương, có mũi tên ở cuối menu để chuyển trang khi người chơi sở hữu nhiều hơn.
+
+Người chơi dùng Minecraft cũ hơn 1.21.6, vào qua ViaBackwards, luôn nhận menu này, vì game của họ không hiển thị được menu hộp thoại.
+
+<div class="placeholder-row">
+  <figure>
+    <img alt="Danh sách rương dạng kho đồ, trang 1/2, hiện 28 rương và ô số trang" src="/screenshots/eclist-inventory-page1.webp" />
+    <figcaption>Trang 1/2. Quyển sách cho biết trang hiện tại và tổng số rương.</figcaption>
+  </figure>
+  <figure>
+    <img alt="Danh sách rương dạng kho đồ, trang 2/2, với mũi tên Trang trước" src="/screenshots/eclist-inventory-page2.webp" />
+    <figcaption>Trang cuối, với mũi tên quay về trang trước.</figcaption>
+  </figure>
+</div>
+
 ## Rương Chính
 
 Với nhiều rương, người chơi có thể chọn một rương làm **rương chính**, rương được mở trực tiếp bằng `/ec` và bằng chuột phải vào rương Ender. Cho đến khi chọn rương chính, những thao tác đó sẽ mở menu quản lý. Rương mới không bao giờ tự động trở thành rương chính; người chơi tự đặt từ menu (và luôn vào menu được bằng `/eclist`).
