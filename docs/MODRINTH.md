@@ -9,8 +9,7 @@
 </div>
 
 ## Larger Ender Chests
-* **Up to 54 Slots:** A full double chest instead of 27, in steps of 9.
-* **Same Block:** Right-click an ender chest or run `/ec`. The lid still opens and closes.
+* **Multiple sizes:** each chest can hold 9, 18, 27, 36, 45 or 54 slots.
 * **Size by Rank:** Set the base size per rank with the [`enhancedechest.default_size.<size>`](https://openvdra.github.io/EnhancedEchest/docs/access/permission-chests#default-size-permission) permission.
 
 <p align="center">
@@ -18,6 +17,7 @@
 </p>
 
 ## Multiple Chests
+Each player can owns one or several, with their own names and icons, managed from an in-game menu
 * **Chest List:** `/eclist`, or shift and right-click an ender chest, lists every chest a player owns.
 * **Main Chest:** Players pick the one `/ec` opens. A new chest never becomes main on its own.
 * **Edit Mode:** Tick it to manage a chest on click instead of opening it.
@@ -156,8 +156,10 @@ enderchest:
   # Size of a player's first chest. One of: 9, 18, 27, 36, 45, 54.
   default-size: 54
 
-  # Chest list style: dialog (full menu) or inventory (click to open only, up to 28 chests).
-  list-menu: dialog
+  # Chest list style: dialog (full menu) or inventory (click to open only, 28 chests per page).
+  # Inventory has no rename, set main, icon or sort buttons; those exist only in the dialog menu.
+  # Players on Minecraft older than 1.21.6 always get inventory, their game can't show the dialog.
+  chest-list-menu: dialog
 
   # Shift + right-click an ender chest opens the chest list instead of a chest.
   shift-click-list: true
@@ -294,7 +296,7 @@ Every setting is explained on the [configuration page](https://openvdra.github.i
 
 | Minecraft version | Server | Java | Support status |
 |---|---|---|---|
-| 1.21.11 – 26.2 | Paper, Purpur, Folia | 21 | Active |
+| 1.21.11 – 26.3 | Paper, Purpur, Folia | 21 | Active |
 
 ## Quick FAQ
 
@@ -316,9 +318,7 @@ English and Vietnamese, and each player sees their own client language. Every me
 
 Need help or want to suggest something? Join the [Discord](http://discord.com/invite/FJN7hJKPyb).
 
-## Credits
-
-* Free and open source on [GitHub](https://github.com/OpenVdra/EnhancedEchest), under the [GPL-3.0](https://github.com/OpenVdra/EnhancedEchest/blob/main/LICENSE).
+## bStats
 
 <p align="center">
   <a href="https://bstats.org/plugin/bukkit/EnhancedEchest/32142">

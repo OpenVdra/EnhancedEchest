@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/public/logo.png" alt="EnhancedEchest logo" width="160">
+<img src="docs/public/logo.webp" alt="EnhancedEchest logo" width="160">
 
 # EnhancedEchest
 
@@ -8,13 +8,11 @@
 [![hangar](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/hangar_64h.png)](https://hangar.papermc.io/Nighter/EnhancedEchest)
 [![ghpages](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/ghpages_64h.png)](https://openvdra.github.io/EnhancedEchest/)
 
-Bigger ender chests, and several of them per player, for **Paper**, **Purpur** and **Folia**.
-
 </div>
 
 ## Overview
-* **Larger Chests:** Up to 54 slots instead of 27, sized per rank by permission.
-* **Multiple Chests:** Each player owns several, with their own names and icons, managed from an in-game menu.
+* **Multiple sizes:** each chest can hold 9, 18, 27, 36, 45 or 54 slots, sized per rank by permission.
+* **Multiple Chests:** Each player can owns one or several, with their own names and icons, managed from an in-game menu.
 * **Admin Tools:** Add, resize, view and transfer any player's chests, online or offline, with temporary chests that expire.
 * **Activity Log:** See who added or took what, and the chest exactly as it was after each visit.
 * **Storage:** SQLite, MySQL, MariaDB or PostgreSQL, shared between servers through Redis.
@@ -24,7 +22,7 @@ Every feature is explained on the [documentation site](https://openvdra.github.i
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/public/screenshots/eclist-icons.webp" alt="The chest list showing seven named chests with icons" width="372"></td>
+    <td align="center"><img src="docs/public/screenshots/eclist.webp" alt="The chest list showing six ender chests with their default names" width="372"></td>
     <td align="center"><img src="docs/public/screenshots/chest-sizes.webp" alt="Six ender chests stacked from 54 slots down to 9 slots" width="400"></td>
   </tr>
 </table>
@@ -34,7 +32,7 @@ Every feature is explained on the [documentation site](https://openvdra.github.i
 
 | Minecraft | Server | Java |
 | :--- | :--- | :---: |
-| 1.21.11 – 26.2 | Paper, Purpur or Folia | 21 |
+| 1.21.11 – 26.3 | Paper, Purpur or Folia | 21 |
 
 Spigot and CraftBukkit are not supported. Bedrock players joining through Geyser get the menus as Bedrock forms.
 

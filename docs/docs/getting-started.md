@@ -18,7 +18,7 @@ Meet **EnhancedEchest** and explore everything it brings to your Minecraft serve
 
 | Requirement | Specification |
 |-------------|---------------|
-| **Minecraft Version** | 1.21.11 - 26.2 |
+| **Minecraft Version** | 1.21.11 - 26.3 |
 | **Server Software** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) or compatible Paper forks |
 | **Java Version** | Java 21 |
 

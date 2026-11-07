@@ -6,7 +6,7 @@ hero:
   text: "Ender Chests, Upgraded"
   tagline: Give players bigger ender chest up to 54 slots, customizable and with support for multiple chests per player
   image:
-    src: /logo.png
+    src: /logo.webp
     alt: EnhancedEchest
   actions:
     - theme: brand

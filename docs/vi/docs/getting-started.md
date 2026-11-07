@@ -18,7 +18,7 @@ Khám phá **EnhancedEchest** và mọi tính năng plugin mang đến cho máy 
 
 | Yêu cầu | Thông số |
 |---------|----------|
-| **Phiên bản Minecraft** | 1.21.11 - 26.2 |
+| **Phiên bản Minecraft** | 1.21.11 - 26.3 |
 | **Phần mềm máy chủ** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) hoặc các bản fork tương thích Paper |
 | **Phiên bản Java** | Java 21 |
 

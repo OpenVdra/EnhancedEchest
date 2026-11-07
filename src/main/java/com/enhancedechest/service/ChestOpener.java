@@ -1,6 +1,8 @@
 package com.enhancedechest.service;
 
 import com.enhancedechest.config.PluginConfig;
+import com.enhancedechest.compat.ClientVersions;
+import com.enhancedechest.gui.ChestListHolder;
 import com.enhancedechest.gui.ChestListMenu;
 import com.enhancedechest.gui.EnderChestHolder;
 import com.enhancedechest.gui.dialog.ChestDialogs;
@@ -69,6 +71,7 @@ public final class ChestOpener {
     private final PluginConfig config;
     private final DatabaseImportService importService;
     private final Telemetry telemetry;
+    private final ClientVersions clientVersions;
 
     /** Last time (epoch millis) each player sorted a chest, for the anti-spam Sort cooldown. */
     private final ConcurrentHashMap<UUID, Long> lastSortAt = new ConcurrentHashMap<>();
@@ -82,7 +85,8 @@ public final class ChestOpener {
                        PlayerSettingsCache settings, EnderChestStorage storage, DbExecutor db,
                        LanguageManager lang, Scheduler scheduler, Logger logger, int defaultSize,
                        PermissionChestService permService, ChestSpillService spillService,
-                       PluginConfig config, DatabaseImportService importService, Telemetry telemetry) {
+                       PluginConfig config, DatabaseImportService importService, Telemetry telemetry,
+                       ClientVersions clientVersions) {
         this.sessions       = sessions;
         this.storageGateway = storageGateway;
         this.settings       = settings;
@@ -97,6 +101,7 @@ public final class ChestOpener {
         this.config         = config;
         this.importService  = importService;
         this.telemetry      = telemetry;
+        this.clientVersions = clientVersions;
         this.dialogs        = new ChestDialogs(this, storageGateway, settings, lang, config);
         this.listMenu       = new ChestListMenu(lang);
     }
@@ -175,7 +180,7 @@ public final class ChestOpener {
                                 : null;
                         if (mainIndex != null) {
                             openChest(player, mainIndex, sourceBlock);
-                        } else if (useInventoryMenu(chests)) {
+                        } else if (useInventoryMenu(player)) {
                             // Inventory-chooser mode: no edit-mode checkbox to seed, so open it straight away.
                             openListInventory(player, chests, sourceBlock);
                         } else {
@@ -326,7 +331,7 @@ public final class ChestOpener {
                                             player.getName());
                                     return;
                                 }
-                                if (useInventoryMenu(chests)) {
+                                if (useInventoryMenu(player)) {
                                     player.openInventory(listMenu.build(player.locale(), chests, uuid, sourceBlock));
                                 } else {
                                     player.showDialog(dialogs.listDialog(player.locale(), chests, canSetMain, sourceBlock, editInitial));
@@ -337,17 +342,38 @@ public final class ChestOpener {
     }
 
     /**
-     * Whether the simple inventory chooser should render this list instead of the Dialog-API menu: the
-     * {@code enderchest.list-menu} mode is {@code inventory} <i>and</i> the player owns few enough chests to
-     * fit the fixed-slot layout ({@link ChestListMenu#MAX_CHESTS}). Anyone with more falls back to the
-     * dialog until the larger-inventory layout is implemented.
+     * Whether the simple inventory chooser should render this player's list instead of the Dialog-API
+     * menu: the {@code enderchest.chest-list-menu} mode is {@code inventory}, or the player's client is
+     * older than 1.21.6. Such a client has no Dialog API — ViaBackwards either emulates it clumsily or
+     * drops it, leaving the player unable to pick a chest — so the fallback is always on, not a setting.
+     * Any chest count fits: above {@link ChestListMenu#PAGE_SIZE} the chooser pages.
      */
-    private boolean useInventoryMenu(List<ChestSummary> chests) {
-        return config.getListMenuType() == PluginConfig.ListMenuType.INVENTORY
-                && chests.size() <= ChestListMenu.MAX_CHESTS;
+    private boolean useInventoryMenu(Player player) {
+        if (config.getListMenuType() == PluginConfig.ListMenuType.INVENTORY) return true;
+        return !clientVersions.supportsDialogs(player);
     }
 
-    /** Builds and opens the 27-slot inventory chooser on the player's entity thread. */
+    /**
+     * Turns an open inventory chooser to {@code page}, re-rendering from the chest snapshot on its holder
+     * (no storage query — a chest click still re-validates through {@link #openChest}). Deferred to the
+     * entity scheduler because it is called from inside an {@code InventoryClickEvent}, where opening
+     * another inventory directly is unsafe; skipped if that menu is no longer the one on screen.
+     */
+    public void showListPage(Player player, ChestListHolder holder, int page) {
+        scheduler.runAtEntity(player, task -> {
+            if (!player.isOnline()) return;
+            // Only turn the page of the menu that was clicked. In the tick between the click and now the
+            // player may have closed it, or clicked a chest icon whose (async) open already put a live
+            // chest on screen — reopening the list over that would force-close a real session, the same
+            // overlapping open/close shape behind the earlier Folia dupe. Also collapses arrow spam: once
+            // the first turn lands, the old holder is gone and the queued duplicates drop out here.
+            if (player.getOpenInventory().getTopInventory().getHolder() != holder) return;
+            player.openInventory(listMenu.buildPage(player.locale(), holder.getChests(), holder.getOwner(),
+                    holder.getSourceBlock(), page));
+        });
+    }
+
+    /** Builds and opens the inventory chooser (first page) on the player's entity thread. */
     private void openListInventory(Player player, List<ChestSummary> chests, @Nullable Location sourceBlock) {
         scheduler.runAtEntity(player, task -> {
             if (!player.isOnline()) return;

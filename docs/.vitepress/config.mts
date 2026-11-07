@@ -164,7 +164,9 @@ export default defineConfig({
     // automatically the way it is for themeConfig.logo / markdown links. The
     // href must therefore include the base path, otherwise on the GitHub Pages
     // project site the favicon resolves to the domain root and 404s.
-    ['link', { rel: 'icon', type: 'image/png', href: '/EnhancedEchest/logo.png' }],
+    ['link', { rel: 'icon', type: 'image/webp', href: '/EnhancedEchest/logo.webp' }],
+    // logo.png is the same logo as logo.webp, kept only because iOS touch icons and
+    // some social-card scrapers do not accept WebP.
     ['link', { rel: 'apple-touch-icon', href: '/EnhancedEchest/logo.png' }],
     // Social share preview (Discord, Twitter, etc.) when a docs link is pasted.
     ['meta', { property: 'og:image', content: 'https://openvdra.github.io/EnhancedEchest/logo.png' }],
@@ -176,7 +178,7 @@ export default defineConfig({
   themeConfig: {
     // Shared across every locale; per-locale nav / sidebar / editLink live under
     // each entry in `locales` below and are deep-merged over these.
-    logo: '/logo.png',
+    logo: '/logo.webp',
 
     // Renders the little diagonal arrow after markdown links that point off-site.
     externalLinkIcon: true,

@@ -11,7 +11,7 @@ holders that identify our inventories. The click/drag guards that police those i
 | `dialog/ChestDialogs` | Every chest dialog: list, detail, rename, icon picker, admin picker, admin clear confirm |
 | `dialog/IconCatalog` | The pickable icon set, sprite lookup, and locale-aware search |
 | `dialog/DialogLinks` | The shared "open the documentation" button (book sprite, URL from `gui.yml`, never shown on screen) |
-| `ChestListMenu` | The inventory-based chest chooser used when `enderchest.list-menu: inventory` |
+| `ChestListMenu` | The inventory-based chest chooser used when `enderchest.chest-list-menu: inventory` |
 | `EnderChestHolder` | `InventoryHolder` carrying owner, index, size, kind — how every other layer recognises our chest |
 | `ChestListHolder` | `InventoryHolder` for the chooser menu |
 | `EnderChestAnimator` | Ender chest block lid open/close animation (pure `Lidded` API) |
@@ -97,11 +97,16 @@ site's Language page in sync with the file format.
 
 ## `ChestListMenu` (inventory mode)
 
-`enderchest.list-menu: inventory` swaps the list **dialog** for a plain chest chooser: click an icon to
+`enderchest.chest-list-menu: inventory` swaps the list **dialog** for a plain chest chooser: click an icon to
 open that chest, nothing else (no rename, main, icon or sort — those stay dialog-only). Layout is a
 one-cell padding border on every side, so the menu grows a row at a time and the icons stay centred: up
-to 7 chests → 27 slots, 14 → 36, 21 → 45, 28 → 54. `MAX_CHESTS` is 28; **callers must gate on it** and
-fall back to the dialog for anyone with more, because `build` silently drops the overflow.
+to 7 chests → 27 slots, 14 → 36, 21 → 45, 28 → 54. Above `PAGE_SIZE` (28) every page is a fixed
+54-slot menu with ← / page-info / → in the bottom border row (slots 48/49/50). The holder carries the
+ordered chest snapshot and the current page, so `ChestOpener.showListPage` re-renders a page turn with
+no storage query (deferred a tick — it runs from inside the click event); a chest click still goes
+through `openChest`, which re-validates against storage. `ChestOpener.useInventoryMenu` also routes
+players on clients older than 1.21.6 (no Dialog API, detected via `compat/ClientVersions` when ViaVersion
+is installed) to this menu whatever the setting — always on, deliberately not configurable.
 
 ## Gotchas
 

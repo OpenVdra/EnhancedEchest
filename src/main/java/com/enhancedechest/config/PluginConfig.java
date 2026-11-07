@@ -162,7 +162,7 @@ public final class PluginConfig {
         autoDetectLanguage = config.getBoolean("language-auto-detect", true);
 
         defaultSize = sanitizeSize(config.getInt("enderchest.default-size", 54));
-        listMenuType = parseListMenuType(config.getString("enderchest.list-menu", "dialog"));
+        listMenuType = parseListMenuType(config.getString("enderchest.chest-list-menu", "dialog"));
         shiftClickListEnabled = config.getBoolean("enderchest.shift-click-list", true);
 
         renameEnabled      = config.getBoolean("enderchest.features.rename", true);
@@ -278,7 +278,7 @@ public final class PluginConfig {
     }
 
     /**
-     * Parses the {@code enderchest.list-menu} value into {@link ListMenuType}. {@code inventory} (also the
+     * Parses the {@code enderchest.chest-list-menu} value into {@link ListMenuType}. {@code inventory} (also the
      * aliases {@code gui} / {@code chest}) selects the inventory chooser; anything else — including a blank
      * or unrecognised value — falls back to {@link ListMenuType#DIALOG}.
      */

@@ -25,7 +25,7 @@ import java.util.UUID;
 
 /**
  * Builds the simple {@code /eclist} inventory menu — the alternative to {@code ChestDialogs}' Dialog-API
- * list, chosen with {@code enderchest.list-menu: inventory}. It is a bare chooser: one icon per owned
+ * list, chosen with {@code enderchest.chest-list-menu: inventory}. It is a bare chooser: one icon per owned
  * chest showing its name / slot count / expiry, and clicking an icon opens that chest directly. None of
  * the dialog's management actions (rename / set-main / icon / sort) exist here.
  *
@@ -39,11 +39,15 @@ import java.util.UUID;
  *   <li>up to 21 &rarr; 45 slots (5 rows, 3 inner rows);</li>
  *   <li>up to 28 &rarr; 54 slots (6 rows, 4 inner rows) — the largest a chest inventory can be.</li>
  * </ul>
- * A player with more than {@link #MAX_CHESTS} chests can't fit even the 54-slot menu, so callers route
- * them back to the dialog list instead.
+ * A player with more than {@link #PAGE_SIZE} chests gets paged 54-slot menus instead: the same 4 &times; 7
+ * icon area per page, with previous / next arrows and a page indicator in the bottom border row. Page
+ * turns re-render from the ordered snapshot kept on {@link ChestListHolder} rather than re-querying
+ * storage; that is safe because clicking an icon still goes through {@code ChestOpener.openChest}, which
+ * re-validates the chest against storage.
  *
- * <p>All text reuses the existing {@code gui.yml} dialog keys (title, slot count, expiry, main tag), so
- * this mode adds no new language strings.
+ * <p>Chest text reuses the {@code gui.yml} dialog keys (title, slot count, expiry, main tag); only the page
+ * controls have keys of their own ({@code dialog.list-prev-page} / {@code list-next-page} /
+ * {@code list-page} / {@code list-total}).
  */
 public final class ChestListMenu {
 
@@ -60,10 +64,15 @@ public final class ChestListMenu {
     private static final int MAX_ROWS = 6;
 
     /**
-     * Largest chest count the inventory chooser can show: the 54-slot menu's 4 inner rows &times; 7
-     * columns = 28. Callers fall back to the dialog list above this (a 54-slot inventory can't hold more).
+     * Chests per page: the 54-slot menu's 4 inner rows &times; 7 columns = 28. Up to this many chests fit
+     * one page, laid out exactly as before pagination existed (sized to the count, no controls).
      */
-    public static final int MAX_CHESTS = (MAX_ROWS - 2) * INNER_COLUMNS; // 28
+    public static final int PAGE_SIZE = (MAX_ROWS - 2) * INNER_COLUMNS; // 28
+
+    /** Bottom-row control slots of a paged (54-slot) menu: previous · page info · next, centred. */
+    private static final int SLOT_PREV = 48;
+    private static final int SLOT_INFO = 49;
+    private static final int SLOT_NEXT = 50;
 
     private final LanguageManager lang;
 
@@ -72,32 +81,66 @@ public final class ChestListMenu {
     }
 
     /**
-     * Builds the menu inventory for {@code owner}'s chests, sized to the chest count. Temp (expiring)
-     * chests sort first — same order as the dialog list — then natural index order; only the first
-     * {@link #MAX_CHESTS} are placed, so callers must gate on {@link #MAX_CHESTS} before choosing this menu
-     * over the dialog.
-     *
-     * @param sourceBlock ender chest block the menu was opened from (for the lid animation on open), or null
+     * Display order: temp (expiring) chests first — same order as the dialog list — then natural index
+     * order. The holder keeps this ordered snapshot so page turns re-render without re-sorting.
      */
-    public Inventory build(java.util.Locale locale, List<ChestSummary> chests, UUID owner, @Nullable Location sourceBlock) {
+    public static List<ChestSummary> order(List<ChestSummary> chests) {
         List<ChestSummary> ordered = new ArrayList<>(chests);
         ordered.sort(Comparator
                 .comparingInt((ChestSummary c) -> c.kind() == ChestKind.TEMP ? 0 : 1)
                 .thenComparingInt(ChestSummary::index));
+        return List.copyOf(ordered);
+    }
 
-        int rows = rowsFor(ordered.size());
+    /** First page of the menu for an unordered chest list; see {@link #buildPage}. */
+    public Inventory build(java.util.Locale locale, List<ChestSummary> chests, UUID owner, @Nullable Location sourceBlock) {
+        return buildPage(locale, order(chests), owner, sourceBlock, 0);
+    }
+
+    /**
+     * Builds one page of the menu for {@code owner}'s chests. A single page (≤ {@link #PAGE_SIZE} chests)
+     * is sized to the chest count and has no controls; more chests than that switch to fixed 54-slot pages
+     * with previous / next arrows (each shown only when that page exists) and a page indicator in the
+     * bottom border row. {@code page} is clamped so an out-of-range request still lands on a real page.
+     *
+     * @param ordered     chests already in display order ({@link #order})
+     * @param page        0-based page to show
+     * @param sourceBlock ender chest block the menu was opened from (for the lid animation on open), or null
+     */
+    public Inventory buildPage(java.util.Locale locale, List<ChestSummary> ordered, UUID owner,
+                               @Nullable Location sourceBlock, int page) {
+        int pageCount = Math.max(1, (ordered.size() + PAGE_SIZE - 1) / PAGE_SIZE);
+        page = Math.max(0, Math.min(page, pageCount - 1));
+        boolean paged = pageCount > 1;
+
+        int from = page * PAGE_SIZE;
+        List<ChestSummary> pageChests = ordered.subList(from, Math.min(ordered.size(), from + PAGE_SIZE));
+
+        int rows = paged ? MAX_ROWS : rowsFor(pageChests.size());
         int[] slots = contentSlots(rows);
 
         Map<Integer, Integer> slotIndex = new HashMap<>();
-        ChestListHolder holder = new ChestListHolder(owner, sourceBlock, slotIndex);
+        Map<Integer, Integer> navSlots = new HashMap<>();
+        ChestListHolder holder = new ChestListHolder(owner, sourceBlock, slotIndex, navSlots, ordered, page);
         Inventory inv = Bukkit.createInventory(holder, rows * COLUMNS, lang.getGui(locale, "dialog.list-title"));
 
-        int count = Math.min(ordered.size(), slots.length);
-        for (int i = 0; i < count; i++) {
-            ChestSummary chest = ordered.get(i);
+        for (int i = 0; i < pageChests.size(); i++) {
+            ChestSummary chest = pageChests.get(i);
             int slot = slots[i];
             inv.setItem(slot, iconFor(locale, chest));
             slotIndex.put(slot, chest.index());
+        }
+
+        if (paged) {
+            if (page > 0) {
+                inv.setItem(SLOT_PREV, nav(locale, "dialog.list-prev-page"));
+                navSlots.put(SLOT_PREV, page - 1);
+            }
+            if (page < pageCount - 1) {
+                inv.setItem(SLOT_NEXT, nav(locale, "dialog.list-next-page"));
+                navSlots.put(SLOT_NEXT, page + 1);
+            }
+            inv.setItem(SLOT_INFO, pageInfo(locale, page, pageCount, ordered.size()));
         }
         return inv;
     }
@@ -127,6 +170,27 @@ public final class ChestListMenu {
             }
         }
         return slots;
+    }
+
+    /** A page arrow, named from gui.yml. */
+    private ItemStack nav(java.util.Locale locale, String key) {
+        ItemStack item = ItemStack.of(Material.ARROW);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(noItalic(lang.getGui(locale, key)));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    /** The page indicator between the arrows: "Page x/y" plus the total chest count. */
+    private ItemStack pageInfo(java.util.Locale locale, int page, int pageCount, int total) {
+        ItemStack item = ItemStack.of(Material.BOOK);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(noItalic(lang.getGui(locale, "dialog.list-page",
+                "page", Integer.toString(page + 1),
+                "pages", Integer.toString(pageCount))));
+        meta.lore(List.of(loreLine(lang.getGui(locale, "dialog.list-total", "count", Integer.toString(total)))));
+        item.setItemMeta(meta);
+        return item;
     }
 
     /** One chest's display item: its chosen icon (or an ender chest), named and described from gui.yml. */

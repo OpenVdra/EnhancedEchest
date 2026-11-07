@@ -15,8 +15,10 @@ enderchest:
   # Size of a player's first chest. One of: 9, 18, 27, 36, 45, 54.
   default-size: 54
 
-  # Chest list style: dialog (full menu) or inventory (click to open only, up to 28 chests).
-  list-menu: dialog
+  # Chest list style: dialog (full menu) or inventory (click to open only, 28 chests per page).
+  # Inventory has no rename, set main, icon or sort buttons; those exist only in the dialog menu.
+  # Players on Minecraft older than 1.21.6 always get inventory, their game can't show the dialog.
+  chest-list-menu: dialog
 
   # Shift + right-click an ender chest opens the chest list instead of a chest.
   shift-click-list: true

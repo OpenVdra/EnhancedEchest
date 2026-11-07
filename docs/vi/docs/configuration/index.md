@@ -44,12 +44,14 @@ Bạn cũng có thể ghi đè kích thước rương cơ bản <strong>theo t�
 
 </ConfigProperty>
 
-<ConfigProperty name="list-menu" value="dialog" type="string">
+<ConfigProperty name="chest-list-menu" value="dialog" type="string">
 Cách hiển thị danh sách rương của <code>/eclist</code> cho người chơi. Đây cũng là danh sách mà <code>/ec</code> và chuột phải mở khi người chơi có 2 rương trở lên và chưa đặt rương chính. Hai giá trị:<br><br>
 
 <code>dialog</code> (mặc định): menu hộp thoại của Paper, với đầy đủ thao tác <strong>Chế độ chỉnh sửa</strong> (đổi tên, đặt rương chính, chọn biểu tượng, sắp xếp).<br><br>
 
-<code>inventory</code>: một GUI rương đơn giản chỉ <strong>liệt kê</strong> các rương. Bấm vào biểu tượng rương sẽ mở rương đó ngay, không có đổi tên, rương chính, biểu tượng hay sắp xếp. <strong>Chế độ này hoạt động với người chơi có tối đa 28 rương.</strong> Người chơi sở hữu hơn 28 rương luôn nhận menu <code>dialog</code>, bất kể cấu hình này.
+<code>inventory</code>: một GUI rương đơn giản chỉ <strong>liệt kê</strong> các rương. Bấm vào biểu tượng rương sẽ mở rương đó ngay, không có đổi tên, rương chính, biểu tượng hay sắp xếp. Mỗi trang hiện tối đa 28 rương. Người chơi có hơn 28 rương sẽ thấy nút <strong>Trang trước</strong> và <strong>Trang sau</strong> ở cuối menu.<br><br>
+
+Người chơi dùng Minecraft <strong>cũ hơn 1.21.6</strong> (vào qua ViaBackwards) luôn nhận <code>inventory</code>, vì game của họ không hiển thị được menu hộp thoại. Cần cài <strong>ViaVersion</strong> trên chính server này. Nếu ViaVersion chỉ chạy trên proxy, mọi người đều nhận menu đặt ở đây.
 
 </ConfigProperty>
 
@@ -313,9 +315,11 @@ enderchest:
   default-size: 54
 
   # Cách hiển thị /eclist: "dialog" (mặc định, menu Chế độ chỉnh sửa đầy đủ) hoặc "inventory" (GUI rương
-  # đơn giản chỉ liệt kê rương; bấm để mở). Menu inventory lớn dần 27 -> 36 -> 45 -> 54 ô và chứa tối đa
-  # 28 rương; người chơi có hơn 28 rương luôn nhận menu dialog.
-  list-menu: dialog
+  # đơn giản chỉ liệt kê rương; bấm để mở). Menu inventory lớn dần 27 -> 36 -> 45 -> 54 ô và hiện
+  # 28 rương mỗi trang; người chơi có hơn 28 rương sẽ có nút chuyển trang.
+  # Inventory không có nút đổi tên, đặt rương chính, biểu tượng hay sắp xếp; các nút này chỉ có ở dialog.
+  # Người chơi Minecraft cũ hơn 1.21.6 luôn nhận inventory, vì game của họ không hiển thị được dialog.
+  chest-list-menu: dialog
 
   # Mở danh sách rương (cùng menu với /eclist) bằng shift + chuột phải vào khối rương ender.
   shift-click-list: true

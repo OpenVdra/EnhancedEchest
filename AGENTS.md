@@ -39,7 +39,7 @@ automatically: check a change by running it.
 ## Stack and constraints
 
 - **Java 21**, **Paper API 1.21.11** (`paper-api:1.21.11-R0.1-SNAPSHOT`, api-version `1.21`).
-  Compiled against the lowest supported API so the jar runs on servers **1.21.11 through 26.2** —
+  Compiled against the lowest supported API so the jar runs on servers **1.21.11 through 26.3** —
   do not call APIs newer than 1.21.11.
 - Paper-only APIs throughout (`paper-plugin.yml` bootstrapper, Brigadier commands, Dialog API), so
   the plugin needs **Paper** or a Paper fork (Purpur / Folia) and does not run on CraftBukkit.

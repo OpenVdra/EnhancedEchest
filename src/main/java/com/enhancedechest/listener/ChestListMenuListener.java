@@ -12,10 +12,11 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 
 /**
- * Drives the simple 27-slot {@code /eclist} inventory menu ({@link ChestListHolder}). The menu is a
- * read-only chooser: every click and drag on it is cancelled so its display icons can never be taken and
- * items can never be dumped into the empty cells, and clicking a chest icon opens that chest — sharing the
- * live session through {@link ChestOpener#openChest} exactly like the dialog and right-click paths.
+ * Drives the simple {@code /eclist} inventory menu ({@link ChestListHolder}). The menu is a read-only
+ * chooser: every click and drag on it is cancelled so its display icons can never be taken and items can
+ * never be dumped into the empty cells, clicking a chest icon opens that chest — sharing the live session
+ * through {@link ChestOpener#openChest} exactly like the dialog and right-click paths — and clicking a
+ * page arrow re-renders the menu on the adjacent page.
  */
 @RequiredArgsConstructor
 public final class ChestListMenuListener implements Listener {
@@ -40,6 +41,11 @@ public final class ChestListMenuListener implements Listener {
         Integer index = holder.chestIndexAt(event.getSlot());
         if (index != null) {
             opener.openChest(player, index, holder.getSourceBlock());
+            return;
+        }
+        Integer targetPage = holder.navTargetAt(event.getSlot());
+        if (targetPage != null) {
+            opener.showListPage(player, holder, targetPage);
         }
     }
 

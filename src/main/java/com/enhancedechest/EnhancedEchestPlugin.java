@@ -1,6 +1,7 @@
 package com.enhancedechest;
 
 import com.enhancedechest.backup.BackupService;
+import com.enhancedechest.compat.ClientVersions;
 import com.enhancedechest.config.ConfigMigrations;
 import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.config.YamlMigrator;
@@ -231,7 +232,8 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 getDataFolder().toPath());
         chestOpener    = new ChestOpener(sessionManager, storageGateway, settingsCache, storage,
                 dbExecutor, languageManager, scheduler, getSLF4JLogger(), pluginConfig.getDefaultSize(),
-                permissionChestService, spillService, pluginConfig, databaseImportService, telemetry);
+                permissionChestService, spillService, pluginConfig, databaseImportService, telemetry,
+                new ClientVersions(getSLF4JLogger()));
         logViewer      = new LogViewer(chestLogStore, codec, dbExecutor, scheduler, languageManager,
                 getSLF4JLogger(), telemetry);
 

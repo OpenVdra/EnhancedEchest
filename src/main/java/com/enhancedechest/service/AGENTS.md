@@ -104,7 +104,7 @@ already in sync (common case: nothing changed, no extra query), and lazily write
   player has none). The index comes from the list already in hand — no `getPrimaryIndex` query.
 - **2+ chests, an explicit main flagged, caller has `enhancedechest.command.open`** → open the main.
 - **2+ chests otherwise** (no main, or no permission), or **any TEMP chest present** → the `/eclist`
-  management UI (dialog or inventory menu, per `enderchest.list-menu`).
+  management UI (dialog or inventory menu, per `enderchest.chest-list-menu`).
 
 "Real chest" counts `kind != TEMP`, i.e. both NORMAL and PERM. A PERM chest can itself be the flagged
 main. The main is **never** auto-assigned. `sortChest` here enforces the per-clicker

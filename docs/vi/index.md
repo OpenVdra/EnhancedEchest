@@ -6,7 +6,7 @@ hero:
   text: "Rương Ender, Nâng Cấp"
   tagline: Cho người chơi rương Ender lớn hơn, tối đa 54 ô, có thể tùy chỉnh và hỗ trợ sở hữu nhiều rương mỗi người chơi
   image:
-    src: /logo.png
+    src: /logo.webp
     alt: EnhancedEchest
   actions:
     - theme: brand

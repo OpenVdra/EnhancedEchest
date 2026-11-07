@@ -20,6 +20,12 @@ dialog:
   main-tag: '<gold>★'
   # {time} ví dụ "23h 45m".
   expires-in: 'Hết hạn sau {time}'
+  # Nút chuyển trang của danh sách dạng kho đồ (chest-list-menu: inventory), hiện khi có hơn 28 rương.
+  # {page}/{pages} đếm từ 1; {count} = tổng số rương.
+  list-prev-page: '<green>« Trang trước'
+  list-next-page: '<green>Trang sau »'
+  list-page: '<gold>Trang {page}/{pages}'
+  list-total: '{count} rương'
 
   # ===== Danh sách xem của quản trị viên (/ee view <player> [list]) =====
   # {player} = chủ rương đang được xem.

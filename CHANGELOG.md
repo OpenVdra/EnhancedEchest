@@ -2,6 +2,26 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## 1.3.0 - 2026-11-07
+
+### Added
+
+- The inventory-style chest list (`chest-list-menu: inventory` in `config.yml`) now has pages. Players with more than 28 chests flip through them with arrows, instead of getting the dialog menu.
+- Players on Minecraft older than 1.21.6, joining through `ViaBackwards`, now get the inventory-style chest list, since their game cannot show the dialog menu. They can open their chests but not rename, set a main, change icons or sort.
+
+### Changed
+
+- The `list-menu` setting in `config.yml` is now `chest-list-menu`. Existing configs are updated automatically on start.
+
+### Fixed
+
+- Fixed two database warnings printed on every server start when using MySQL. Ender chest data was never affected.
+- Fixed a Redis warning printed on every server start when `cross-server` is enabled.
+
+### Notes
+
+- Detecting older game versions needs `ViaVersion` installed on the same server. Without it, or with `ViaVersion` only on the proxy, every player gets the menu set by `chest-list-menu`.
+
 ## 1.2.1 - 2026-09-10
 
 ### Added

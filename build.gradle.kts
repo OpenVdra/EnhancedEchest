@@ -12,7 +12,7 @@ configurations {
 }
 
 group = "com.enhancedechest"
-version = "1.2.1"
+version = "1.3.0"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -22,6 +22,7 @@ repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.faststats.dev/releases")
+    maven("https://repo.viaversion.com")
 }
 
 val faststatsToken: String = System.getenv("FASTSTATS_TOKEN")
@@ -49,6 +50,10 @@ dependencies {
     // From the server classpath; must NOT be relocated (see libs.versions.toml).
     compileOnly(libs.sqlite)
     compileOnly(libs.gson)
+
+    // Optional: detects pre-1.21.6 clients (no Dialog API) behind ViaBackwards. Loaded only when the
+    // ViaVersion plugin is present, see compat/ClientVersions.
+    compileOnly(libs.viaversion.api)
 
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

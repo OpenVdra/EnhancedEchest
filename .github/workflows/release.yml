@@ -179,7 +179,7 @@ jobs:
               { "path": "${{ steps.meta.outputs.jar }}", "platforms": ["PAPER"] }
             ]
           platform_dependencies: |
-            { "PAPER": ["1.21.11", "26.1", "26.1.1", "26.1.2", "26.2"] }
+            { "PAPER": ["1.21.11", "26.1", "26.1.1", "26.1.2", "26.2", "26.3"] }
 
       # Build the Discord embed body: the changelog followed by a download-links
       # section. The GitHub link is the resolved release URL; Modrinth and Hangar

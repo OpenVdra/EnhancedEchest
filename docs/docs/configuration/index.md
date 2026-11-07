@@ -44,12 +44,14 @@ You can also override the base chest size <strong>per player</strong> with the <
 
 </ConfigProperty>
 
-<ConfigProperty name="list-menu" value="dialog" type="string">
+<ConfigProperty name="chest-list-menu" value="dialog" type="string">
 How the <code>/eclist</code> chest list is shown to players. This is also the list that <code>/ec</code> and right-click open when a player has 2 or more chests and no main set. Two values:<br><br>
 
 <code>dialog</code> (default): Paper's dialog menu, with the full <strong>Edit mode</strong> actions (rename, set as main, choose icon, sort).<br><br>
 
-<code>inventory</code>: a plain chest GUI that only <strong>lists</strong> the chests. Clicking a chest icon opens it straight away, with no rename, main, icon, or sort. <strong>It works for players with up to 28 chests.</strong> A player who owns more than 28 chests always gets the <code>dialog</code> menu instead, whatever this is set to.
+<code>inventory</code>: a plain chest GUI that only <strong>lists</strong> the chests. Clicking a chest icon opens it straight away, with no rename, main, icon, or sort. It shows up to 28 chests per page. A player who owns more than 28 chests gets <strong>Previous page</strong> and <strong>Next page</strong> arrows at the bottom of the menu.<br><br>
+
+Players on Minecraft <strong>older than 1.21.6</strong> (joining through ViaBackwards) always get <code>inventory</code>, because their game can't show the dialog menu. This needs <strong>ViaVersion</strong> on this server. If ViaVersion only runs on the proxy, everyone gets the menu set here.
 
 </ConfigProperty>
 
@@ -313,8 +315,10 @@ enderchest:
 
   # How /eclist is shown: "dialog" (default, full Edit-mode menu) or "inventory" (a plain chest GUI
   # that only lists chests; click to open). The inventory menu grows 27 -> 36 -> 45 -> 54 slots and
-  # holds up to 28 chests; players with more than 28 chests always get the dialog menu.
-  list-menu: dialog
+  # shows 28 chests per page; players with more than 28 chests get page arrows.
+  # Inventory has no rename, set main, icon or sort buttons; those exist only in the dialog menu.
+  # Players on Minecraft older than 1.21.6 always get inventory, their game can't show the dialog.
+  chest-list-menu: dialog
 
   # Open the chest list (same menu as /eclist) with shift + right-click on an ender chest block.
   shift-click-list: true

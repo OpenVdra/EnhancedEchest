@@ -20,6 +20,12 @@ dialog:
   main-tag: '<gold>★'
   # {time} e.g. "23h 45m".
   expires-in: 'Expires in {time}'
+  # Page controls of the inventory-style list (chest-list-menu: inventory), shown above 28 chests.
+  # {page}/{pages} are 1-based; {count} = total chests.
+  list-prev-page: '<green>« Previous page'
+  list-next-page: '<green>Next page »'
+  list-page: '<gold>Page {page}/{pages}'
+  list-total: '{count} chests'
 
   # ===== Admin view list (/ee view <player> [list]) =====
   # {player} = the owner whose chests are being viewed.

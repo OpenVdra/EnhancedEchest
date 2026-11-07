@@ -21,7 +21,8 @@ public final class ConfigMigrations {
 
     /** Renames applied to {@code config.yml}. */
     public static final List<YamlMigrator.Rename> CONFIG = List.of(
-            // -- 1.x.x renames go here --
+            // 1.3.0: the chest list setting got a self-describing name.
+            new YamlMigrator.Rename("enderchest.list-menu", "enderchest.chest-list-menu")
     );
 
     /** Renames applied to {@code language/<locale>/messages.yml}. */

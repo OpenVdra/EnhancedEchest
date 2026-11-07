@@ -7,6 +7,15 @@ folia-supported: true
 author: Nighter
 description: Gives every player a double-size ender chest backed by a persistent database
 
+dependencies:
+  server:
+    # Optional. Lets the plugin see each player's real client version, so players on clients older
+    # than 1.21.6 (joining through ViaBackwards) get the inventory chest list instead of a dialog.
+    ViaVersion:
+      load: BEFORE
+      required: false
+      join-classpath: true
+
 permissions:
   enhancedechest.command.open:
     description: Open the ender chest GUI via command (/enderchest, /eclist). Block right-click never needs this.
