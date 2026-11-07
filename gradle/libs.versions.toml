@@ -2,7 +2,7 @@
 # Only versions shared by more than one coordinate. Single-use versions stay inline below.
 paper = "1.21.11-R0.1-SNAPSHOT"
 lombok = "1.18.48"
-sqlite = "3.53.4.0"
+sqlite = "3.54.1.0"
 
 [plugins]
 shadow = { id = "com.gradleup.shadow", version = "9.6.1" }
