@@ -1,6 +1,6 @@
 # Multi-Chest System
 
-Players are no longer limited to one ender chest. Each player can own several, managed through an in-game menu.
+Each player can own one or several chests, with their own names and icons, managed from an in-game menu.
 
 <figure class="feature-figure">
   <img alt="The chest list menu showing several owned ender chests" src="/screenshots/eclist.webp" />
@@ -30,19 +30,19 @@ Players on Minecraft older than 1.21.6, joining through ViaBackwards, always get
 
 ## Main Chest
 
-With several chests, a player can pick one as their **main**, the one opened directly by `/ec` and by right-clicking an ender chest. Until a main is chosen, those open the management menu instead. A new chest is never made main automatically; players set it from the menu (and can always reach the menu with `/eclist`).
+With several chests, a player can pick one as their **main**, the one opened directly by `/ec` and by right-clicking an ender chest. Until a main is chosen, those open the management menu instead. A new chest never becomes main on its own. Players set it from the menu, which `/eclist` always opens.
 
 One exception: while a player has a **temporary chest** holding spilled items (for example after a resize or a revoked rank chest), opening the ender chest always shows the menu, even with a main set. This makes sure the spilled items are seen. Once the player empties the temporary chest, it disappears and the main chest opens directly again.
 
-## Customize Each Chest
+## Customize Each Chest {#customize-each-chest}
 
-Personalize a chest from the in-game menu, no commands needed:
+Personalize a chest from the in-game menu, with no commands:
 
-- **Rename**: give it a display name, with optional colours
-- **Choose an icon**: pick any item to show in the list
+- **Rename**: give it its own name, with optional colours. It becomes the inventory title.
+- **Choose an icon**: pick from over a thousand items, with a search box
 - **Sort**: merge stacks and reorder by type in one click
 
-Each one can be switched off server-wide in the `features` section under `enderchest` in `config.yml`. See [Configuration](/docs/configuration/).
+Rename, icons and sorting can each be switched off server-wide in the `features` section under `enderchest` in `config.yml`. See [Configuration](/docs/configuration/).
 
 <div class="placeholder-row">
   <figure>

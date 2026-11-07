@@ -1,22 +1,17 @@
-# Larger Ender Chests
+# Custom Ender Chests
 
-EnhancedEchest replaces the vanilla 27-slot ender chest with a configurable inventory of up to **54 slots**.
+Each chest can hold **9, 18, 27, 36, 45 or 54 slots**, instead of the fixed 27 of the vanilla ender chest.
 
 <img class="feature-shot" alt="Six ender chests stacked from 54 slots down to 9 slots" src="/screenshots/chest-sizes.webp" />
 
-## Same Block, More Space
+## Vanilla Feel
 
-Players open their ender chest the same way they always have, by right-clicking an ender chest, and get the larger inventory instead of the vanilla screen.
+Players use the same vanilla ender chest as always. Right-click it or run `/ec` to open it, and the lid still opens and closes.
 
-- Opens on right-click or via `/ec`
-- The ender chest block keeps its open/close lid animation
-- Size is configurable in multiples of 9, from 9 up to 54
+## Size by Rank
 
-## Configurable Size
+The size of a player's first chest is set with the `default-size` setting in `config.yml`. It defaults to `54`.
 
-The default size for a player's first chest is set with `default-size` in `config.yml`. Admins can also resize any individual chest with `/ee resize`, and you can override the base size **per rank** with the `enhancedechest.default_size.<size>` permission.
-
-- Valid sizes: `9`, `18`, `27`, `36`, `45`, `54`
-- Invalid values are rounded to the nearest valid size
-- Defaults to `54` (a full double chest)
-- Per-player override by permission, see the [Permission Chests](/docs/access/permission-chests#default-size-permission) page
+- Accepted sizes: `9`, `18`, `27`, `36`, `45`, `54`. Any other value is rounded to the nearest one.
+- Set the size per rank with the `enhancedechest.default_size.<size>` permission. See [Permission Chests](/docs/access/permission-chests#default-size-permission).
+- Admins can resize any single chest with `/ee resize`.

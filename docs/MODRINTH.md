@@ -8,7 +8,7 @@
 
 </div>
 
-## Larger Ender Chests
+## Custom Ender Chests
 * **Multiple sizes:** each chest can hold 9, 18, 27, 36, 45 or 54 slots.
 * **Vanilla feel:** Same vanilla ender chest block. Right-click or run `/ec` to open it.
 * **Size by Rank:** Set the base size per rank with the [`enhancedechest.default_size.<size>`](https://openvdra.github.io/EnhancedEchest/docs/access/permission-chests#default-size-permission) permission.

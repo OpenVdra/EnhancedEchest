@@ -1,22 +1,17 @@
-# Rương Ender Lớn Hơn
+# Rương Ender Tùy Chỉnh
 
-EnhancedEchest thay rương Ender vanilla 27 ô bằng một kho đồ có thể cấu hình lên tới **54 ô**.
+Mỗi rương có thể chứa **9, 18, 27, 36, 45 hoặc 54 ô**, thay vì cố định 27 ô như rương Ender vanilla.
 
 <img class="feature-shot" alt="Sáu rương Ender xếp chồng, từ 54 ô xuống 9 ô" src="/screenshots/chest-sizes.webp" />
 
-## Cùng Khối, Nhiều Không Gian Hơn
+## Cảm Giác Vanilla
 
-Người chơi mở rương Ender đúng theo cách họ vẫn làm, bằng cách chuột phải vào rương Ender, và nhận được kho đồ lớn hơn thay vì màn hình vanilla.
+Người chơi vẫn dùng rương Ender vanilla như cũ. Chuột phải vào rương hoặc dùng `/ec` để mở, nắp rương vẫn đóng mở như thường.
 
-- Mở bằng chuột phải hoặc qua `/ec`
-- Khối rương Ender vẫn giữ hiệu ứng đóng/mở nắp
-- Kích thước cấu hình theo bội số của 9, từ 9 đến 54
+## Kích Thước Theo Rank
 
-## Kích Thước Tùy Chỉnh
+Kích thước rương đầu tiên của người chơi được đặt bằng `default-size` trong `config.yml`. Mặc định là `54`.
 
-Kích thước mặc định cho rương đầu tiên của người chơi được đặt bằng `default-size` trong `config.yml`. Quản trị viên cũng có thể đổi kích thước từng rương bằng `/ee resize`, và bạn có thể ghi đè kích thước rương cơ bản **theo từng rank** bằng quyền `enhancedechest.default_size.<size>`.
-
-- Kích thước hợp lệ: `9`, `18`, `27`, `36`, `45`, `54`
-- Giá trị không hợp lệ được làm tròn về kích thước gần nhất
-- Mặc định là `54` (rương đôi đầy đủ)
-- Ghi đè theo từng người chơi bằng quyền, xem trang [Rương Theo Quyền](/vi/docs/access/permission-chests#default-size-permission)
+- Kích thước hợp lệ: `9`, `18`, `27`, `36`, `45`, `54`. Giá trị khác được làm tròn về kích thước gần nhất.
+- Đặt kích thước theo từng rank bằng quyền `enhancedechest.default_size.<size>`. Xem [Rương Theo Quyền](/vi/docs/access/permission-chests#default-size-permission).
+- Quản trị viên có thể đổi kích thước từng rương bằng `/ee resize`.

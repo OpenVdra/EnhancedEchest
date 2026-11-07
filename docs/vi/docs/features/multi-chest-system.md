@@ -1,6 +1,6 @@
 # Hệ Thống Nhiều Rương
 
-Người chơi không còn bị giới hạn ở một rương Ender. Mỗi người chơi có thể sở hữu nhiều rương, quản lý qua menu trong game.
+Mỗi người chơi có thể sở hữu một hoặc nhiều rương, mỗi rương có tên và biểu tượng riêng, quản lý từ menu trong game.
 
 <figure class="feature-figure">
   <img alt="The chest list menu showing several owned ender chests" src="/screenshots/eclist.webp" />
@@ -30,19 +30,19 @@ Người chơi dùng Minecraft cũ hơn 1.21.6, vào qua ViaBackwards, luôn nh�
 
 ## Rương Chính
 
-Với nhiều rương, người chơi có thể chọn một rương làm **rương chính**, rương được mở trực tiếp bằng `/ec` và bằng chuột phải vào rương Ender. Cho đến khi chọn rương chính, những thao tác đó sẽ mở menu quản lý. Rương mới không bao giờ tự động trở thành rương chính; người chơi tự đặt từ menu (và luôn vào menu được bằng `/eclist`).
+Với nhiều rương, người chơi có thể chọn một rương làm **rương chính**, rương được mở trực tiếp bằng `/ec` và bằng chuột phải vào rương Ender. Cho đến khi chọn rương chính, những thao tác đó sẽ mở menu quản lý. Rương mới không bao giờ tự trở thành rương chính. Người chơi tự đặt từ menu, và `/eclist` luôn mở được menu này.
 
 Một ngoại lệ: khi người chơi đang có **rương tạm** chứa vật phẩm bị dồn (ví dụ sau khi rương bị thu nhỏ hoặc rương cấp theo rank bị thu hồi), mở rương Ender sẽ luôn hiện menu, kể cả khi đã đặt rương chính. Điều này bảo đảm người chơi thấy được số vật phẩm bị dồn. Khi lấy hết đồ, rương tạm tự biến mất và rương chính lại mở trực tiếp như thường.
 
-## Tùy Chỉnh Từng Rương
+## Tùy Chỉnh Từng Rương {#customize-each-chest}
 
 Cá nhân hóa rương ngay từ menu trong game, không cần lệnh:
 
-- **Đổi tên**: đặt tên hiển thị cho rương, có thể tô màu
-- **Chọn biểu tượng**: chọn vật phẩm bất kỳ để hiện trong danh sách
+- **Đổi tên**: đặt tên riêng cho rương, có thể tô màu. Tên này trở thành tiêu đề kho đồ.
+- **Chọn biểu tượng**: chọn từ hơn một nghìn vật phẩm, có ô tìm kiếm
 - **Sắp xếp**: gộp cụm và xếp lại theo loại chỉ với một cú bấm
 
-Có thể tắt từng mục cho toàn máy chủ trong phần `features` thuộc mục `enderchest` của `config.yml`. Xem [Cấu hình](/vi/docs/configuration/).
+Đổi tên, biểu tượng và sắp xếp đều có thể tắt riêng cho toàn máy chủ trong phần `features` thuộc mục `enderchest` của `config.yml`. Xem [Cấu hình](/vi/docs/configuration/).
 
 <div class="placeholder-row">
   <figure>

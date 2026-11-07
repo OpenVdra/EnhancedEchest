@@ -27,7 +27,7 @@ const enFeaturesSidebar = [
     text: 'Features',
     items: [
       { text: 'Overview', link: '/docs/features/' },
-      { text: 'Larger Ender Chests', link: '/docs/features/larger-ender-chests' },
+      { text: 'Custom Ender Chests', link: '/docs/features/larger-ender-chests' },
       { text: 'Multi-Chest System', link: '/docs/features/multi-chest-system' },
       { text: 'Bedrock Support', link: '/docs/features/bedrock-support' }
     ]
@@ -39,7 +39,7 @@ const viFeaturesSidebar = [
     text: 'Tính năng',
     items: [
       { text: 'Tổng quan', link: '/vi/docs/features/' },
-      { text: 'Rương Ender Lớn Hơn', link: '/vi/docs/features/larger-ender-chests' },
+      { text: 'Rương Ender Tùy Chỉnh', link: '/vi/docs/features/larger-ender-chests' },
       { text: 'Hệ Thống Nhiều Rương', link: '/vi/docs/features/multi-chest-system' },
       { text: 'Hỗ Trợ Bedrock', link: '/vi/docs/features/bedrock-support' }
     ]
@@ -154,7 +154,7 @@ const viSidebar = {
 
 export default defineConfig({
   title: "EnhancedEchest",
-  description: "Bigger ender chests for your players, several per person, each with its own name and icon.",
+  description: "Add custom ender chests with 9, 18, 27, 36, 45 or 54 slots, customizable and support for multiple chests per player.",
   // GitHub project page is served from /EnhancedEchest/. If you later point a custom
   // domain at the site (add public/CNAME), change this back to '/'.
   base: '/EnhancedEchest/',
@@ -225,7 +225,7 @@ export default defineConfig({
     vi: {
       label: 'Tiếng Việt',
       lang: 'vi',
-      description: 'Rương Ender lớn hơn cho người chơi, nhiều rương mỗi người, mỗi rương có tên và biểu tượng riêng.',
+      description: 'Thêm rương Ender tùy chỉnh với 9, 18, 27, 36, 45 hoặc 54 ô, dễ tùy biến và hỗ trợ nhiều rương cho mỗi người chơi.',
       themeConfig: {
         nav: [
           { text: 'Tài liệu', link: '/vi/docs/getting-started', activeMatch: '^/vi/docs/(getting-started|access|configuration|database)(/|$)' },

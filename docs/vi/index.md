@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "EnhancedEchest"
   text: "Rương Ender, Nâng Cấp"
-  tagline: Cho người chơi rương Ender lớn hơn, tối đa 54 ô, có thể tùy chỉnh và hỗ trợ sở hữu nhiều rương mỗi người chơi
+  tagline: Thêm rương Ender tùy chỉnh với 9, 18, 27, 36, 45 hoặc 54 ô, dễ tùy biến và hỗ trợ nhiều rương cho mỗi người chơi
   image:
     src: /logo.webp
     alt: EnhancedEchest
@@ -17,24 +17,24 @@ hero:
       link: /vi/docs/getting-started#download
 
 features:
-  - title: Tối đa 54 Ô
-    details: Thay rương Ender vanilla chật chội bằng một rương đôi đầy đủ, sáu hàng thay vì ba.
+  - title: Sáu Kích Thước Rương
+    details: Mỗi rương chứa 9, 18, 27, 36, 45 hoặc 54 ô. Người chơi vẫn chuột phải vào rương Ender như cũ, hoặc dùng /ec.
     link: /vi/docs/features/larger-ender-chests
   - title: Nhiều Rương Cho Mỗi Người Chơi
-    details: Cho người chơi nhiều hơn một rương Ender. Mở, đặt tên và chuyển đổi giữa chúng từ một menu trong game.
+    details: Mỗi người chơi có thể sở hữu một hoặc nhiều rương và tự chọn rương chính mà /ec mở, tất cả từ menu trong game.
     link: /vi/docs/features/multi-chest-system
-  - title: Tên và Biểu Tượng Tùy Chỉnh
-    details: Mỗi rương có thể có tên và biểu tượng riêng, chọn trực tiếp từ bộ chọn vật phẩm trong game, không cần lệnh.
-    link: /vi/docs/features/multi-chest-system
-  - title: Cấp Rương Theo Quyền
-    details: Phát rương theo rank hoặc nhóm quyền. Việc cấp đồng bộ tự động và thu hồi sạch sẽ khi rank thay đổi.
-    link: /vi/docs/access/permissions
-  - title: Tương Thích Bedrock
-    details: Menu trong game hiển thị dưới dạng form Bedrock native cho người chơi vào qua Geyser, không cần cấu hình thêm.
-    link: /vi/docs/features/bedrock-support
-  - title: Mã Nguồn Mở
-    details: EnhancedEchest hoàn toàn miễn phí và mã nguồn mở trên GitHub. Fork nó, phát triển thêm, hoặc đóng góp lại.
-    link: https://github.com/OpenVdra/EnhancedEchest
+  - title: Tên và Biểu Tượng
+    details: Đặt tên riêng cho từng rương, có thể tô màu, và chọn biểu tượng từ hơn một nghìn vật phẩm.
+    link: /vi/docs/features/multi-chest-system#customize-each-chest
+  - title: Công Cụ Quản Trị
+    details: Thêm, đổi kích thước, xóa và xem rương của bất kỳ người chơi nào, trực tuyến hay ngoại tuyến, kể cả rương tạm có hạn dùng.
+    link: /vi/docs/access/commands
+  - title: Nhật Ký Hoạt Động
+    details: Xem ai đã bỏ vào hay lấy ra gì, và chính xác rương chứa gì sau mỗi lần mở, bằng /ee log.
+    link: /vi/docs/configuration/activity-log
+  - title: Mọi Cơ Sở Dữ Liệu
+    details: SQLite dùng ngay, hoặc MySQL, MariaDB và PostgreSQL, dùng chung giữa nhiều máy chủ qua Redis.
+    link: /vi/docs/database/
 ---
 
 <UsageStats />
