@@ -122,7 +122,11 @@ public final class RedisCoordinator implements CrossServerCoordinator {
         DefaultJedisClientConfig.Builder cfg = DefaultJedisClientConfig.builder()
                 .database(database)
                 .ssl(ssl)
-                .timeoutMillis(5_000);
+                .timeoutMillis(5_000)
+                // Skip the HELLO handshake and talk the server's default (RESP2). Locks + pub/sub need
+                // nothing from RESP3, and leaving auto-negotiation on made Jedis log a warning on every
+                // start (issue #53) before falling back to RESP2 anyway.
+                .serverDefaultProtocol();
         if (ssl) {
             // Jedis validates the certificate chain against the JVM truststore when ssl is on, but does
             // NOT verify the hostname by default. Turn on endpoint identification so a valid certificate

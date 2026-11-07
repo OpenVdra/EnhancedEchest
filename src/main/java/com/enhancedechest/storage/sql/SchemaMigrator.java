@@ -233,9 +233,11 @@ final class SchemaMigrator {
      * every few minutes on a large roster. A missing index only costs sweep performance, never
      * correctness, so any failure here is logged and swallowed rather than aborting startup.
      *
-     * <p>Portability: {@code CREATE INDEX IF NOT EXISTS} is accepted by SQLite, MariaDB and PostgreSQL;
-     * stock MySQL rejects the {@code IF NOT EXISTS}, so on that first failure we retry with a plain
-     * {@code CREATE INDEX} and tolerate the duplicate-index error a subsequent start then raises.
+     * <p>Portability: existence is checked through JDBC metadata first and only a plain {@code CREATE
+     * INDEX} is issued, never {@code CREATE INDEX IF NOT EXISTS}. Stock MySQL (8.4 included) rejects the
+     * {@code IF NOT EXISTS}, and the shaded MariaDB driver logs every server error packet at WARN on its
+     * own — so a "try it and swallow the failure" approach printed two warnings on every MySQL start
+     * (issue #53) even though nothing was wrong.
      */
     private static void ensureIndexes(Connection conn, String prefix) {
         // Index name carries the prefix too: SQLite/PostgreSQL require index names to be unique
@@ -244,17 +246,35 @@ final class SchemaMigrator {
         // leaving the table itself intact — the index is just recreated under the new name if missing.
         String indexName = prefix + "idx_enderchests_expires";
         String table = prefix + "enderchests";
-        String ddl = "CREATE INDEX %s" + indexName + " ON " + table + " (expires_at)";
-        try (Statement stmt = conn.createStatement()) {
-            stmt.execute(String.format(ddl, "IF NOT EXISTS "));
-        } catch (SQLException ifNotExistsUnsupported) {
+        try {
+            if (indexExists(conn, table, indexName)) {
+                return;                                    // the common restart path: no DDL at all
+            }
             try (Statement stmt = conn.createStatement()) {
-                stmt.execute(String.format(ddl, ""));      // stock MySQL: no IF NOT EXISTS
-            } catch (SQLException probablyAlreadyExists) {
-                log.debug("Expiry index not created (likely already present): {}",
-                        probablyAlreadyExists.getMessage());
+                stmt.execute("CREATE INDEX " + indexName + " ON " + table + " (expires_at)");
+            }
+        } catch (SQLException e) {
+            log.debug("Expiry index not created: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * True if {@code table} has an index named {@code indexName} (case-insensitive), via JDBC metadata so
+     * no engine-specific catalog query is needed. Same upper-case table retry as {@link #columnExists}.
+     */
+    private static boolean indexExists(Connection conn, String table, String indexName) throws SQLException {
+        DatabaseMetaData meta = conn.getMetaData();
+        for (String t : new String[] {table, table.toUpperCase(Locale.ROOT)}) {
+            // approximate=true: no need for the driver to refresh statistics just to list index names
+            try (ResultSet rs = meta.getIndexInfo(conn.getCatalog(), null, t, false, true)) {
+                while (rs.next()) {
+                    if (indexName.equalsIgnoreCase(rs.getString("INDEX_NAME"))) {
+                        return true;
+                    }
+                }
             }
         }
+        return false;
     }
 
     private static void ensureMetaTable(Connection conn, String metaTable) throws SQLException {
