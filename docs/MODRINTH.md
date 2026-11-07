@@ -43,11 +43,11 @@
 <div align="center">
 <table>
   <tr>
-    <th align="center">Rename</th>
+    <th align="center">Chests with Icons</th>
     <th align="center">Choose an Icon</th>
   </tr>
   <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/OpenVdra/EnhancedEchest/main/docs/public/screenshots/rename.webp" alt="Renaming a chest to Treasure Vault" width="372"></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/OpenVdra/EnhancedEchest/main/docs/public/screenshots/eclist-icons.webp" alt="The chest list with renamed chests, each with its own icon" width="372"></td>
     <td align="center"><img src="https://raw.githubusercontent.com/OpenVdra/EnhancedEchest/main/docs/public/screenshots/icon-picker.webp" alt="The searchable item picker for choosing a chest icon" width="372"></td>
   </tr>
 </table>

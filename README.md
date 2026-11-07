@@ -24,8 +24,8 @@ Every feature is explained on the [documentation site](https://openvdra.github.i
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/public/screenshots/eclist.webp" alt="The chest list showing seven named chests with icons" width="372"></td>
-    <td align="center"><img src="docs/public/screenshots/chest-54.webp" alt="A 54-slot ender chest named Treasure Vault" width="320"></td>
+    <td align="center"><img src="docs/public/screenshots/eclist-icons.webp" alt="The chest list showing seven named chests with icons" width="372"></td>
+    <td align="center"><img src="docs/public/screenshots/chest-sizes.webp" alt="Six ender chests stacked from 54 slots down to 9 slots" width="400"></td>
   </tr>
 </table>
 </div>
