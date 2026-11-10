@@ -43,6 +43,9 @@ public final class ChestLogStore {
     /** A stored snapshot resolved back to bytes plus the chest size needed to decode it. */
     public record SnapshotBlob(byte[] data, int size) {}
 
+    /** The snapshot of an earlier visit plus when that visit closed. */
+    public record PreviousSnapshot(byte[] data, int size, long closedAt) {}
+
     private static final String TABLE = "echest_log";
 
     private final Path dbFile;
@@ -216,17 +219,17 @@ public final class ChestLogStore {
      * The chest as it was <i>before</i> a visit: the snapshot of the newest earlier logged visit of the same
      * chest. {@code null} when there is none (first logged visit, or the older rows were pruned).
      */
-    public @Nullable SnapshotBlob loadPreviousSnapshot(UUID owner, int index, long id) throws SQLException {
+    public @Nullable PreviousSnapshot loadPreviousSnapshot(UUID owner, int index, long id) throws SQLException {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT snapshot, size FROM " + TABLE
+                     "SELECT snapshot, size, closed_at FROM " + TABLE
                              + " WHERE owner = ? AND chest_index = ? AND id < ? ORDER BY id DESC LIMIT 1")) {
             ps.setString(1, owner.toString());
             ps.setInt(2, index);
             ps.setLong(3, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) return null;
-                return new SnapshotBlob(gunzip(rs.getBytes(1)), rs.getInt(2));
+                return new PreviousSnapshot(gunzip(rs.getBytes(1)), rs.getInt(2), rs.getLong(3));
             }
         }
     }

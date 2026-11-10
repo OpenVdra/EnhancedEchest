@@ -235,7 +235,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 permissionChestService, spillService, pluginConfig, databaseImportService, telemetry,
                 new ClientVersions(getSLF4JLogger()));
         logViewer      = new LogViewer(chestLogStore, codec, dbExecutor, scheduler, languageManager,
-                getSLF4JLogger(), telemetry);
+                getSLF4JLogger(), telemetry, getDataFolder().toPath().resolve(pluginConfig.getBackupFolder()));
 
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger(),
                 sessionManager, scheduler, telemetry, pluginConfig.getTempExpiryMillis());

@@ -114,6 +114,7 @@ log:
   # Snapshot preview window title. {index} = chest number, {time} = when it was closed.
   snapshot-title: '#{index} · {time}'
   snapshot-title-before: '#{index} · Before · {time}'
+  snapshot-title-backup: '#{index} · Backup · {time}'
   # Search dialog: find visits whose change list mentions an item.
   search-title: 'Search chest log'
   search-body: 'Type an item name to find visits that added or took it.'

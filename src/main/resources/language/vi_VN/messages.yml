@@ -79,7 +79,7 @@ admin:
   log-empty: '{prefix}{player} chưa có hoạt động rương nào được ghi lại.'
   log-failed: '{prefix}Không đọc được nhật ký hoạt động rương. Vui lòng kiểm tra console.'
   log-snapshot-failed: '{prefix}Không mở được ảnh chụp đó — có thể nó đã bị dọn.'
-  log-snapshot-no-before: '{prefix}Không có ảnh chụp trước lượt này (đây là lượt đầu tiên được ghi, hoặc lượt cũ đã bị dọn).'
+  log-snapshot-no-before: '{prefix}Không tìm thấy đồ trước lượt này: không có lượt nào được ghi trước đó, và không có bản backup database nào cũ hơn lượt này.'
   chest-added: '{prefix}Đã thêm rương ender {index} với {size} ô cho {player}.'
   chest-added-expiring: '{prefix}Đã thêm rương ender {index} với {size} ô cho {player}. Rương sẽ hết hạn sau {duration}.'
   chests-added: '{prefix}Đã thêm {count} rương ender ({range}) với {size} ô cho {player}.'
