@@ -213,6 +213,25 @@ public final class ChestLogStore {
     }
 
     /**
+     * The chest as it was <i>before</i> a visit: the snapshot of the newest earlier logged visit of the same
+     * chest. {@code null} when there is none (first logged visit, or the older rows were pruned).
+     */
+    public @Nullable SnapshotBlob loadPreviousSnapshot(UUID owner, int index, long id) throws SQLException {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT snapshot, size FROM " + TABLE
+                             + " WHERE owner = ? AND chest_index = ? AND id < ? ORDER BY id DESC LIMIT 1")) {
+            ps.setString(1, owner.toString());
+            ps.setInt(2, index);
+            ps.setLong(3, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                return new SnapshotBlob(gunzip(rs.getBytes(1)), rs.getInt(2));
+            }
+        }
+    }
+
+    /**
      * Applies retention: deletes events older than {@code cutoffTs}, then trims each owner to its newest
      * {@code maxPerOwner} rows. The per-owner trim uses a window function (SQLite ≥ 3.25, well below the
      * bundled driver's version) so it stays one statement rather than a per-owner scan.

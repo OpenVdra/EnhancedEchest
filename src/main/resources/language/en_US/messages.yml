@@ -79,6 +79,7 @@ admin:
   log-empty: '{prefix}{player} has no chest activity logged yet.'
   log-failed: '{prefix}Could not read the chest activity log. Please check the console.'
   log-snapshot-failed: '{prefix}Could not open that snapshot — it may have been cleaned up.'
+  log-snapshot-no-before: '{prefix}No snapshot before this visit (it is the first logged one, or older ones were cleaned up).'
   chest-added: '{prefix}Added ender chest {index} with {size} slots to {player}.'
   chest-added-expiring: '{prefix}Added ender chest {index} with {size} slots to {player}. It will expire in {duration}.'
   chests-added: '{prefix}Added {count} ender chests ({range}) with {size} slots to {player}.'

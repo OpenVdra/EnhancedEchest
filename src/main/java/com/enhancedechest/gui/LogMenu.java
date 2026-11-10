@@ -119,6 +119,7 @@ public final class LogMenu {
         appendDiff(lore, entry.diff());
         lore.add(Component.empty());
         lore.add(line(lang.getGui(locale, "log.lore-click")));
+        lore.add(line(lang.getGui(locale, "log.lore-click-before")));
 
         meta.lore(lore);
         item.setItemMeta(meta);

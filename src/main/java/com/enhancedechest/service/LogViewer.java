@@ -155,9 +155,20 @@ public final class LogViewer {
      */
     public void openSnapshot(Player admin, UUID owner, String ownerName, LogEntry entry, int page,
                              @Nullable String query) {
+        openSnapshot(admin, owner, ownerName, entry, page, query, false);
+    }
+
+    /**
+     * {@code before} = show the chest as it was when this visit started (the previous logged visit's
+     * snapshot) instead of as it was left.
+     */
+    public void openSnapshot(Player admin, UUID owner, String ownerName, LogEntry entry, int page,
+                             @Nullable String query, boolean before) {
         db.supply(() -> {
             try {
-                ChestLogStore.SnapshotBlob blob = store.loadSnapshot(entry.id());
+                ChestLogStore.SnapshotBlob blob = before
+                        ? store.loadPreviousSnapshot(owner, entry.index(), entry.id())
+                        : store.loadSnapshot(entry.id());
                 if (blob == null) return null;   // pruned between listing and click
                 return codec.decode(blob.data(), blob.size());
             } catch (Exception e) {
@@ -171,10 +182,11 @@ public final class LogViewer {
                         logger.warn("Could not open chest-log snapshot {} for {}", entry.id(), owner, err);
                         telemetry.error(err, "log.snapshot-decode");
                     }
-                    admin.sendMessage(lang.get("admin.log-snapshot-failed"));
+                    admin.sendMessage(lang.get(before && err == null
+                            ? "admin.log-snapshot-no-before" : "admin.log-snapshot-failed"));
                     return;
                 }
-                Component title = lang.getGui(admin.locale(), "log.snapshot-title",
+                Component title = lang.getGui(admin.locale(), before ? "log.snapshot-title-before" : "log.snapshot-title",
                         "index", Integer.toString(entry.index()),
                         "time", TIME.format(Instant.ofEpochMilli(entry.closedAt())));
                 Inventory inv = Bukkit.createInventory(

@@ -2,6 +2,13 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## Unreleased
+
+### Added
+
+- `/ee log`: right-click a visit to see the chest as it was before that visit (the previous logged visit of the same chest). Left-click still shows it as it was left.
+- `/ee log`: admins with the new `enhancedechest.admin.log.take` permission (default op) can take or drop items out of a log snapshot to give lost items back. Every item that leaves a snapshot is logged to the console. Without the permission the snapshot stays a read-only sandbox, as before.
+
 ## 1.3.0 - 2026-11-07
 
 ### Added
