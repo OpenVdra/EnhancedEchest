@@ -136,6 +136,8 @@ enhancedechest.admin.transfer
 enhancedechest.admin.view         open another player's chest (read-only by default)
 enhancedechest.admin.edit         additionally take/add items, and rename/icon/sort while viewing
 enhancedechest.admin.clear        show and use the Clear chest button in the /ee view detail dialog
+enhancedechest.admin.log          open the /ee log viewer (snapshots are a sandbox: look, never take)
+enhancedechest.admin.log.take     snapshots open in take-out mode (items may leave, never enter; audited)
 ```
 
 All admin nodes default to `op`. The two grant-style nodes deliberately have **no** default — they are

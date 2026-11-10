@@ -27,6 +27,8 @@ Mỗi lượt là một ô, một rương ender, mới nhất trước:
 
 Nhấn vào một ô bất kỳ để xem chính xác nội dung rương khi lượt đó kết thúc. Có thể nhặt và di chuyển vật phẩm trong bản xem này để kiểm tra, nhưng không thể lấy ra khỏi nó, và đóng lại không thay đổi gì. Bản ghi đã lưu không bao giờ bị sửa đổi. Bấm Esc hoặc E sẽ quay về đúng trang nhật ký lúc nãy.
 
+Quản trị viên có quyền `enhancedechest.admin.log.take` có thể lấy vật phẩm ra khỏi bản xem, vào túi đồ hoặc vứt xuống đất, để trả lại đồ bị mất. Ở chế độ này tiêu đề cửa sổ kết thúc bằng "Lấy ra". Không thể bỏ vật phẩm vào bản xem, và rương thật của người chơi không bị thay đổi. Mỗi lần lấy đều được ghi vào console máy chủ, kèm tên quản trị viên và các vật phẩm đã lấy.
+
 <figure class="feature-figure">
   <img alt="The contents a chest held at the end of one logged visit" src="/screenshots/log-snapshot.webp" />
   <figcaption>Rương đúng như lúc lượt đó kết thúc.</figcaption>

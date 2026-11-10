@@ -27,6 +27,8 @@ Each visit is one pane, an ender chest, newest first:
 
 Click any pane to see the exact contents the chest held when that visit ended. Items can be picked up and moved around inside this preview to inspect them, but nothing can be taken out of it, and closing it changes nothing. The stored record is never altered. Pressing Esc or E returns to the same page of the log.
 
+Admins with the `enhancedechest.admin.log.take` permission can take items out of the preview, into their inventory or onto the ground, to give back lost items. The window title ends with "Take out" in this mode. Items cannot be put into the preview, and the player's real chest is not changed. Every take is written to the server console with the admin's name and the items taken.
+
 <figure class="feature-figure">
   <img alt="The contents a chest held at the end of one logged visit" src="/screenshots/log-snapshot.webp" />
   <figcaption>The chest exactly as it was when that visit ended.</figcaption>

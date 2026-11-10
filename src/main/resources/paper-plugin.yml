@@ -48,6 +48,9 @@ permissions:
   enhancedechest.admin.log:
     description: Open the chest activity log viewer (/ee log)
     default: op
+  enhancedechest.admin.log.take:
+    description: Take items out of, or drop them from, a /ee log snapshot (restores them from history)
+    default: op
   enhancedechest.admin.edit:
     description: Take/add items while viewing another player's chest
     default: op

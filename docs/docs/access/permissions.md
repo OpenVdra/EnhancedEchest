@@ -35,6 +35,8 @@ Each `/ee` command requires only its own node. There is no separate base permiss
 
 **`enhancedechest.admin.log`** - `/ee log`: open the chest activity log viewer for a player.
 
+**`enhancedechest.admin.log.take`** - take items out of, or drop them from, a snapshot in the `/ee log` viewer.
+
 **`enhancedechest.admin.transfer`** - `/ee transfer`: move a player's chests onto another account.
 
 **`enhancedechest.admin.reload`** - `/ee reload`: reload config and language files.

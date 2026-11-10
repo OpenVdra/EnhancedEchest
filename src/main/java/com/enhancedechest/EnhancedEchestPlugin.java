@@ -269,7 +269,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         pm.registerEvents(new VanillaEnderChestListener(chestOpener, pluginConfig), this);
         pm.registerEvents(new EnderChestGuiListener(sessionManager, scheduler, languageManager, pluginConfig), this);
         pm.registerEvents(new ChestListMenuListener(chestOpener), this);
-        pm.registerEvents(new LogMenuListener(logViewer), this);
+        pm.registerEvents(new LogMenuListener(logViewer, getSLF4JLogger()), this);
         pm.registerEvents(new PlayerQuitListener(sessionManager, scheduler), this);
         pm.registerEvents(new JoinMigrationListener(pluginConfig, migrationService, storage,
                 dbExecutor, getSLF4JLogger(), telemetry), this);

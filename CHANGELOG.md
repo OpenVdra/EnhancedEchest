@@ -2,6 +2,12 @@
 
 All notable changes to EnhancedEchest are recorded here, newest first.
 
+## Unreleased
+
+### Added
+
+- Admins with the new `enhancedechest.admin.log.take` permission can take items out of, or drop them from, a snapshot in the `/ee log` viewer. Each take is written to the server console.
+
 ## 1.3.0 - 2026-11-07
 
 ### Added

@@ -112,6 +112,8 @@ log:
   info-search: '<gold>{player} <gray>· "{query}" · Page {page}/{pages}'
   # Snapshot preview window title. {index} = chest number, {time} = when it was closed.
   snapshot-title: '#{index} · {time}'
+  # Same title when the viewer may take items out of the snapshot (enhancedechest.admin.log.take).
+  snapshot-title-take: '#{index} · {time} · Take out'
   # Search dialog: find visits whose change list mentions an item.
   search-title: 'Search chest log'
   search-body: 'Type an item name to find visits that added or took it.'

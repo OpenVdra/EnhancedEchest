@@ -53,6 +53,13 @@ public final class LogViewer {
 
     /** Search dialog's text input key, read back when the Search button is clicked. */
     private static final String SEARCH_INPUT = "log_search";
+
+    /**
+     * Lets an admin take items out of (or drop them from) a snapshot preview. This restores historical
+     * items into the world — it creates them, the real chest is not touched — so it is a separate node
+     * from {@code enhancedechest.admin.log}, which only looks. Checked once per preview, at open.
+     */
+    public static final String TAKE_PERMISSION = "enhancedechest.admin.log.take";
     private static final int SEARCH_MAX_LENGTH = 48;
 
     private record PageData(List<LogEntry> entries, int page, int pageCount, int total) {}
@@ -151,7 +158,8 @@ public final class LogViewer {
      * Opens a read-only-safe sandbox showing exactly what the chest held when {@code entry} was closed.
      * The inventory uses {@link LogSnapshotHolder}, so it never funnels through the session manager and is
      * discarded on close — the real chest is never affected. {@code page} and {@code query} are remembered
-     * so closing the preview returns to the same (possibly filtered) log page.
+     * so closing the preview returns to the same (possibly filtered) log page. With
+     * {@link #TAKE_PERMISSION} the preview is opened in take-out mode instead (see {@link LogSnapshotHolder}).
      */
     public void openSnapshot(Player admin, UUID owner, String ownerName, LogEntry entry, int page,
                              @Nullable String query) {
@@ -174,11 +182,14 @@ public final class LogViewer {
                     admin.sendMessage(lang.get("admin.log-snapshot-failed"));
                     return;
                 }
-                Component title = lang.getGui(admin.locale(), "log.snapshot-title",
+                boolean canTake = admin.hasPermission(TAKE_PERMISSION);
+                Component title = lang.getGui(admin.locale(),
+                        canTake ? "log.snapshot-title-take" : "log.snapshot-title",
                         "index", Integer.toString(entry.index()),
                         "time", TIME.format(Instant.ofEpochMilli(entry.closedAt())));
                 Inventory inv = Bukkit.createInventory(
-                        new LogSnapshotHolder(owner, ownerName, entry.index(), page, query),
+                        new LogSnapshotHolder(owner, ownerName, entry.index(), page, query,
+                                entry.id(), canTake, contents),
                         contents.length, title);
                 inv.setContents(contents);
                 admin.openInventory(inv);

@@ -35,6 +35,8 @@ Mỗi lệnh `/ee` chỉ cần đúng node riêng của lệnh đó. Không còn
 
 **`enhancedechest.admin.log`** - `/ee log`: mở trình xem nhật ký hoạt động rương của một người chơi.
 
+**`enhancedechest.admin.log.take`** - lấy vật phẩm ra hoặc vứt chúng từ một ảnh chụp trong trình xem `/ee log`.
+
 **`enhancedechest.admin.transfer`** - `/ee transfer`: chuyển rương của một người chơi sang tài khoản khác.
 
 **`enhancedechest.admin.reload`** - `/ee reload`: tải lại file cấu hình và ngôn ngữ.
