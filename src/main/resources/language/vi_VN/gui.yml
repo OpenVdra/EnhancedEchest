@@ -101,7 +101,8 @@ log:
   # Mô tả ô. {opened}/{closed} là giờ, {index}/{size} là số rương và số ô.
   lore-time: '<gray>Mở {opened} <dark_gray>→ <gray>{closed}'
   lore-chest: '<gray>Rương #{index} <dark_gray>· <gray>{size} ô'
-  lore-click: '<yellow>Nhấn để xem nội dung'
+  lore-click: '<yellow>Chuột trái: xem đồ lúc đóng'
+  lore-click-before: '<yellow>Chuột phải: xem đồ trước lượt này'
   # Nút điều hướng và điều khiển. {page}/{pages} tính từ 1.
   nav-newer: '<green>« Mới hơn'
   nav-older: '<green>Cũ hơn »'
@@ -112,6 +113,8 @@ log:
   info-search: '<gold>{player} <gray>· "{query}" · Trang {page}/{pages}'
   # Tiêu đề cửa sổ ảnh chụp. {index} = số rương, {time} = thời điểm đóng.
   snapshot-title: '#{index} · {time}'
+  snapshot-title-before: '#{index} · Trước · {time}'
+  snapshot-title-backup: '#{index} · Backup · {time}'
   # Dialog tìm kiếm: tìm những lượt có nhắc tới một vật phẩm trong danh sách thay đổi.
   search-title: 'Tìm trong nhật ký'
   search-body: 'Nhập tên vật phẩm để tìm những lượt có thêm hoặc lấy nó.'

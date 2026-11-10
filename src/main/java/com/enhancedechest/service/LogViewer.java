@@ -55,6 +55,9 @@ public final class LogViewer {
     private static final String SEARCH_INPUT = "log_search";
     private static final int SEARCH_MAX_LENGTH = 48;
 
+    /** What a snapshot window shows: contents, the title key, and the time to put in the title. */
+    private record Shown(org.bukkit.inventory.ItemStack[] contents, String titleKey, long time) {}
+
     private record PageData(List<LogEntry> entries, int page, int pageCount, int total) {}
 
     private final ChestLogStore store;
@@ -66,8 +69,18 @@ public final class LogViewer {
     private final Logger logger;
     private final Telemetry telemetry;
 
+    /** Folder of the scheduled database backups, searched by the "before" view; {@code null} = don't. */
+    @Nullable
+    private final java.nio.file.Path backupDir;
+
     public LogViewer(ChestLogStore store, ContainerCodec codec, DbExecutor db, Scheduler scheduler,
                      LanguageManager lang, Logger logger, Telemetry telemetry) {
+        this(store, codec, db, scheduler, lang, logger, telemetry, null);
+    }
+
+    public LogViewer(ChestLogStore store, ContainerCodec codec, DbExecutor db, Scheduler scheduler,
+                     LanguageManager lang, Logger logger, Telemetry telemetry, @Nullable java.nio.file.Path backupDir) {
+        this.backupDir = backupDir;
         this.store = store;
         this.codec = codec;
         this.db = db;
@@ -155,28 +168,60 @@ public final class LogViewer {
      */
     public void openSnapshot(Player admin, UUID owner, String ownerName, LogEntry entry, int page,
                              @Nullable String query) {
+        openSnapshot(admin, owner, ownerName, entry, page, query, false);
+    }
+
+    /**
+     * {@code before} = show the chest as it was when this visit started (the previous logged visit's
+     * snapshot) instead of as it was left.
+     */
+    public void openSnapshot(Player admin, UUID owner, String ownerName, LogEntry entry, int page,
+                             @Nullable String query, boolean before) {
         db.supply(() -> {
             try {
-                ChestLogStore.SnapshotBlob blob = store.loadSnapshot(entry.id());
-                if (blob == null) return null;   // pruned between listing and click
-                return codec.decode(blob.data(), blob.size());
+                if (!before) {
+                    ChestLogStore.SnapshotBlob blob = store.loadSnapshot(entry.id());
+                    if (blob == null) return null;   // pruned between listing and click
+                    return new Shown(codec.decode(blob.data(), blob.size()), "log.snapshot-title", entry.closedAt());
+                }
+                // Before this visit: the newest of (the previous logged visit of this chest, the newest
+                // database backup taken before the visit opened).
+                ChestLogStore.PreviousSnapshot prev = store.loadPreviousSnapshot(owner, entry.index(), entry.id());
+                com.enhancedechest.log.BackupLookup.Found backup = null;
+                if (backupDir != null) {
+                    try {
+                        backup = com.enhancedechest.log.BackupLookup.find(backupDir, owner, entry.index(), entry.openedAt());
+                    } catch (Exception e) {
+                        logger.warn("Could not read database backups for the chest-log before view", e);
+                    }
+                }
+                if (backup != null && (prev == null || backup.takenAt() > prev.closedAt())) {
+                    org.bukkit.inventory.ItemStack[] items = backup.data().length < 2
+                            ? emptyChest(backup.size())
+                            : codec.decode(backup.data(), backup.size());
+                    return new Shown(items, "log.snapshot-title-backup", backup.takenAt());
+                }
+                if (prev == null) return null;
+                return new Shown(codec.decode(prev.data(), prev.size()), "log.snapshot-title-before", prev.closedAt());
             } catch (Exception e) {
                 throw new CompletionException(e);
             }
-        }).whenComplete((contents, err) -> {
+        }).whenComplete((shown, err) -> {
             scheduler.runAtEntity(admin, t -> {
                 if (!admin.isOnline()) return;
-                if (err != null || contents == null) {
+                if (err != null || shown == null) {
                     if (err != null) {
                         logger.warn("Could not open chest-log snapshot {} for {}", entry.id(), owner, err);
                         telemetry.error(err, "log.snapshot-decode");
                     }
-                    admin.sendMessage(lang.get("admin.log-snapshot-failed"));
+                    admin.sendMessage(lang.get(before && err == null
+                            ? "admin.log-snapshot-no-before" : "admin.log-snapshot-failed"));
                     return;
                 }
-                Component title = lang.getGui(admin.locale(), "log.snapshot-title",
+                org.bukkit.inventory.ItemStack[] contents = shown.contents();
+                Component title = lang.getGui(admin.locale(), shown.titleKey(),
                         "index", Integer.toString(entry.index()),
-                        "time", TIME.format(Instant.ofEpochMilli(entry.closedAt())));
+                        "time", TIME.format(Instant.ofEpochMilli(shown.time())));
                 Inventory inv = Bukkit.createInventory(
                         new LogSnapshotHolder(owner, ownerName, entry.index(), page, query),
                         contents.length, title);
@@ -184,6 +229,12 @@ public final class LogViewer {
                 admin.openInventory(inv);
             });
         });
+    }
+
+    private static org.bukkit.inventory.ItemStack[] emptyChest(int size) {
+        org.bukkit.inventory.ItemStack[] out = new org.bukkit.inventory.ItemStack[Math.max(9, size)];
+        java.util.Arrays.fill(out, org.bukkit.inventory.ItemStack.empty());
+        return out;
     }
 
     private void reportFailure(Player admin, String messageKey, Throwable err, String label) {

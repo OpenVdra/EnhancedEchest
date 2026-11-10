@@ -50,19 +50,23 @@ public final class LogMenuListener implements Listener {
             event.setCancelled(true);
             if (!(event.getWhoClicked() instanceof Player player)) return;
             if (event.getClickedInventory() != top) return;   // a click in the player's own inv, already cancelled
-            handleMenuClick(player, holder, event.getSlot());
+            handleMenuClick(player, holder, event.getSlot(), event.isRightClick());
             return;
         }
-        if (top.getHolder() instanceof LogSnapshotHolder) {
+        if (top.getHolder() instanceof LogSnapshotHolder holder) {
+            if (canTake(event.getWhoClicked())) {
+                auditTake(event, top, holder);
+                return;   // restore mode: every click allowed (take, shift-click, drop with Q)
+            }
             guardSnapshotClick(event, top);
         }
     }
 
-    private void handleMenuClick(Player player, LogMenuHolder holder, int slot) {
+    private void handleMenuClick(Player player, LogMenuHolder holder, int slot, boolean right) {
         LogEntry entry = holder.entryAt(slot);
         if (entry != null) {
             viewer.openSnapshot(player, holder.getOwner(), holder.getOwnerName(), entry,
-                    holder.getPage(), holder.getQuery());
+                    holder.getPage(), holder.getQuery(), right);
             return;
         }
         switch (slot) {
@@ -103,6 +107,39 @@ public final class LogMenuListener implements Listener {
         }
     }
 
+    /** Admins with this permission may take / drop items out of a log snapshot to give lost items back. */
+    public static final String TAKE_PERMISSION = "enhancedechest.admin.log.take";
+
+    private static boolean canTake(org.bukkit.entity.HumanEntity who) {
+        return who.hasPermission(TAKE_PERMISSION);
+    }
+
+    /** Console line for every item that leaves a snapshot, so restores can be audited. */
+    private void auditTake(InventoryClickEvent event, Inventory top, LogSnapshotHolder holder) {
+        org.bukkit.inventory.ItemStack item = null;
+        String how = null;
+        switch (event.getAction()) {
+            case DROP_ALL_SLOT, DROP_ONE_SLOT -> {
+                if (event.getClickedInventory() == top) { item = event.getCurrentItem(); how = "dropped"; }
+            }
+            case MOVE_TO_OTHER_INVENTORY -> {
+                if (event.getClickedInventory() == top) { item = event.getCurrentItem(); how = "took"; }
+            }
+            case HOTBAR_SWAP -> {
+                if (event.getClickedInventory() == top) { item = event.getCurrentItem(); how = "took"; }
+            }
+            case DROP_ALL_CURSOR, DROP_ONE_CURSOR -> { item = event.getCursor(); how = "dropped"; }
+            case PLACE_ALL, PLACE_ONE, PLACE_SOME, SWAP_WITH_CURSOR -> {
+                if (event.getClickedInventory() != top) { item = event.getCursor(); how = "took"; }
+            }
+            default -> { }
+        }
+        if (item == null || item.isEmpty()) return;
+        org.bukkit.Bukkit.getLogger().info("[EnhancedEchest] " + event.getWhoClicked().getName() + " " + how + " "
+                + item.getAmount() + "x " + item.getType() + " from log snapshot of " + holder.getOwnerName()
+                + " #" + holder.getIndex());
+    }
+
     /** A drag is allowed only if every affected slot is inside the snapshot inventory. */
     @EventHandler(priority = EventPriority.HIGH)
     public void onDrag(InventoryDragEvent event) {
@@ -112,6 +149,7 @@ public final class LogMenuListener implements Listener {
             return;
         }
         if (top.getHolder() instanceof LogSnapshotHolder) {
+            if (canTake(event.getWhoClicked())) return;
             int topSize = top.getSize();
             if (event.getRawSlots().stream().anyMatch(raw -> raw >= topSize)) {
                 event.setCancelled(true);
@@ -129,7 +167,7 @@ public final class LogMenuListener implements Listener {
     public void onClose(InventoryCloseEvent event) {
         if (!(event.getView().getTopInventory().getHolder() instanceof LogSnapshotHolder holder)) return;
         if (!(event.getPlayer() instanceof Player player)) return;
-        if (!player.getItemOnCursor().isEmpty()) {
+        if (!player.getItemOnCursor().isEmpty() && !canTake(player)) {
             player.setItemOnCursor(null);
         }
         viewer.openLog(player, holder.getOwner(), holder.getOwnerName(), holder.getPage(), holder.getQuery());

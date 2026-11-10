@@ -101,7 +101,8 @@ log:
   # Pane lore. {opened}/{closed} are clock times, {index}/{size} the chest number and slots.
   lore-time: '<gray>Open {opened} <dark_gray>→ <gray>{closed}'
   lore-chest: '<gray>Chest #{index} <dark_gray>· <gray>{size} slots'
-  lore-click: '<yellow>Click to view contents'
+  lore-click: '<yellow>Left-click: contents when closed'
+  lore-click-before: '<yellow>Right-click: contents before this visit'
   # Navigation and control buttons. {page}/{pages} are 1-based.
   nav-newer: '<green>« Newer'
   nav-older: '<green>Older »'
@@ -112,6 +113,8 @@ log:
   info-search: '<gold>{player} <gray>· "{query}" · Page {page}/{pages}'
   # Snapshot preview window title. {index} = chest number, {time} = when it was closed.
   snapshot-title: '#{index} · {time}'
+  snapshot-title-before: '#{index} · Before · {time}'
+  snapshot-title-backup: '#{index} · Backup · {time}'
   # Search dialog: find visits whose change list mentions an item.
   search-title: 'Search chest log'
   search-body: 'Type an item name to find visits that added or took it.'
