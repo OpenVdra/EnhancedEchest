@@ -270,6 +270,23 @@ final class ChestCacheState {
         return !dirtyPlayers.contains(owner) && !dirtyChests.containsKey(owner);
     }
 
+    /**
+     * Forgets every in-memory chest row of {@code owner} <b>and</b> their pending chest changes — for
+     * the {@code /ee import} refresh only, right after the backend deleted those rows itself. Dropping
+     * the dirty keys is what matters: left behind with no row, the next flush would read them as deletes
+     * of the rows the import just inserted.
+     */
+    void resetChests(UUID owner) {
+        chests.remove(owner);
+        dirtyChests.remove(owner);
+    }
+
+    /** {@link #resetChests} for the player row, before the imported one is applied over it. */
+    void resetPlayer(UUID owner) {
+        players.remove(owner);
+        dirtyPlayers.remove(owner);
+    }
+
     /** Drops one owner's materialized rows (residency removal lives in the cache). */
     void dropOwner(UUID owner) {
         chests.remove(owner);

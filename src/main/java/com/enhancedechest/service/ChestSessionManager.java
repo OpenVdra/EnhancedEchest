@@ -493,6 +493,15 @@ public final class ChestSessionManager {
     }
 
     /**
+     * True while any chest at all has a live session or an in-flight save/exclusive op. {@code /ee import}
+     * refuses to run then: it replaces chest rows wholesale, and a session closing afterwards would write
+     * its stale inventory back over an imported row.
+     */
+    public boolean hasAnyActivity() {
+        return !sessions.isEmpty() || !pendingSaves.isEmpty();
+    }
+
+    /**
      * Serializes arbitrary DB work for one (owner, index) behind any in-flight save/op for that key,
      * registering it in {@code pendingSaves} so a concurrent {@code open} waits for it. The work runs
      * on the async executor; the returned future completes with its result (or its failure).

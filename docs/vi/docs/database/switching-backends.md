@@ -13,12 +13,23 @@ Bạn có thể chuyển toàn bộ dữ liệu hiện có từ backend này san
    - Với Máy chủ, **host** (dạng `host` hoặc `host:port`), **tên cơ sở dữ liệu**, **tên đăng nhập**, và **mật khẩu**.
 5. Nhấn **Bắt đầu nhập**. Khi hoàn tất, số người chơi và số rương đã sao chép sẽ hiện trong chat.
 
+### Từ console
+
+`/ee import` cũng chạy được từ console của máy chủ, nên không cần ai vào game trước. Ghi backend cũ ngay trong lệnh:
+
+```
+ee import sqlite enderchests.db
+ee import mysql <host> <cổng> <cơ sở dữ liệu> <tên đăng nhập> [mật khẩu]
+```
+
+Dùng `mariadb` hoặc `postgres` thay cho `mysql` với các engine đó. Lệnh đã gõ, kể cả mật khẩu, có thể bị ghi vào log máy chủ, nên hãy dùng console thay vì chat cho dạng máy chủ.
+
 Việc sao chép là từng byte một, nên nó nhanh và mọi nội dung, kích thước, tên, biểu tượng và thiết lập của rương đều được giữ nguyên chính xác.
 
 ::: warning Trước khi nhập, hãy đọc kỹ những điều này
 - **Cập nhật backend cũ trước.** Hãy nạp cơ sở dữ liệu cũ bằng *phiên bản plugin này* một lần trước khi nhập, để schema của nó là mới nhất. Nhập từ schema lỗi thời sẽ thất bại với lỗi "source schema outdated" và không sao chép gì cả.
-- **Không có người chơi trực tuyến.** Việc nhập sẽ từ chối chạy khi có bất kỳ ai khác ngoài bạn đang kết nối. Nội dung chỉ có thể được sao chép an toàn trên một máy chủ yên tĩnh.
-- **Đích phải trống.** Việc nhập chỉ hoạt động vào một cơ sở dữ liệu mới chưa có rương nào. Điều này tránh vô tình gộp hoặc ghi đè dữ liệu hiện có.
+- **Không có người chơi trực tuyến.** Việc nhập sẽ từ chối chạy khi có bất kỳ ai khác ngoài bạn đang kết nối, hoặc khi vẫn còn rương đang mở. Nội dung chỉ có thể được sao chép an toàn trên một máy chủ yên tĩnh.
+- **Đích phải là cơ sở dữ liệu mới.** Mở ender chest sẽ tạo ra một rương trống, nên rương trống có sẵn trong cơ sở dữ liệu mới không sao cả: việc nhập sẽ thay thế chúng. Nếu có rương nào ở đó chứa đồ, việc nhập dừng lại và không sao chép gì, nên đồ có sẵn không bao giờ bị gộp hay ghi đè.
 :::
 
 ::: tip Nếu việc nhập thất bại

@@ -228,7 +228,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 pluginConfig.getTempExpiryMillis());
         permissionChestService = new PermissionChestService(storageGateway, spillService,
                 pluginConfig.getDefaultSize());
-        databaseImportService = new DatabaseImportService(storage, pluginConfig, getSLF4JLogger(),
+        databaseImportService = new DatabaseImportService(storage, codec, pluginConfig,getSLF4JLogger(),
                 getDataFolder().toPath());
         chestOpener    = new ChestOpener(sessionManager, storageGateway, settingsCache, storage,
                 dbExecutor, languageManager, scheduler, getSLF4JLogger(), pluginConfig.getDefaultSize(),

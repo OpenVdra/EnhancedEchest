@@ -40,7 +40,7 @@ or its holders can no longer see `/ee` at all.
 | Subcommand | Permission | Action |
 |---|---|---|
 | `reload` | `admin.reload` | Reload config + language, re-apply runtime-tunable settings |
-| `import` | `admin.import` | Copy an old EnhancedEchest database into the active backend |
+| `import [sqlite <file> \| <mysql\|mariadb\|postgres> <host> <port> <db> <user> [pw]]` | `admin.import` | Copy an old EnhancedEchest database into the active backend. Bare = dialog (players only); with arguments it also runs from the console |
 | `migrate vanilla <player>\|all` | `admin.migrate` | Vanilla ender chest → chest #1. **Online-only** |
 | `migrate axvaults\|playervaultsx\|customenderchest [<player>\|all]` | `admin.migrate` | Import another plugin's data; works offline |
 | `add <player> <size> [count] [duration]` | `admin.add` | Grant chest(s); `duration` makes them expire |

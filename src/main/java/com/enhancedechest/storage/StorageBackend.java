@@ -50,13 +50,22 @@ public interface StorageBackend {
     }
 
     /**
-     * Bulk-inserts raw {@code players} and {@code enderchests} rows <b>verbatim</b> into this (fresh)
-     * backend, in a single transaction — the DB→DB conversion primitive behind {@code /ee import}.
-     * A duplicate primary key (or any other failure) rolls the whole transaction back and throws.
+     * Bulk-inserts raw {@code players} and {@code enderchests} rows <b>verbatim</b> into this backend, in
+     * a single transaction — the DB→DB conversion primitive behind {@code /ee import}. Inside that same
+     * transaction it first re-counts the {@code enderchests} rows and throws unless there are exactly
+     * {@code expectedChests} (the caller verified those hold no items), then deletes every existing chest
+     * row and the {@code players} rows the import is about to insert. A duplicate primary key (or any
+     * other failure) rolls the whole transaction back and throws.
      *
      * @return {@code [playersInserted, chestsInserted]}
      */
-    int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests);
+    int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests, long expectedChests);
+
+    /**
+     * Reads every {@code enderchests} row verbatim. Only {@code /ee import}'s destination check uses it,
+     * and only after {@link #countChests} showed the table is small.
+     */
+    List<RawChestRow> loadAllChests();
 
     /** Primary key of one {@code enderchests} row, used to flush a deletion. */
     record ChestKey(String playerUuid, int chestIndex) {}

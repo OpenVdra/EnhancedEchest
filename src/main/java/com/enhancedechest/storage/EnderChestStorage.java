@@ -69,12 +69,23 @@ public interface EnderChestStorage {
      *
      * <p>Inserts are batched per table (one reused {@link java.sql.PreparedStatement} each, flushed in
      * chunks) with autocommit off, so the whole copy commits once. A duplicate primary key (or any other
-     * failure) rolls the whole transaction back and throws — the caller guards that the destination is
-     * empty first, so a duplicate signals a real problem rather than silently merging.
+     * failure) rolls the whole transaction back and throws.
+     *
+     * <p>The destination may already hold {@code expectedChests} chest rows, which the caller has
+     * verified hold no items: the base chest bootstrapped by an admin who opened their ender chest after
+     * switching backends. Those rows, and the {@code players} rows of every imported player, are deleted
+     * in the same transaction before the insert; a re-count inside it refuses the import if the chest
+     * count changed since the check. Resident owners' in-memory rows are reset to match.
      *
      * @return {@code [playersInserted, chestsInserted]}
      */
-    int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests);
+    int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests, long expectedChests);
+
+    /**
+     * Every {@code enderchests} row (pending changes flushed first). For {@code /ee import}'s
+     * destination check only — call it after {@link #countChests} showed the table is small.
+     */
+    List<RawChestRow> loadAllChests();
 
     /** One {@code players} row read verbatim from a source database for {@link #importRows}. */
     record RawPlayerRow(String playerUuid, @Nullable String username, int editMode, int appliedDefaultSize,

@@ -100,7 +100,7 @@ Tải lại file cấu hình và ngôn ngữ mà không cần khởi động l�
 
 <CommandRow commands="/ee import" permission="enhancedechest.admin.import">
 
-Mở biểu mẫu để sao chép toàn bộ dữ liệu từ một backend cơ sở dữ liệu cũ vào backend đang dùng (ví dụ SQLite → MySQL). Cơ sở dữ liệu đang dùng phải trống và không được có người chơi nào khác trực tuyến. Xem [Chuyển Đổi Backend](/vi/docs/database/switching-backends) để biết hướng dẫn đầy đủ.
+Mở biểu mẫu để sao chép toàn bộ dữ liệu từ một backend cơ sở dữ liệu cũ vào backend đang dùng (ví dụ SQLite → MySQL). Từ console, ghi backend cũ thành tham số: `/ee import sqlite <tệp>` hoặc `/ee import <mysql|mariadb|postgres> <host> <cổng> <cơ sở dữ liệu> <tên đăng nhập> [mật khẩu]`. Không rương nào trong cơ sở dữ liệu đang dùng được chứa đồ, và không được có người chơi nào khác trực tuyến. Xem [Chuyển Đổi Backend](/vi/docs/database/switching-backends) để biết hướng dẫn đầy đủ.
 
 </CommandRow>
 

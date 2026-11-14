@@ -54,11 +54,14 @@ import:
   # Các bước kiểm tra trước khi chạy.
   players-online: '{prefix}Chỉ có thể nhập khi không còn người chơi nào khác trực tuyến. Hãy yêu cầu mọi người thoát ra rồi thử lại.'
   same-database: '{prefix}Nguồn chính là cơ sở dữ liệu plugin đang dùng. Hãy trỏ tới backend CŨ thay vào đó.'
-  dest-not-empty: '{prefix}Cơ sở dữ liệu đang dùng đã có {count} rương. Việc nhập chỉ hoạt động vào một cơ sở dữ liệu mới, trống.'
+  dest-not-empty: '{prefix}Cơ sở dữ liệu đang dùng đã có {count} rương. Việc nhập chỉ hoạt động vào một cơ sở dữ liệu mới.'
+  dest-has-items: '{prefix}Đã có {count} rương chứa đồ trong cơ sở dữ liệu đang dùng. Việc nhập chỉ hoạt động vào một cơ sở dữ liệu mới, nên chưa sao chép gì cả.'
+  chest-open: '{prefix}Vẫn còn một rương đang mở hoặc đang lưu. Hãy đóng nó, chờ một chút rồi thử lại.'
   # Tiến trình + kết quả. {source} = loại đã chọn; {players}/{chests} = số hàng đã sao chép.
   started: '{prefix}Đang nhập từ cơ sở dữ liệu {source}… tiến trình chạy nền.'
   done: '{prefix}Nhập hoàn tất. Đã sao chép {players} người chơi và {chests} rương vào cơ sở dữ liệu đang dùng.'
   failed: '{prefix}Nhập thất bại và không ghi gì cả. Lý do: {error}'
+  usage: '{prefix}Cách dùng: /ee import sqlite <tệp>  hoặc  /ee import <mysql|mariadb|postgres> <host> <cổng> <cơ sở dữ liệu> <tên đăng nhập> [mật khẩu]'
 
 admin:
   reload-success: '{prefix}Đã tải lại cấu hình.'

@@ -15,6 +15,7 @@ import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.Message;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -399,6 +400,32 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     }
 
     /**
+     * {@code /ee import <type> <host> <port> <database> <username> [password]} for one server engine.
+     * The engine is named outright rather than guessed from the port the way the dialog does, since a
+     * console line has room for it. {@code host} is a separate {@code word()} from the port because an
+     * unquoted Brigadier string cannot contain {@code :}; the password is greedy so it may hold spaces.
+     */
+    private static LiteralArgumentBuilder<CommandSourceStack> importServerSource(String type) {
+        return Commands.literal(type)
+                .then(Commands.argument("host", StringArgumentType.word())
+                        .then(Commands.argument("port", IntegerArgumentType.integer(1, 65535))
+                                .then(Commands.argument("database", StringArgumentType.word())
+                                        .then(Commands.argument("username", StringArgumentType.word())
+                                                .executes(ctx -> ImportCommand.executeServer(ctx.getSource(), type,
+                                                        StringArgumentType.getString(ctx, "host"),
+                                                        IntegerArgumentType.getInteger(ctx, "port"),
+                                                        StringArgumentType.getString(ctx, "database"),
+                                                        StringArgumentType.getString(ctx, "username"), ""))
+                                                .then(Commands.argument("password", StringArgumentType.greedyString())
+                                                        .executes(ctx -> ImportCommand.executeServer(ctx.getSource(), type,
+                                                                StringArgumentType.getString(ctx, "host"),
+                                                                IntegerArgumentType.getInteger(ctx, "port"),
+                                                                StringArgumentType.getString(ctx, "database"),
+                                                                StringArgumentType.getString(ctx, "username"),
+                                                                StringArgumentType.getString(ctx, "password"))))))));
+    }
+
+    /**
      * The {@code <player> [list | <index>]} subtree shared by {@code /ee view} and its standalone
      * shorthand {@code /endersee}. Built fresh per call rather than cached in a constant: Brigadier
      * builders are mutable and {@code build()} produces one node instance, so handing the same object to
@@ -479,9 +506,20 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                                 .requires(src -> src.getSender().hasPermission(ADMIN_RELOAD_PERMISSION))
                                 .executes(ctx -> ReloadCommand.execute(ctx.getSource())))
                         // /ee import — open the DB→DB import dialog (copy an old backend into the active one).
+                        // The argument forms describe the source on the command line instead, so the
+                        // console can run it: nobody has to join, and so nobody's first ender chest open
+                        // can put a chest into the fresh database before the import.
                         .then(Commands.literal("import")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_IMPORT_PERMISSION))
-                                .executes(ctx -> ImportCommand.execute(ctx.getSource())))
+                                .executes(ctx -> ImportCommand.execute(ctx.getSource()))
+                                // /ee import sqlite <file> — greedy, so a path may contain spaces
+                                .then(Commands.literal("sqlite")
+                                        .then(Commands.argument("file", StringArgumentType.greedyString())
+                                                .executes(ctx -> ImportCommand.executeSqlite(ctx.getSource(),
+                                                        StringArgumentType.getString(ctx, "file")))))
+                                .then(importServerSource("mysql"))
+                                .then(importServerSource("mariadb"))
+                                .then(importServerSource("postgres")))
                         // /ee add <player> <size> [count] [duration] — a single linear chain so each
                         // node has one argument child (two sibling argument children break Brigadier's
                         // suggestions, since word() matches the empty trailing token).

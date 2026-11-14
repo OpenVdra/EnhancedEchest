@@ -67,7 +67,18 @@ read-only and hands its rows to `EnderChestStorage.importRows`, which writes the
 
 - **Bytes are copied verbatim** — no decode, no re-encode — so the copy is exact and the cost is the
   batched destination writes.
-- The destination must be empty and must differ from the source; the command refuses otherwise.
+- The destination must differ from the source, and **no destination chest may hold items** (decoded, an
+  undecodable row counts as holding items; above 500 rows it is refused without decoding). Empty chest
+  rows are expected, not an error: the first ender chest open bootstraps chest #1, and an admin who
+  joined to run the import has usually done that. `importRows(players, chests, expectedChests)` re-counts
+  inside its transaction (refusing if the count moved since the check), deletes every chest row and the
+  imported players' rows, then inserts; `CachedStorage` resets resident owners' rows **and dirty marks**
+  to match, since a leftover dirty key with no row would flush as a delete of an imported row.
+- Refused while any session or pending save exists (`ChestSessionManager.hasAnyActivity`): a session
+  closing after the import would write its stale inventory over an imported row.
+- `/ee import sqlite <file>` and `/ee import <mysql|mariadb|postgres> <host> <port> <db> <user> [pw]`
+  run the same path from the console (`performImport` takes any `CommandSender`); bare `/ee import` is
+  the dialog for players and a usage line for the console.
 - No `SchemaMigrator` runs against the source: the docs tell the admin to load the source with this
   plugin version first, so a missing column surfaces as a SQLException that the service reports as
   "source schema outdated" rather than importing partial data.

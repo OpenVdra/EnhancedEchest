@@ -160,6 +160,11 @@ final class OwnerResidencyCache {
         }
     }
 
+    /** The live resident set. Callers hold {@link #lock} (inside {@link #runLocked}) and only read it. */
+    Set<UUID> residentLocked() {
+        return resident;
+    }
+
     /** Whether an owner is currently resident. Callers hold {@link #lock} (i.e. inside {@link #runLocked}). */
     boolean isResidentLocked(UUID owner) {
         return resident.contains(owner);

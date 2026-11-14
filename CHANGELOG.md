@@ -7,6 +7,11 @@ All notable changes to EnhancedEchest are recorded here, newest first.
 ### Added
 
 - Admins with the new `enhancedechest.admin.log.take` permission can take items out of, or drop them from, a snapshot in the `/ee log` viewer. Each take is written to the server console.
+- `/ee import` runs from the console with the old backend as arguments: `/ee import sqlite <file>` or `/ee import <mysql|mariadb|postgres> <host> <port> <database> <username> [password]`.
+
+### Fixed
+
+- `/ee import` no longer refuses a new database just because an ender chest was opened there first. Empty chests are replaced, and only chests holding items block the import.
 
 ## 1.3.0 - 2026-11-07
 

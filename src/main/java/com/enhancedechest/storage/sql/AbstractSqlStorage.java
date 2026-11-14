@@ -61,6 +61,9 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     private final String sqlLoadOnePlayer;
     private final String sqlFindExpired;
     private final String sqlCountChests;
+    private final String sqlDeleteAllChests;
+    private final String sqlDeletePlayer;
+    private final String sqlLoadAllChests;
     private final String sqlNameFind;
 
     protected AbstractSqlStorage(HikariConfig config, String tablePrefix, UpsertSyntax upsertSyntax,
@@ -94,6 +97,9 @@ public abstract class AbstractSqlStorage implements StorageBackend {
         this.sqlFindExpired = "SELECT player_uuid, chest_index, kind FROM " + chests + " "
                 + "WHERE expires_at IS NOT NULL AND expires_at <= ?";
         this.sqlCountChests = "SELECT COUNT(*) FROM " + chests;
+        this.sqlDeleteAllChests = "DELETE FROM " + chests;
+        this.sqlDeletePlayer = "DELETE FROM " + players + " WHERE player_uuid = ?";
+        this.sqlLoadAllChests = "SELECT * FROM " + chests;
         this.sqlNameFind = "SELECT player_uuid FROM " + players + " WHERE username IS NOT NULL AND LOWER(username) = LOWER(?)";
     }
 
@@ -215,6 +221,21 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     }
 
     @Override
+    public List<RawChestRow> loadAllChests() {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlLoadAllChests);
+             ResultSet rs = ps.executeQuery()) {
+            List<RawChestRow> rows = new ArrayList<>();
+            while (rs.next()) {
+                rows.add(readChestRow(rs));
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to read chest rows", e);
+        }
+    }
+
+    @Override
     public String findUuidByName(String name) {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlNameFind)) {
@@ -297,10 +318,38 @@ public abstract class AbstractSqlStorage implements StorageBackend {
     // ---- database-to-database import (/ee import) ----
 
     @Override
-    public int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests) {
+    public int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests, long expectedChests) {
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                // Re-count inside the transaction: the caller checked that these rows hold no items, and
+                // a chest created since that check would otherwise be wiped unseen by the delete below.
+                long existing;
+                try (PreparedStatement ps = conn.prepareStatement(sqlCountChests);
+                     ResultSet rs = ps.executeQuery()) {
+                    existing = rs.next() ? rs.getLong(1) : 0;
+                }
+                if (existing != expectedChests) {
+                    throw new SQLException("the active database changed during the import ("
+                            + expectedChests + " chest(s) checked, " + existing + " found); run it again");
+                }
+                if (existing > 0) {
+                    try (PreparedStatement ps = conn.prepareStatement(sqlDeleteAllChests)) {
+                        ps.executeUpdate();
+                    }
+                }
+                // Players who joined after the backend switch already have a row here; the verbatim
+                // INSERT would collide with it. Only rows the import replaces go — everyone else keeps
+                // their name and settings.
+                try (PreparedStatement ps = conn.prepareStatement(sqlDeletePlayer)) {
+                    int pending = 0;
+                    for (RawPlayerRow p : players) {
+                        ps.setString(1, p.playerUuid());
+                        ps.addBatch();
+                        if (++pending >= BATCH_SIZE) { ps.executeBatch(); pending = 0; }
+                    }
+                    if (pending > 0) ps.executeBatch();
+                }
                 int playerCount = batchPlayers(conn, sqlInsertPlayer, players);
                 int chestCount = batchChests(conn, sqlInsertChest, chests);
                 conn.commit();

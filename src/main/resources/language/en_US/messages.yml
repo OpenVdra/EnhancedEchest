@@ -54,11 +54,16 @@ import:
   # Pre-flight guards.
   players-online: '{prefix}Import can only run when no other players are online. Ask everyone else to leave and try again.'
   same-database: '{prefix}The source is the same database the plugin is already using. Point it at the OLD backend instead.'
-  dest-not-empty: '{prefix}The active database already has {count} chest(s). Import only works into a fresh, empty database.'
+  dest-not-empty: '{prefix}The active database already has {count} chest(s). Import only works into a fresh database.'
+  # Empty chests (e.g. made by opening an ender chest after switching) are replaced; these hold items.
+  dest-has-items: '{prefix}{count} chest(s) in the active database already hold items. Import only works into a fresh database, so nothing was copied.'
+  chest-open: '{prefix}A chest is still open or saving. Close it, wait a moment and try again.'
   # Progress + outcome. {source} = chosen type; {players}/{chests} = rows copied.
   started: '{prefix}Importing from the {source} database… this runs in the background.'
   done: '{prefix}Import complete. Copied {players} player(s) and {chests} chest(s) into the active database.'
   failed: '{prefix}Import failed and nothing was written. Reason: {error}'
+  # /ee import from the console, which cannot show the dialog.
+  usage: '{prefix}Usage: /ee import sqlite <file>  or  /ee import <mysql|mariadb|postgres> <host> <port> <database> <username> [password]'
 
 admin:
   reload-success: '{prefix}Configuration reloaded.'

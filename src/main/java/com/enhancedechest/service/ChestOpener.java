@@ -18,6 +18,7 @@ import com.enhancedechest.telemetry.Telemetry;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.Nullable;
@@ -613,72 +614,90 @@ public final class ChestOpener {
         });
     }
 
-    /** Carries the DB-executor outcome back to the entity thread: dest not empty, or the row counts. */
-    private record ImportOutcome(long existingCount, @Nullable DatabaseImportService.Result result) {}
+    /** Carries the DB-executor outcome back: the destination check, and the row counts if it ran. */
+    private record ImportOutcome(DatabaseImportService.DestinationCheck check,
+                                 @Nullable DatabaseImportService.Result result) {}
 
     /**
-     * Validates the submitted source connection form, runs the pre-flight guards, and — if they pass —
-     * copies the source database into the active backend off the region thread, reporting the result.
+     * Validates the source connection, runs the pre-flight guards, and — if they pass — copies the source
+     * database into the active backend off the region thread, reporting the result. {@code sender} is the
+     * admin who submitted the import dialog, or the console / a player running the argument form of
+     * {@code /ee import}.
      *
-     * <p>Guards: (1) the form must be complete for its chosen type; (2) no player other than the running
-     * admin may be online (the copy assumes a quiet server); (3) the source must not be the active
-     * destination; (4) the destination must be empty (import only into a fresh DB — checked on the DB
-     * executor). All user-facing text goes through {@link LanguageManager}.
+     * <p>Guards: (1) the spec must be complete for its chosen type; (2) no player other than a sender who
+     * is a player may be online, and no chest may be open or mid-save (the copy replaces rows wholesale);
+     * (3) the source must not be the active destination; (4) no destination chest may hold items — empty
+     * ones, such as the base chest an admin's first ender chest open creates, are replaced (checked on the
+     * DB executor). All user-facing text goes through {@link LanguageManager}.
      */
-    public void performImport(Player admin, SourceSpec spec) {
+    public void performImport(CommandSender sender, SourceSpec spec) {
         String validationKey = validateSpec(spec);
         if (validationKey != null) {
-            final String key = validationKey;
-            scheduler.runAtEntity(admin, t -> {
-                if (admin.isOnline()) admin.sendMessage(lang.get(key));
-            });
+            reply(sender, lang.get(validationKey));
             return;
         }
 
         // Run the in-memory guards on the global/next tick so Bukkit.getOnlinePlayers() is read on a safe
         // thread (the dialog callback may arrive on a region thread under Folia).
         scheduler.runNextTick(t -> {
+            UUID self = sender instanceof Player p ? p.getUniqueId() : null;
             for (Player online : Bukkit.getOnlinePlayers()) {
-                if (!online.getUniqueId().equals(admin.getUniqueId())) {
-                    admin.sendMessage(lang.get("import.players-online"));
+                if (!online.getUniqueId().equals(self)) {
+                    reply(sender, lang.get("import.players-online"));
                     return;
                 }
             }
+            if (sessions.hasAnyActivity()) {
+                reply(sender, lang.get("import.chest-open"));
+                return;
+            }
             if (importService.pointsAtActiveDatabase(spec)) {
-                admin.sendMessage(lang.get("import.same-database"));
+                reply(sender, lang.get("import.same-database"));
                 return;
             }
 
-            admin.sendMessage(lang.get("import.started", "source", spec.type()));
+            reply(sender, lang.get("import.started", "source", spec.type()));
             db.supply(() -> {
-                long existing = importService.destinationChestCount();
-                if (existing > 0) {
-                    return new ImportOutcome(existing, null);
+                DatabaseImportService.DestinationCheck check = importService.checkDestination();
+                if (!check.importable()) {
+                    return new ImportOutcome(check, null);
                 }
                 try {
-                    return new ImportOutcome(0, importService.importFrom(spec));
+                    return new ImportOutcome(check, importService.importFrom(spec, check));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            }).whenComplete((outcome, error) -> scheduler.runAtEntity(admin, tt -> {
-                if (!admin.isOnline()) return;
+            }).whenComplete((outcome, error) -> {
                 if (error != null) {
                     Throwable cause = error.getCause() != null ? error.getCause() : error;
                     logger.error("[Import] Database import failed", cause);
                     telemetry.error(cause, "import.db-import");
-                    admin.sendMessage(lang.get("import.failed", "error", rootMessage(error)));
+                    reply(sender, lang.get("import.failed", "error", rootMessage(error)));
                     return;
                 }
+                DatabaseImportService.DestinationCheck check = outcome.check();
                 if (outcome.result() == null) {
-                    admin.sendMessage(lang.get("import.dest-not-empty",
-                            "count", Long.toString(outcome.existingCount())));
+                    reply(sender, check.withItems() < 0
+                            ? lang.get("import.dest-not-empty", "count", Long.toString(check.chests()))
+                            : lang.get("import.dest-has-items", "count", Long.toString(check.withItems())));
                     return;
                 }
-                admin.sendMessage(lang.get("import.done",
+                reply(sender, lang.get("import.done",
                         "players", Integer.toString(outcome.result().players()),
                         "chests", Integer.toString(outcome.result().chests())));
-            }));
+            });
         });
+    }
+
+    /** Sends {@code message} on the sender's own thread: the player's region, or the global one. */
+    private void reply(CommandSender sender, Component message) {
+        if (sender instanceof Player player) {
+            scheduler.runAtEntity(player, t -> {
+                if (player.isOnline()) player.sendMessage(message);
+            });
+        } else {
+            scheduler.runNextTick(t -> sender.sendMessage(message));
+        }
     }
 
     /** Returns the language key of the first validation failure for {@code spec}, or null if it is valid. */

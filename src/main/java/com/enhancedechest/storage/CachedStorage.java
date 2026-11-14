@@ -139,27 +139,39 @@ public final class CachedStorage implements EnderChestStorage {
     }
 
     @Override
-    public int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests) {
-        // Sync pending deletes first so the verbatim inserts cannot collide with stale backend rows,
-        // then write the import into SQL. Only owners already materialized need their cache refreshed
-        // (not dirtied — the rows are already persisted); everyone else lazy-loads the imported rows
-        // straight from SQL on first touch.
+    public int[] importRows(List<RawPlayerRow> players, List<RawChestRow> chests, long expectedChests) {
+        // Sync pending changes first so the backend's re-count and wipe see every in-memory row, then
+        // write the import into SQL. The backend deleted every chest row and the imported players' rows,
+        // so resident owners are reset to match (dirty marks included — see resetChests) before the
+        // imported rows are applied, not dirtied: they are already persisted. Everyone else lazy-loads
+        // the imported rows straight from SQL on first touch.
         flush();
-        int[] counts = backend.importRows(players, chests);
+        int[] counts = backend.importRows(players, chests, expectedChests);
         cache.runLocked(() -> {
+            for (UUID owner : cache.residentLocked()) {
+                state.resetChests(owner);
+            }
             for (RawChestRow c : chests) {
                 if (cache.isResidentLocked(UUID.fromString(c.playerUuid()))) {
                     state.applyRawChest(c);
                 }
             }
             for (RawPlayerRow p : players) {
-                if (cache.isResidentLocked(UUID.fromString(p.playerUuid()))) {
+                UUID owner = UUID.fromString(p.playerUuid());
+                if (cache.isResidentLocked(owner)) {
+                    state.resetPlayer(owner);
                     state.applyRawPlayer(p);
                 }
             }
             return null;
         });
         return counts;
+    }
+
+    @Override
+    public List<RawChestRow> loadAllChests() {
+        flush();                                   // the check must see chests not yet written back
+        return backend.loadAllChests();
     }
 
     @Override

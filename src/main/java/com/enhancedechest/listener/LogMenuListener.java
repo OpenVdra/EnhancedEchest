@@ -33,7 +33,8 @@ import java.util.Set;
  *   <li>the <b>snapshot preview</b> ({@link LogSnapshotHolder}) — a dupe-proof sandbox: the admin may
  *       rearrange items <i>within</i> the preview to inspect them, but no path can move an item into
  *       their own inventory or the world, and the cursor is cleared on close.</li>
- *   <li>the <b>take-out preview</b> (same holder, {@link LogSnapshotHolder#isCanTake()}) — for admins
+ *   <li>the <b>take-out preview</b> (same holder, {@code LogSnapshotHolder.isCanTake()}, a Lombok getter javadoc cannot
+ *       link to) — for admins
  *       with {@code enhancedechest.admin.log.take}: the inverse rule, items may only <i>leave</i> the
  *       preview (cursor, own inventory, ground), never enter it, since the preview is discarded on close
  *       and anything placed in it would be destroyed. What was taken is written to the server log.</li>

@@ -13,12 +13,23 @@ The idea is simple: you make the **new** backend the active one, then import the
    - For Server, the **host** (as `host` or `host:port`), **database name**, **username**, and **password**.
 5. Press **Start import**. When it finishes, the number of players and chests copied is reported in chat.
 
+### From the console
+
+`/ee import` also runs from the server console, so nobody has to join first. Give the old backend on the command line:
+
+```
+ee import sqlite enderchests.db
+ee import mysql <host> <port> <database> <username> [password]
+```
+
+Use `mariadb` or `postgres` in place of `mysql` for those engines. A typed command, password included, can end up in the server log, so prefer the console over chat for the server form.
+
 The copy is byte-for-byte, so it is fast and every chest's contents, size, name, icon, and settings carry over exactly.
 
 ::: warning Before you import, read these
 - **Update the old backend first.** Load the old database with *this* version of the plugin once before importing, so its schema is current. Importing from an outdated schema fails with a "source schema outdated" error and copies nothing.
-- **No players online.** The import refuses to run while anyone other than you is connected. Contents can only be copied safely on a quiet server.
-- **The destination must be empty.** Import only works into a fresh database with no chests yet. This prevents accidentally merging or overwriting existing data.
+- **No players online.** The import refuses to run while anyone other than you is connected, or while a chest is still open. Contents can only be copied safely on a quiet server.
+- **The destination must be fresh.** Opening an ender chest creates an empty chest, so empty chests already in the new database are fine: the import replaces them. If any chest there holds items, the import stops and copies nothing, so existing items are never merged or overwritten.
 :::
 
 ::: tip If an import fails
